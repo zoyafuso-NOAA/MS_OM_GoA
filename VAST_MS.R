@@ -1,0 +1,80 @@
+########################
+## Build and Run Multispecies VAST
+########################
+
+rm(list = ls())
+
+# Getting started
+library(TMB)               # Can instead load library(TMBdebug)
+library(VAST)
+
+setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+
+## Import Settings
+load('data/Model_Settings.RData')
+load('data/Spatial_Settings.RData')
+
+## Save settings: We then set the location for saving files.
+DateFile = paste0('VAST_output1/')
+if(!dir.exists(DateFile)) dir.create(DateFile)
+
+## remove unused species factors if only using a subset of the species in the df
+#Subset species
+
+Data_Geostat$spp = droplevels(Data_Geostat)$spp
+
+# Build and run model
+
+## Build model: To estimate parameters, we first build a list of data-inputs used for parameter estimation.  `make_data` has some simple checks for buggy inputs, but also please read the help file `?make_data`.  
+#We then build the TMB object.
+
+TmbData = make_data("Version"=Version, 
+                    "FieldConfig"=FieldConfig, 
+                    "OverdispersionConfig"=OverdispersionConfig, 
+                    "RhoConfig"=RhoConfig, 
+                    "ObsModel_ez" = c(PosDist = 2, Link = 0), 
+                    "c_i"=as.numeric(Data_Geostat[,'spp'])-1, 
+                    "b_i"=Data_Geostat[,'Catch_KG'], 
+                    "a_i"=Data_Geostat[,'AreaSwept_km2'], 
+                    "v_i"=as.numeric(Data_Geostat[,'Vessel'])-1, 
+                    "s_i"=Data_Geostat[,'knot_i']-1, 
+                    "t_i"=Data_Geostat[,'Year'], 
+                    "spatial_list"=Spatial_List, 
+                    "Options"=Options ,
+                    formula = "Catch_KG ~ DEPTH + DEPTH2",
+                    covariate_data = cbind(Data_Geostat[,c('Lat', 'Lon', 
+                                                           'DEPTH', 'DEPTH2',
+                                                           'Catch_KG')], 
+                                           Year = NA)
+)
+
+
+TmbList = make_model("TmbData"=TmbData, 
+                     "RunDir"= getwd(), 
+                     "Version"=Version, 
+                     "RhoConfig"=RhoConfig, 
+                     "loc_x"=Spatial_List$loc_x, 
+                     "Method"=Spatial_List$Method)
+Obj = TmbList[["Obj"]]
+
+
+
+## Estimate fixed effects and predict random effects: Next, we use a gradient-based nonlinear minimizer to identify maximum likelihood estimates for fixed-effects
+
+Opt = TMBhelper::fit_tmb( obj=Obj, 
+                          lower=TmbList[["Lower"]], 
+                          upper=TmbList[["Upper"]], 
+                          getsd=F, 
+                          savedir=DateFile, 
+                          bias.correct=F, 
+                          bias.correct.control=list(
+                            sd=FALSE, split=NULL, 
+                            nsplit=1, vars_to_correct="Index_cyl"), 
+                          newtonsteps=1 )
+
+
+#Finally, we bundle and save output
+Report = Obj$report()
+Save = list("Opt"=Opt, "Report"=Report, 'Spp' = unique(Data_Geostat$spp),
+            "ParHat"=Obj$env$parList(Opt$par), "TmbData"=TmbData)
+save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run1.RData"))
