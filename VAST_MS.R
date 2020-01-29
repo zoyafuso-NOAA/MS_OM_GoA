@@ -8,14 +8,16 @@ rm(list = ls())
 library(TMB)               # Can instead load library(TMBdebug)
 library(VAST)
 
-setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
 ## Import Settings
 load('data/Model_Settings.RData')
 load('data/Spatial_Settings.RData')
 
 ## Save settings: We then set the location for saving files.
-DateFile = paste0('VAST_output1/')
+model_no = 1
+
+DateFile = paste0('VAST_output', model_no)
 if(!dir.exists(DateFile)) dir.create(DateFile)
 
 ## remove unused species factors if only using a subset of the species in the df
@@ -57,8 +59,6 @@ TmbList = make_model("TmbData"=TmbData,
                      "Method"=Spatial_List$Method)
 Obj = TmbList[["Obj"]]
 
-
-
 ## Estimate fixed effects and predict random effects: Next, we use a gradient-based nonlinear minimizer to identify maximum likelihood estimates for fixed-effects
 
 Opt = TMBhelper::fit_tmb( obj=Obj, 
@@ -68,13 +68,16 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
                           savedir=DateFile, 
                           bias.correct=F, 
                           bias.correct.control=list(
-                            sd=FALSE, split=NULL, 
+                            sd=F, split=NULL, 
                             nsplit=1, vars_to_correct="Index_cyl"), 
                           newtonsteps=1 )
 
 
 #Finally, we bundle and save output
 Report = Obj$report()
-Save = list("Opt"=Opt, "Report"=Report, 'Spp' = unique(Data_Geostat$spp),
-            "ParHat"=Obj$env$parList(Opt$par), "TmbData"=TmbData)
-save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run1.RData"))
+starting_par = Opt$par
+Save = list('Obj' = Obj,"Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
+            'Spp' = unique(Data_Geostat$spp), "ParHat"=Obj$env$parList(Opt$par),
+            'TmbList' = TmbList)
+
+save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run.RData"))
