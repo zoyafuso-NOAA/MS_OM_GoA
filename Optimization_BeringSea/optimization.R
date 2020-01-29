@@ -1,13 +1,11 @@
 setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Optimization_BeringSea')
 
-ATF = read.csv('10210_stations_.csv')
-plot(lat ~ long, data = ATF, cex = var_CPUE/2e6, pch = 16)
-plot(lat ~ long, data = ATF, cex = mean_CPUE/1e3, pch = 16)
+df = read.csv('optim_data.csv')
 
 library(glpkAPI)
 
-do_optim = function(objvals = ATF$mean_CPUE,
-                    variances = ATF$var_CPUE,
+do_optim = function(objvals = df$tot_mean,
+                    variances = df$tot_var,
                     number_of_stations = 100,
                     var_constraint = 0.1){
   
@@ -24,7 +22,7 @@ do_optim = function(objvals = ATF$mean_CPUE,
   
   # Initialize decision variables (columns)
   glpkAPI::addColsGLPK(lp = model, 
-                       ncols = nrow(ATF))
+                       ncols = nrow(df))
   
   # Set the objective function, specify no bounds on decision variables
   # GLP_FR means free variable
@@ -55,7 +53,7 @@ do_optim = function(objvals = ATF$mean_CPUE,
   
   # Set the lower and upper bounds for the right-hand side
   # of the inequalities
-  lower = c(sum(ATF$var_CPUE)*var_constraint, number_of_stations)
+  lower = c(sum(variances)*var_constraint, number_of_stations)
   
   upper = c(Inf, number_of_stations)
   
@@ -106,12 +104,43 @@ do_optim = function(objvals = ATF$mean_CPUE,
   return(results)
 }
 
-(x = do_optim(objvals = ATF$mean_CPUE,
-             variances = ATF$var_CPUE,
-             number_of_stations = 200,
-             var_constraint = 0.98))
+res_df = data.frame()
 
-plot(lat ~ long, data = ATF)
-points(lat ~ long, data = ATF[x$x == 1,], pch = 16)
+for(i in seq(from=50, to=300, by=25)){
+  temp = 0.1; opt_res = 0
+  
+  while(opt_res %in% c(0, 14)){
+    x = do_optim(objvals = df$tot_mean,
+                 variances = df$tot_var,
+                 number_of_stations = i,
+                 var_constraint = temp)
+    
+    opt_res = x$output_code
+    
+    if(x$output_code %in% c(0, 14)){
+      res_df = rbind(res_df, data.frame(n = sum(x$x == 1),
+                                        tot_var = x$tot_var,
+                                        rel_var = x$rel_var,
+                                        tot_mean = x$objval) )
+      temp = x$rel_var + 0.01
+    }
+    
+  }
+}
 
 
+
+plot(lat ~ long, data = df)
+points(lat ~ long, data = df[x$x == 1,], pch = 16, cex = 2)
+
+plot(tot_mean ~ tot_var, data = res_df, type = 'n', las = 1,
+     xlim = range(res_df$tot_var), ylim = range(res_df$tot_mean),
+     xlab = 'Total Variance', ylab = "Total Mean")
+
+for(i in seq(from=50, to=300, by=25)){
+  lines(tot_mean ~ tot_var, data = res_df, subset = n == i, lwd = 2)
+  points(tot_mean ~ tot_var, data = res_df, subset = n == i, pch = 16)
+  with(subset(res_df, n == i),
+       text(max(tot_var), min(tot_mean), paste('n =', i), pos = 1)
+  )
+}
