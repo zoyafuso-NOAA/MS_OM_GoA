@@ -15,7 +15,8 @@ load('data/Model_Settings.RData')
 load('data/Spatial_Settings.RData')
 
 ## Save settings: We then set the location for saving files.
-DateFile = paste0('VAST_output1/')
+model_no = 2
+DateFile = paste0('VAST_output', model_no)
 if(!dir.exists(DateFile)) dir.create(DateFile)
 
 ## remove unused species factors if only using a subset of the species in the df
@@ -75,6 +76,7 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
 
 #Finally, we bundle and save output
 Report = Obj$report()
-Save = list("Opt"=Opt, "Report"=Report, 'Spp' = unique(Data_Geostat$spp),
-            "ParHat"=Obj$env$parList(Opt$par), "TmbData"=TmbData)
-save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run1.RData"))
+Save = list("Obj" = Obj, "Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
+            'Spp' = unique(Data_Geostat$spp),
+            "ParHat"=Obj$env$parList(Opt$par))
+save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run.RData"))
