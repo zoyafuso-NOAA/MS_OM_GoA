@@ -26,13 +26,14 @@ Data_Geostat = data.frame( "spp"=data$SCI,
 Data_Geostat = subset(x = Data_Geostat, 
                       spp %in% c('Gadus macrocephalus', 'Atherestes stomias',
                                  'Sebastes alutus', 'Gadus chalcogrammus',
-                                 'Hippoglossus stenolepis'))
+                                 'Hippoglossus stenolepis', 'Solea solea',
+                                 'Glyptocephalus zachirus'))
 
 ## Spatial settings: The following settings define the spatial resolution 
 ## for the model, and whether to use a grid or mesh approximation
 Method = c("Grid", "Mesh", "Spherical_mesh")[2]
 #grid_size_km = 50
-n_x = 500   # Specify number of stations (a.k.a. "knots")
+n_x = 250   # Specify number of stations (a.k.a. "knots")
 
 ## Stratification for results
 strata.limits <- data.frame(
