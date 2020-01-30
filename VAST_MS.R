@@ -15,12 +15,8 @@ load('data/Model_Settings.RData')
 load('data/Spatial_Settings.RData')
 
 ## Save settings: We then set the location for saving files.
-<<<<<<< HEAD
 model_no = 2
-=======
-model_no = 1
 
->>>>>>> 6e89d1cb31c6a0793410f65a1997a198c6bda96d
 DateFile = paste0('VAST_output', model_no)
 if(!dir.exists(DateFile)) dir.create(DateFile)
 
@@ -79,15 +75,9 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
 
 #Finally, we bundle and save output
 Report = Obj$report()
-<<<<<<< HEAD
-Save = list("Obj" = Obj, "Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
-            'Spp' = unique(Data_Geostat$spp),
-            "ParHat"=Obj$env$parList(Opt$par))
-=======
-starting_par = Opt$par
+
 Save = list('Obj' = Obj,"Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
             'Spp' = unique(Data_Geostat$spp), "ParHat"=Obj$env$parList(Opt$par),
             'TmbList' = TmbList)
 
->>>>>>> 6e89d1cb31c6a0793410f65a1997a198c6bda96d
-save(Save, file=paste0(DateFile,"VAST_MS_GoA_Run.RData"))
+save(Save, file=paste0(DateFile,"/VAST_MS_GoA_Run.RData"))
