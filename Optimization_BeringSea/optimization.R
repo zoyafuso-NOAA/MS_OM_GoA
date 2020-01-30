@@ -104,7 +104,7 @@ do_optim = function(objvals = df$tot_mean,
   return(results)
 }
 
-res_df = data.frame()
+res_df = res_mat = data.frame()
 
 for(i in seq(from=50, to=300, by=25)){
   temp = 0.1; opt_res = 0
@@ -122,16 +122,22 @@ for(i in seq(from=50, to=300, by=25)){
                                         tot_var = x$tot_var,
                                         rel_var = x$rel_var,
                                         tot_mean = x$objval) )
+      
+      res_mat = rbind(res_mat, as.integer(x$x))
+      
       temp = x$rel_var + 0.01
+      
     }
     
   }
 }
 
-
+res_mat = as.matrix(res_mat)
 
 plot(lat ~ long, data = df)
 points(lat ~ long, data = df[x$x == 1,], pch = 16, cex = 2)
+
+dev.off()
 
 plot(tot_mean ~ tot_var, data = res_df, type = 'n', las = 1,
      xlim = range(res_df$tot_var), ylim = range(res_df$tot_mean),
@@ -144,3 +150,25 @@ for(i in seq(from=50, to=300, by=25)){
        text(max(tot_var), min(tot_mean), paste('n =', i), pos = 1)
   )
 }
+
+###########################
+## Show solutions for a particular effort level
+###########################
+temp_df = subset(res_df, n == 150)
+temp_mat = res_mat[res_df$n == 150,]
+
+par(mfrow = c(3,3), mar = c(4,4,1,1))
+plot(tot_mean ~ tot_var, data = temp_df, 
+     type = 'b', las = 1, pch = 16, lwd = 2, cex = 2, 
+     col = c('black', 'red', 'darkgreen', 'blue', 'cyan', 'magenta', 'orange', 'grey'),
+     xlim = range(temp_df$tot_var), ylim = range(temp_df$tot_mean),
+     xlab = 'Total Variance', ylab = "Total Mean")
+
+par(mar = rep(0.5, 4))
+for(i in 1:nrow(temp_mat)){
+  plot(lat ~ long, data = df, ann = F, axes = F, asp = 1); box()
+  points(lat ~ long, data = df[temp_mat[i,] == 1,], pch = 16, cex = 2,
+         col = c('black', 'red', 'darkgreen', 'blue', 
+                 'cyan', 'magenta', 'orange', 'grey')[i])
+}
+
