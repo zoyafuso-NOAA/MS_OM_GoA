@@ -15,7 +15,7 @@ load('data/Model_Settings.RData')
 load('data/Spatial_Settings.RData')
 
 ## Save settings: We then set the location for saving files.
-model_no = 2
+model_no = 3
 
 DateFile = paste0('VAST_output', model_no)
 if(!dir.exists(DateFile)) dir.create(DateFile)
