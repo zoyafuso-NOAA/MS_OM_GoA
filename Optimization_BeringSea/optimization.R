@@ -2,6 +2,7 @@ setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Optimization_BeringSea')
 
 df = read.csv('optim_data.csv')
 
+
 library(glpkAPI)
 
 do_optim = function(objvals = df$tot_mean,

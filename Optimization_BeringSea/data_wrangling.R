@@ -1,4 +1,4 @@
-library(tidyr); library(infotheo)
+library(tidyr)
 
 EBS = read.csv('G:/Oyafuso/data/data-raw/cpue_EBSshelf_all_spp.csv')
 
