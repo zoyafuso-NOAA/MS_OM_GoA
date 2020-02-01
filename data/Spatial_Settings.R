@@ -12,22 +12,22 @@ data = read.csv(file = 'data/GOA_multspp.csv')
 data = subset(x = data, YEAR > 1990)
 
 # Prepare the Data-frame for catch-rate data
-Data_Geostat = data.frame( "spp"=data$SCI, 
-                           "Year"=data$YEAR, 
-                           "Catch_KG"=data$BIOMASS, 
-                           "AreaSwept_km2"=data$EFFORT, 
-                           "Vessel"=0, 
-                           "Lat"=data$LATITUDE, 
+Data_Geostat = data.frame( "spp"=data$SCI,
+                           "Year"=data$YEAR,
+                           "Catch_KG"=data$BIOMASS,
+                           "AreaSwept_km2"=data$EFFORT,
+                           "Vessel"=0,
+                           "Lat"=data$LATITUDE,
                            "Lon"=data$LONGITUDE,
                            "DEPTH" = data$DEPTH,
                            "DEPTH2" = data$DEPTH2)
 
 #Filter Species
-Data_Geostat = subset(x = Data_Geostat, 
-                      spp %in% c('Gadus macrocephalus', 'Atherestes stomias',
-                                 'Sebastes alutus', 'Gadus chalcogrammus',
-                                 'Hippoglossus stenolepis', 'Solea solea',
-                                 'Glyptocephalus zachirus'))
+# Data_Geostat = subset(x = Data_Geostat, 
+#                       spp %in% c('Gadus macrocephalus', 'Atherestes stomias',
+#                                  'Sebastes alutus', 'Gadus chalcogrammus',
+#                                  'Hippoglossus stenolepis', 'Solea solea',
+#                                  'Glyptocephalus zachirus'))
 
 ## Spatial settings: The following settings define the spatial resolution 
 ## for the model, and whether to use a grid or mesh approximation
