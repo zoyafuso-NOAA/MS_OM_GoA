@@ -1,12 +1,63 @@
 setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Optimization_BeringSea')
 
-df = read.csv('optim_data.csv')
-
-
 library(glpkAPI)
 
-do_optim = function(objvals = df$tot_mean,
-                    variances = df$tot_var,
+library(tidyr); library(reshape2)
+
+EBS = read.csv('EBS_data_trimmed.csv')
+
+spp = length(unique(EBS$SPECIES_CODE))
+
+spp_mean = spread(data = aggregate(WGTCPUE ~ SPECIES_CODE + STATIONID, data = EBS, FUN = mean), key = SPECIES_CODE, value = WGTCPUE)
+
+spp_sd = spread(data = aggregate(WGTCPUE ~ SPECIES_CODE + STATIONID, data = EBS, FUN = sd), key = SPECIES_CODE, value = WGTCPUE)
+
+#############################
+## Create a function that inputs a vector of species weights
+## Calculates the weighted return and total variance across spp. for a station
+#############################
+
+calc_portfolio = function(weights = rep(1/5, 5)){
+  
+  port_ret = matrix(nrow = nrow(spp_mean), ncol = 2,
+                    dimnames = list(spp_mean$STATIONID, 
+                                    c('return', 'variance')))
+  
+  for(id in spp_mean$STATIONID){
+    temp = spread(data = subset(x = EBS, subset = STATIONID == id), 
+                  key = SPECIES_CODE,
+                  value = WGTCPUE)
+    
+    scaled_mean = colMeans(temp[,-c(1:2)]) / apply(X = spp_mean[,-1], 
+                                                   MARGIN = 2, 
+                                                   FUN = max)
+    
+    scaled_sd = apply(temp[,-c(1:2)], 
+                      MARGIN = 2, 
+                      FUN = sd) / apply(X = spp_sd[,-1], 
+                                        MARGIN = 2, 
+                                        FUN = max)
+    
+    temp_cor = suppressWarnings(cor(x = temp[,-c(1:2)]))
+    temp_cor[is.na(temp_cor)] = 0
+    
+    port_var = matrix(nrow = spp, ncol = spp)
+    for(i in 1:spp){
+      for(j in 1:spp){
+        port_var[i,j] = weights[i] * weights[j] * scaled_sd[i] * scaled_sd[j] * temp_cor[i,j]
+      }
+    }
+    
+    port_ret[id, ] = c('return' = sum(weights * scaled_mean), 
+                       'var' = sum(port_var) )
+  }
+  
+  return(port_ret)
+}
+
+
+do_optim = function(objvals = optim_df$return,
+                    variances = optim_df$variance,
                     number_of_stations = 100,
                     var_constraint = 0.1){
   
@@ -23,7 +74,7 @@ do_optim = function(objvals = df$tot_mean,
   
   # Initialize decision variables (columns)
   glpkAPI::addColsGLPK(lp = model, 
-                       ncols = nrow(df))
+                       ncols = length(objvals))
   
   # Set the objective function, specify no bounds on decision variables
   # GLP_FR means free variable
@@ -105,15 +156,23 @@ do_optim = function(objvals = df$tot_mean,
   return(results)
 }
 
+optim_df = calc_portfolio(weights = c(0.2, 0.2, 0.2, 0.2, 10) / sum(c(0.2, 0.2, 0.2, 0.2, 10)))
+
+stations = read.csv('10110_stations_.csv')
+stations = stations[stations$STATIONID != 'J-13',]
+optim_df = cbind(optim_df, stations[,c('lat', 'long')])
+
+par(mfrow = c(2,1), mar = c(0,0,0,0))
+plot(lat ~ long, data = optim_df, cex = return * 20, axes = F); box()
+plot(lat ~ long, data = optim_df, cex = variance * 100, axes = F); box()
+
 res_df = res_mat = data.frame()
 
 for(i in seq(from=50, to=300, by=25)){
   temp = 0.1; opt_res = 0
   
   while(opt_res %in% c(0, 14)){
-    x = do_optim(objvals = df$tot_mean,
-                 variances = df$tot_var,
-                 number_of_stations = i,
+    x = do_optim(number_of_stations = i,
                  var_constraint = temp)
     
     opt_res = x$output_code
@@ -135,11 +194,7 @@ for(i in seq(from=50, to=300, by=25)){
 
 res_mat = as.matrix(res_mat)
 
-plot(lat ~ long, data = df)
-points(lat ~ long, data = df[x$x == 1,], pch = 16, cex = 2)
-
 dev.off()
-
 plot(tot_mean ~ tot_var, data = res_df, type = 'n', las = 1,
      xlim = range(res_df$tot_var), ylim = range(res_df$tot_mean),
      xlab = 'Total Variance', ylab = "Total Mean")
@@ -155,8 +210,8 @@ for(i in seq(from=50, to=300, by=25)){
 ###########################
 ## Show solutions for a particular effort level
 ###########################
-temp_df = subset(res_df, n == 150)
-temp_mat = res_mat[res_df$n == 150,]
+temp_df = subset(res_df, n == 100)
+temp_mat = matrix( res_mat[res_df$n == 100,], ncol = nrow(optim_df) )
 
 par(mfrow = c(3,3), mar = c(4,4,1,1))
 plot(tot_mean ~ tot_var, data = temp_df, 
@@ -167,9 +222,33 @@ plot(tot_mean ~ tot_var, data = temp_df,
 
 par(mar = rep(0.5, 4))
 for(i in 1:nrow(temp_mat)){
-  plot(lat ~ long, data = df, ann = F, axes = F, asp = 1); box()
-  points(lat ~ long, data = df[temp_mat[i,] == 1,], pch = 16, cex = 2,
+  plot(lat ~ long, data = stations, ann = F, axes = F, asp = 1); box()
+  points(lat ~ long, data = stations[temp_mat[i,] == 1,], pch = 16, cex = 2,
          col = c('black', 'red', 'darkgreen', 'blue', 
                  'cyan', 'magenta', 'orange', 'grey')[i])
+}
+
+################################
+## Species Plots
+################################
+dev.off()
+subset(x = res_df, subset = (n == 200))
+temp_mat = res_mat[res_df$n == 200,]
+
+ispp = colnames(spp_mean)[2]
+
+plot(x = colSums(spp_mean[temp_mat[i,] == 1,-1]) / colSums(spp_mean[,-1]),
+     y = colSums(spp_var[temp_mat[i,] == 1,-1])/ colSums(spp_var[,-1]), 
+     type = 'n', las = 1, 
+     xlim = c(0, sum(spp_mean[,ispp])), 
+     ylim = c(0,sum(spp_var[,ispp])),
+     xlab = 'Mean', ylab = 'Variance')
+
+for(i in 1:nrow(temp_mat)){
+  points(x = sum(spp_mean[temp_mat[i,] == 1, ispp]),
+         y = sum(spp_var[temp_mat[i,] == 1, ispp]),
+         col = c('black', 'red', 'darkgreen', 'blue', 
+                 'cyan', 'magenta', 'orange', 'grey')[i],
+         pch = 16)
 }
 
