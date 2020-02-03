@@ -1,16 +1,34 @@
+####################################
+## Multispecies Survey Optimization
+####################################
+
 setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Optimization_BeringSea')
 
+#############################
+## Import Libraries
+#############################
 library(glpkAPI)
+library(tidyr)
+library(reshape2)
 
-library(tidyr); library(reshape2)
-
+#########################################
+## Import Data
+#########################################
 EBS = read.csv('EBS_data_trimmed.csv')
 
-spp = length(unique(EBS$SPECIES_CODE))
-
+########################################
+## Calculate Mean and SD CPUE for each species at each station
+########################################
 spp_mean = spread(data = aggregate(WGTCPUE ~ SPECIES_CODE + STATIONID, data = EBS, FUN = mean), key = SPECIES_CODE, value = WGTCPUE)
 
 spp_sd = spread(data = aggregate(WGTCPUE ~ SPECIES_CODE + STATIONID, data = EBS, FUN = sd), key = SPECIES_CODE, value = WGTCPUE)
+
+########################################
+## Species labels
+########################################
+spp = length(unique(EBS$SPECIES_CODE))
+spp_labels =  c('Arrowtooth_Flounder', 'Flathead_Sole',
+                'Yellowfin_Sole', 'AK_Plaice', 'Walleye_Pollock', 'All')
 
 #############################
 ## Create a function that inputs a vector of species weights
@@ -54,7 +72,6 @@ calc_portfolio = function(weights = rep(1/5, 5)){
   
   return(port_ret)
 }
-
 
 do_optim = function(objvals = optim_df$return,
                     variances = optim_df$variance,
@@ -129,7 +146,7 @@ do_optim = function(objvals = optim_df$return,
   glpkAPI::setMIPParmGLPK(parm = MSG_LEV, val = GLP_MSG_ALL)
   
   # Set the maximum optimality gap of the solution
-  glpkAPI::setMIPParmGLPK(parm = MIP_GAP, val = 0.001)
+  glpkAPI::setMIPParmGLPK(parm = MIP_GAP, val = 0.0001)
   
   # Stop after specified number of seconds, convert to milliseconds
   glpkAPI::setMIPParmGLPK(parm = TM_LIM, val = 1000 * 60) 
@@ -156,99 +173,51 @@ do_optim = function(objvals = optim_df$return,
   return(results)
 }
 
-optim_df = calc_portfolio(weights = c(0.2, 0.2, 0.2, 0.2, 10) / sum(c(0.2, 0.2, 0.2, 0.2, 10)))
-
-stations = read.csv('10110_stations_.csv')
-stations = stations[stations$STATIONID != 'J-13',]
-optim_df = cbind(optim_df, stations[,c('lat', 'long')])
-
-par(mfrow = c(2,1), mar = c(0,0,0,0))
-plot(lat ~ long, data = optim_df, cex = return * 20, axes = F); box()
-plot(lat ~ long, data = optim_df, cex = variance * 100, axes = F); box()
+weight_scen = rbind(matrix(nrow=spp,ncol=spp,data=1/14)+
+                      diag(9/14,nrow=spp,ncol=spp),
+                    c(rep(1/spp, spp)))
 
 res_df = res_mat = data.frame()
 
-for(i in seq(from=50, to=300, by=25)){
-  temp = 0.1; opt_res = 0
+for(ispp in 1:(spp+1)){
+
+  optim_df = calc_portfolio(weights = weight_scen[ispp,])
   
-  while(opt_res %in% c(0, 14)){
-    x = do_optim(number_of_stations = i,
-                 var_constraint = temp)
+  # Plot distribution of weighted mean and total variance
+  # par(mfrow = c(2,1), mar = c(0,0,0,0))
+  # plot(lat ~ long, data = optim_df, cex = return * 20, axes = F); box()
+  # plot(lat ~ long, data = optim_df, cex = variance * 100, axes = F); box()
+  
+  for(i in seq(from=50, to=300, by=25)){
+    temp = 0.1; opt_res = 0
     
-    opt_res = x$output_code
-    
-    if(x$output_code %in% c(0, 14)){
-      res_df = rbind(res_df, data.frame(n = sum(x$x == 1),
-                                        tot_var = x$tot_var,
-                                        rel_var = x$rel_var,
-                                        tot_mean = x$objval) )
+    while(opt_res %in% c(0, 14)){
+      x = do_optim(objvals = optim_df[, 'return'], 
+                   variances = optim_df[, 'variance'],
+                   number_of_stations = i,
+                   var_constraint = temp)
       
-      res_mat = rbind(res_mat, as.integer(x$x))
+      opt_res = x$output_code
       
-      temp = x$rel_var + 0.01
+      if(x$output_code %in% c(0, 14)){
+        res_df = rbind(res_df, data.frame(spp_scen = ispp,
+                                          n = sum(x$x == 1),
+                                          tot_var = x$tot_var,
+                                          rel_var = x$rel_var,
+                                          tot_mean = x$objval) )
+        
+        res_mat = rbind(res_mat, as.integer(x$x))
+        
+        temp = x$rel_var + 0.0001
+        
+      }
       
     }
-    
   }
+  
 }
 
 res_mat = as.matrix(res_mat)
 
-dev.off()
-plot(tot_mean ~ tot_var, data = res_df, type = 'n', las = 1,
-     xlim = range(res_df$tot_var), ylim = range(res_df$tot_mean),
-     xlab = 'Total Variance', ylab = "Total Mean")
-
-for(i in seq(from=50, to=300, by=25)){
-  lines(tot_mean ~ tot_var, data = res_df, subset = n == i, lwd = 2)
-  points(tot_mean ~ tot_var, data = res_df, subset = n == i, pch = 16)
-  with(subset(res_df, n == i),
-       text(max(tot_var), min(tot_mean), paste('n =', i), pos = 1)
-  )
-}
-
-###########################
-## Show solutions for a particular effort level
-###########################
-temp_df = subset(res_df, n == 100)
-temp_mat = matrix( res_mat[res_df$n == 100,], ncol = nrow(optim_df) )
-
-par(mfrow = c(3,3), mar = c(4,4,1,1))
-plot(tot_mean ~ tot_var, data = temp_df, 
-     type = 'b', las = 1, pch = 16, lwd = 2, cex = 2, 
-     col = c('black', 'red', 'darkgreen', 'blue', 'cyan', 'magenta', 'orange', 'grey'),
-     xlim = range(temp_df$tot_var), ylim = range(temp_df$tot_mean),
-     xlab = 'Total Variance', ylab = "Total Mean")
-
-par(mar = rep(0.5, 4))
-for(i in 1:nrow(temp_mat)){
-  plot(lat ~ long, data = stations, ann = F, axes = F, asp = 1); box()
-  points(lat ~ long, data = stations[temp_mat[i,] == 1,], pch = 16, cex = 2,
-         col = c('black', 'red', 'darkgreen', 'blue', 
-                 'cyan', 'magenta', 'orange', 'grey')[i])
-}
-
-################################
-## Species Plots
-################################
-dev.off()
-subset(x = res_df, subset = (n == 200))
-temp_mat = res_mat[res_df$n == 200,]
-
-ispp = colnames(spp_mean)[2]
-
-plot(x = colSums(spp_mean[temp_mat[i,] == 1,-1]) / colSums(spp_mean[,-1]),
-     y = colSums(spp_var[temp_mat[i,] == 1,-1])/ colSums(spp_var[,-1]), 
-     type = 'n', las = 1, 
-     xlim = c(0, sum(spp_mean[,ispp])), 
-     ylim = c(0,sum(spp_var[,ispp])),
-     xlab = 'Mean', ylab = 'Variance')
-
-for(i in 1:nrow(temp_mat)){
-  points(x = sum(spp_mean[temp_mat[i,] == 1, ispp]),
-         y = sum(spp_var[temp_mat[i,] == 1, ispp]),
-         col = c('black', 'red', 'darkgreen', 'blue', 
-                 'cyan', 'magenta', 'orange', 'grey')[i],
-         pch = 16)
-}
-
+save(list = c('res_df', 'res_mat', 'spp', 'spp_labels'),
+     file = 'optimization_results.RData')
