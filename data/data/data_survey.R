@@ -14,7 +14,7 @@ library(RANN)
 library(rgdal)
 
 # or from flat files exported from AFSC database
-GOA = read.csv("data-raw/cpue_GOA_selected_spp.csv", 
+GOA = read.csv("C:/Users/zack.oyafuso/Desktop/data-raw/cpue_GOA_selected_spp.csv", 
                stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
 
 # Filter Species: 
@@ -28,9 +28,14 @@ GOA = read.csv("data-raw/cpue_GOA_selected_spp.csv",
 # Flathead sole (Hippoglossoides elassodon, code 10130)
 # Rex sole (Glyptocephalus zachirus, code 10200)
 # Dusky rockfish (Sebastes variabilis, code 30152)
+# Northern rockfish (Sebastes polyspinis, code 30420)
+
+# Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
+# Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
 data <- filter(GOA, SPECIES_CODE %in% c(10110, 21720, 30060, 20510, 21740, 
-                                        10180, 10120, 10130, 10200, 30152))
+                                        10180, 10120, 10130, 10200, 30152,
+                                        30420, 30050,30051,30052, ))
 
 #Add species names
 data$SCI = NA
