@@ -5,8 +5,8 @@ library(VAST)
 
 setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-VAST_model = 1
-load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run',VAST_model,'.RData'))
+VAST_model = 3
+load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load('data/Spatial_Settings.RData')
 
 Opt = Save$Opt
