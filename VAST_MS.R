@@ -8,22 +8,14 @@ rm(list = ls())
 library(TMB)               # Can instead load library(TMBdebug)
 library(VAST)
 
-setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
+modelno = "1a"
+
+setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', 
+modelno))
 
 ## Import Settings
-load('data/Model_Settings.RData')
-load('data/Spatial_Settings.RData')
-
-## Save settings: We then set the location for saving files.
-model_no = 3
-
-DateFile = paste0('VAST_output', model_no)
-if(!dir.exists(DateFile)) dir.create(DateFile)
-
-## remove unused species factors if only using a subset of the species in the df
-#Subset species
-
-Data_Geostat$spp = droplevels(Data_Geostat)$spp
+load('Model_Settings.RData')
+load('Spatial_Settings.RData')
 
 # Build and run model
 
@@ -64,9 +56,10 @@ Obj = TmbList[["Obj"]]
 Opt = TMBhelper::fit_tmb( obj=Obj, 
                           lower=TmbList[["Lower"]], 
                           upper=TmbList[["Upper"]], 
-                          getsd=F, 
-                          savedir=DateFile, 
-                          bias.correct=F, 
+                          getsd=TRUE, 
+                          savedir=getwd(), 
+                          bias.correct= FALSE, 
+				  getHessian = T, 
                           bias.correct.control=list(
                             sd=F, split=NULL, 
                             nsplit=1, vars_to_correct="Index_cyl"), 
@@ -78,6 +71,6 @@ Report = Obj$report()
 
 Save = list('Obj' = Obj,"Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
             'Spp' = unique(Data_Geostat$spp), "ParHat"=Obj$env$parList(Opt$par),
-            'TmbList' = TmbList)
+            'TmbList' = TmbList, modelno = modelno)
 
-save(Save, file=paste0(DateFile,"/VAST_MS_GoA_Run.RData"))
+save(Save, file=paste0("VAST_MS_GoA_Run.RData"))
