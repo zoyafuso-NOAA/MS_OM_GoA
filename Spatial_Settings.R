@@ -5,7 +5,8 @@ rm(list = ls())
 
 library(VAST)
 
-modelno = '1'
+modelno = '3a'
+if(!dir.exists(paste0('VAST_output', modelno))) dir.create(paste0('VAST_output', modelno))
 setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', 
              modelno))
 
@@ -25,10 +26,10 @@ Data_Geostat = data.frame( "spp"=data$SCI,
                            "DEPTH2" = data$DEPTH2)
 
 #Filter Species
-Data_Geostat = subset(x = Data_Geostat,
-                      spp %in% c('Gadus macrocephalus', 'Atherestes stomias',
-                                 'Sebastes alutus', 'Gadus chalcogrammus',
-                                 'Hippoglossus stenolepis'))
+# Data_Geostat = subset(x = Data_Geostat,
+#                       spp %in% c('Gadus macrocephalus', 'Atherestes stomias',
+#                                  'Sebastes alutus', 'Gadus chalcogrammus',
+#                                  'Hippoglossus stenolepis'))
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 

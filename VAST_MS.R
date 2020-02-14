@@ -8,7 +8,7 @@ rm(list = ls())
 library(TMB)               # Can instead load library(TMBdebug)
 library(VAST)
 
-modelno = "1a"
+modelno = "3a"
 
 setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', 
 modelno))
@@ -54,11 +54,11 @@ Obj = TmbList[["Obj"]]
 ## Estimate fixed effects and predict random effects: Next, we use a gradient-based nonlinear minimizer to identify maximum likelihood estimates for fixed-effects
 
 Opt = TMBhelper::fit_tmb( obj=Obj, 
-                          lower=TmbList[["Lower"]], 
-                          upper=TmbList[["Upper"]], 
-                          getsd=TRUE, 
-                          savedir=getwd(), 
-                          bias.correct= FALSE, 
+                          lower = TmbList[["Lower"]], 
+                          upper = TmbList[["Upper"]], 
+                          getsd = TRUE, 
+                          savedir = getwd(), 
+                          bias.correct = FALSE, 
 				  getHessian = T, 
                           bias.correct.control=list(
                             sd=F, split=NULL, 

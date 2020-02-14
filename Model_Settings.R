@@ -8,7 +8,7 @@ library(VAST)
 
 # Version of VAST
 rm(list = ls())
-modelno = '1'
+modelno = '3a'
 Version = get_latest_version( version = NULL, package="VAST" )
 
 ## Model settings
