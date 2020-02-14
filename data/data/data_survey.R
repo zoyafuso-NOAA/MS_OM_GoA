@@ -94,6 +94,4 @@ data = subset(data,
 #                                  'walleye pollock', 'rock soles', 
 #                                  'B_R_rockfishes'))
 
-write.csv(x = data, 
-          file = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/data/GOA_multspp.csv", 
-          row.names = F)
+write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
