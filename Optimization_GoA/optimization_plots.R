@@ -98,7 +98,7 @@ page = 1
         col = c('black', 'darkblue', 'red')[s], 
         border = c('black', 'darkblue', 'red')[s])
    
-   test_dissolved2 = raster::shift(object = test_dissolved, y = 5e5)
+   test_dissolved2 = raster::shift(x = test_dissolved, dy = 5e5)
    
    plot(test_dissolved2, ann = F, axes = F, asp = 1, 
         col = 'grey', border = F, add = T); 
@@ -108,7 +108,7 @@ page = 1
         add = T, col = c('black', 'darkblue', 'red')[s], 
         border = c('black', 'darkblue', 'red')[s])
    
-   test_dissolved3 = raster::shift(object = test_dissolved2, y = 5e5)
+   test_dissolved3 = raster::shift(x = test_dissolved2, dy = 5e5)
    
    plot(test_dissolved3, ann = F, axes = F, asp = 1, 
         col = 'grey', border = F, add = T); 
@@ -121,7 +121,7 @@ page = 1
    legend('top', legend = paste('n =', i), bty = 'n')
   }
   
-  if(ispp %in% c(3,7,11, 14) ) dev.off()
+  if(ispp %in% c(3,7,11,14) ) dev.off()
  }
 }
 
@@ -158,3 +158,7 @@ page = 1
 # all_sol[1,,]
 # 
 # plot(temp, col = grey.colors(max(all_sol[1,2,]))[all_sol[1,2,]], border = NA)
+
+dev.off( )
+
+>>>>>>> 31eac8fc54aae7c8725e74c6d672a64c8c49e92b
