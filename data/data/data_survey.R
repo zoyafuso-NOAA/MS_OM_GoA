@@ -1,22 +1,71 @@
-## Get AK groundfish bottom trawl survey data for 3 primary surveys
-# Result is cleaned cpue (kg/km^2) by haul, with zeros included
-
-# Note: EBS includes all species, whereas GOA and AI are only a subset
-# here, we will filter the data to only include species represented in all regions
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
-
+###########################
+## Import Data using Lewis's code
+###########################
 library(dplyr)
-library(geosphere)
-library(marmap)
-library(RANN)
-library(rgdal)
+#setwd("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/")
+setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
+#data_wd = 'C:/Users/Zack Oyafuso/Desktop/AK_BTS/'
+data_wd = '/Users/zackoyafuso//Desktop/AK_BTS/'
 
-# or from flat files exported from AFSC database
-GOA = read.csv("C:/Users/zack.oyafuso/Desktop/data-raw/cpue_GOA_selected_spp.csv", 
-               stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
+data = read.csv(paste0(data_wd, "data-raw/cpue_GOA_selected_spp.csv"), 
+                stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
 
+# join haul data to get coordinates, depth, bottom and surface temperature
+haul <- read.csv(paste0(data_wd, "data-raw/haul.csv"), 
+                 stringsAsFactors = FALSE)
+haul <- cbind(haul, 
+              geosphere::midPoint(cbind(haul$START_LONGITUDE, haul$START_LATITUDE), 
+                                  cbind(haul$END_LONGITUDE, haul$END_LATITUDE))) # get haul midpoints
+haul$DATE <- as.Date(haul$START_TIME, format = "%d-%b-%y")
+haul$MONTH <- lubridate::month(haul$DATE)
+haul$DAY <- lubridate::day(haul$DATE)
+haul <- haul %>% select(HAULJOIN, GEAR_DEPTH, SURFACE_TEMPERATURE, GEAR_TEMPERATURE, LATITUDE = lat, LONGITUDE = lon, 
+                        DATE, DAY, MONTH)
+data <- inner_join(data, haul)
+
+# join species names
+species_codes =  read.csv(paste0(data_wd, "data-raw/species.csv"), 
+                          stringsAsFactors = FALSE)
+species_codes = select(species_codes, -YEAR_ADDED)
+data <- inner_join(data, species_codes)
+
+# select and rename columns, dropping rows with mising depths
+data <- data %>% select(YEAR, SURVEY, BOTTOM_DEPTH = GEAR_DEPTH, 
+                        SURFACE_TEMPERATURE, GEAR_TEMPERATURE, 
+                        # CPUE = WGTCPUE,
+                        EFFORT, WEIGHT,
+                        LATITUDE, LONGITUDE, DATE, DAY, MONTH, 
+                        SPECIES_NAME, COMMON_NAME) %>%
+  tidyr::drop_na(BOTTOM_DEPTH,LATITUDE,LONGITUDE) 
+
+# filter to GOA survey, remove tows with 0 bottom depth, and drop 2001 year when
+# the survey was incomplete and years before 1990 when a different net was used
+data <- data %>% filter(SURVEY == "GOA", 
+                        BOTTOM_DEPTH > 0, YEAR != 2001 & YEAR > 1989)
+
+#sum catches of northern and southern rock sole with rock sole unid. (not distinguished until 1996)
+rock_soles <- data %>% dplyr::filter(COMMON_NAME %in% c("rock sole unid.", "southern rock sole", "northern rock sole")) %>%
+  group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+  summarise(WEIGHT = sum(WEIGHT)) %>%
+  ungroup() %>%
+  mutate(SPECIES_NAME = "Lepidopsetta spp.", COMMON_NAME = "rock soles")
+
+data <- as.data.frame(rbind(data, rock_soles))
+
+#sum catches of blackspooted and rougheye rocks with rougheye and blackspotted 
+#rockfish unid. 
+B_R_rockfishes <- data %>% dplyr::filter(COMMON_NAME %in% c("blackspotted rockfish", "rougheye rockfish", "rougheye and blackspotted rockfish unid.")) %>%
+  group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+  summarise(WEIGHT = sum(WEIGHT)) %>%
+  ungroup() %>%
+  mutate(SPECIES_NAME = "Sebastes B_R", COMMON_NAME = "B_R_rockfishes")
+data <- as.data.frame(rbind(data, B_R_rockfishes))
+
+# scale bottom depth, provide depth^2
+data$DEPTH = scale(x = data$BOTTOM_DEPTH)
+data$DEPTH2 = data$DEPTH^2
+
+# Filter species to make it easier to import later
 # Filter Species: 
 # Arrowtooth Flounder (Atherestes stomias, code 10110)
 # Pacific Cod (Gadus macrocephalus, code 21720)
@@ -33,91 +82,18 @@ GOA = read.csv("C:/Users/zack.oyafuso/Desktop/data-raw/cpue_GOA_selected_spp.csv
 # Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
 # Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
-data <- filter(GOA, SPECIES_CODE %in% c(10110, 21720, 30060, 20510, 21740, 
-                                        10180, 10120, 10130, 10200, 30152,
-                                        30420, 30050,30051,30052, ))
+# data = subset(data,
+#               COMMON_NAME %in% c('arrowtooth flounder', 'Dover sole',
+#                                  'Pacific cod', 'Pacific halibut', 
+#                                  'Pacific ocean perch', 'rex sole',
+#                                  'walleye pollock'))
 
-#Add species names
-data$SCI = NA
-for(i in 1:nrow(data)){
-  data$SCI[i] = switch(paste(data$SPECIES_CODE[i]), 
-                       '10110' = 'Atherestes stomias',  
-                       '21720' = 'Gadus macrocephalus', 
-                       '30060' = 'Sebastes alutus', 
-                       '20510' = 'Anoplopoma fimbria', 
-                       '21740' = 'Gadus chalcogrammus', 
-                       '10180' = 'Solea solea', 
-                       '10120' = 'Hippoglossus stenolepis', 
-                       '10130' = 'Hippoglossoides elassodon', 
-                       '10200' = 'Glyptocephalus zachirus', 
-                       '30152' = 'Sebastes variabilis'
-  )
-}
+data = subset(data,
+              COMMON_NAME %in% c('Pacific ocean perch', 'arrowtooth flounder', 
+                                 'Pacific cod', 'walleye pollock', 
+                                 'Pacific halibut', 
+                                 'rex sole', 'Dover sole',
+                                 'flathead sole', 'sablefish', 'dusky rockfish', 
+                                 'rock soles', 'B_R_rockfishes'))
 
-
-# join haul data to get coordinates
-haul <- read.csv("data-raw/haul.csv", stringsAsFactors = FALSE)
-haul <- cbind(haul, 
-              geosphere::midPoint(cbind(haul$START_LONGITUDE, haul$START_LATITUDE), 
-                                  cbind(haul$END_LONGITUDE, haul$END_LATITUDE))) # get haul midpoints
-haul <- haul %>% select(HAULJOIN, LATITUDE = lat, LONGITUDE = lon)
-data <- inner_join(data, haul)
-
-# get biomass from cpue and effort, remove extraneous variables, remove NAs
-data <- data %>% mutate(BIOMASS = WGTCPUE * EFFORT) %>%
-  select(HAULJOIN, YEAR, BIOMASS, EFFORT, LATITUDE, LONGITUDE, SCI)%>%
-  tidyr::drop_na()
-
-data = data[order(data$YEAR), ]
-
-#####################################
-## Bathymetry
-#######################################
-xmin <- 180
-xmax <- 240
-ymin <- 50
-ymax <- 62
-bathy <- getNOAA.bathy(lon1 = xmin-360, lon2 = xmax-360, 
-                       lat1 = ymin, lat2 = ymax, resolution = 1)
-
-bathy =  fortify.bathy(bathy)
-
-#####################################
-## Attach a bathmetry value to the survey points
-#####################################
-cord.dec = SpatialPoints(cbind(data$LONGITUDE, data$LATITUDE), 
-                         proj4string = CRS("+proj=longlat"))
-cord.UTM <- spTransform(cord.dec, CRS("+proj=utm +zone=5 +datum=WGS84"))
-data[,c('X', 'Y')] = cord.UTM@coords
-
-cord.dec = SpatialPoints(cbind(bathy$x, bathy$y), 
-                         proj4string = CRS("+proj=longlat"))
-cord.UTM <- spTransform(cord.dec, CRS("+proj=utm +zone=5 +datum=WGS84"))
-bathy[,c('X', 'Y')] = cord.UTM@coords
-
-nearest = nn2(query = data[,c('X', 'Y')], 
-              data = bathy[,c('X', 'Y')],
-              k = 150)
-
-data$DEPTH = bathy$z[nearest$nn.idx[,1]]
-
-#If the closest bathymetry point to a survey station is land (depth > 0), 
-#find the next nearest neighbor and assign that bathymetry point. 
-#Continue until all survey points are associated with a negative bathy value. 
-
-inn = 2
-while(sum(data$DEPTH > 0) !=0 ){
-  for(irow in which(data$DEPTH > 0)){
-    data$DEPTH[irow] = bathy$z[nearest$nn.idx[irow,inn]]
-  }
-  inn = inn + 1
-}
-
-#Convert bathymetry to positive meters, center, and provide the square of depth
-data$DEPTH = -data$DEPTH 
-data$DEPTH = scale(x = data$DEPTH)
-data$DEPTH2 = data$DEPTH^2
-
-#Save Data Objects
-write.csv(x = bathy, file = 'bathymetry/bathy.csv', row.names = F)
 write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
