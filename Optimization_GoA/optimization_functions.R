@@ -11,9 +11,9 @@ calc_portfolio = function(weights = rep(1/ns, ns),
   
   ##Result object: mean and variance criteria for each stratum/station
   ##given a vector of species weights
-  port_ret = matrix(nrow = length(decision_labels), ncol = 2,
+  port_ret = matrix(nrow = length(decision_labels), ncol = 3,
                     dimnames = list(decision_labels, 
-                                    c('return', 'sd')))
+                                    c('return', 'TotalVar', 'TotalCov')))
   
   for(id in decision_labels ){ #for each stratum/station
     
@@ -51,16 +51,18 @@ calc_portfolio = function(weights = rep(1/ns, ns),
     }
     
     port_ret[id, ] = c('return' = sum(weights * colMeans(scaled_means), na.rm = T), 
-                       'sd' = sqrt(sum(port_var, na.rm = T)) )
+                       'TotalVar' = sqrt(sum(port_var, na.rm = T)),
+                       'TotalCov' = sum(port_var[upper.tri(port_var)], na.rm = T)*2 )
   }
   
   return(port_ret)
 }
 
 do_optim = function(objvals = optim_df$return,
-                    variances = optim_df$variance,
+                    variances = optim_df$TotalVar,
                     number_of_stations = 100,
-                    var_constraint = 0.1){
+                    var_constraint = 0.1,
+                    covar_constraint = 0.1){
   
   ##############################
   ## Defining the Model
@@ -91,13 +93,15 @@ do_optim = function(objvals = optim_df$return,
                            kind = rep(glpkAPI::GLP_BV, length(objvals)))
   
   # Initialize the structural constraints (rows)
-  # There is 1 constraint for the total variance, another for the number of stations
+  # There is 1 constraint for the total variance,
+  # 1 constratint for the number of stations
+  
   glpkAPI::addRowsGLPK(lp = model, 
                        nrows = 2)
   
   mr = rep(1:2, each = length(objvals))
   mc = rep(1:length(objvals), times = 2)
-  mz = c(variances, rep(1, length(objvals)))
+  mz = c(variances, rep(1, length(objvals)) )
   
   # set non-zero elements of constraint matrix
   glpkAPI::loadMatrixGLPK(lp = model, 
@@ -106,9 +110,11 @@ do_optim = function(objvals = optim_df$return,
   
   # Set the lower and upper bounds for the right-hand side
   # of the inequalities
-  lower = c(sum(variances)*var_constraint, number_of_stations)
+  lower = c(sum(variances)*var_constraint,
+            number_of_stations)
   
-  upper = c(Inf, number_of_stations)
+  upper = c(Inf,
+            number_of_stations)
   
   # Specify the type of structural variable. Integers refer to different types.   
   # See ?glpkAPI::glpkConstants() for the set of variable types. 

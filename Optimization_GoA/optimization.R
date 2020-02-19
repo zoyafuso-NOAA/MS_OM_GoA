@@ -35,13 +35,16 @@ GOA = read.csv(paste0("/Users/zackoyafuso/Desktop/AK_BTS/data-raw/",
 # Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
 # Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
-data <- filter(GOA, SPECIES_CODE %in% c(10110, 21720, 30060, 20510, 21740, 
-                                        10180, 10120, 10130, 10200, 30152,
-                                        30420, 30050,30051,30052 ))
+# data <- filter(GOA, SPECIES_CODE %in% c(10110, 21720, 30060, 20510, 21740, 
+#                                         10180, 10120, 10130, 10200, 30152,
+#                                         30420, 30050,30051,30052 ))
 
 species = c(10110, 21720, 30060, 20510, 21740, 
             10180, 10120, 10130, 10200, 30152,
             30420, 30050,30051,30052 )
+data = GOA[GOA$SPECIES_CODE %in% species,]
+
+
 ns = length(species)
 nstrata = length(unique(data$STRATUM))
 strata = paste(sort(unique(data$STRATUM)) )
@@ -55,37 +58,34 @@ res_df = res_mat = data.frame()
 for(ispp in 1:(ns+1)){
   
   optim_df = calc_portfolio(weights = weight_scen[ispp,])
-  
-  for(i in seq(from=10, to=40, by=2)){
-    temp = 0.1; opt_res = 0
+
+  for(i in 1:nstrata) {
+    temp = 0.001; output_code = 0
     
-    while(opt_res %in% c(0, 14)){
+    while(output_code %in% c(0,14)){
       x = do_optim(objvals = optim_df[, 'return'],
-                   variances = optim_df[, 'sd'],
+                   variances = optim_df[, 'TotalVar'],
                    number_of_stations = i,
                    var_constraint = temp)
+      output_code = x$output_code
       
-      opt_res = x$output_code
-      
-      if(x$output_code %in% c(0, 14)){
+      if(output_code %in% c(0,14)){
         res_df = rbind(res_df, data.frame(spp_scen = ispp,
-                                          n = sum(x$x == 1),
+                                          n = i,
                                           tot_var = x$tot_var,
                                           rel_var = x$rel_var,
                                           tot_mean = x$objval) )
         
         res_mat = rbind(res_mat, as.integer(x$x))
-        
         temp = x$rel_var + 0.001
-        
       }
-      
     }
   }
-  
 }
 
 res_mat = as.matrix(res_mat)
 
 save(list = c('res_df', 'res_mat', 'ns', 'nstrata', 'strata', 'species'),
      file = 'Optimization_GoA/optimization_results.RData')
+
+

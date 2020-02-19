@@ -124,3 +124,37 @@ page = 1
   if(ispp %in% c(3,7,11, 14) ) dev.off()
  }
 }
+
+
+# temp = test_dissolved
+# 
+# all_sol = array(data = 0, dim = c(ns+1,3,nstrata))
+# 
+# 
+# for(ispp in 1:(ns+1)){
+#    for(i in 5:49 ){
+#       temp_df = subset(res_df, n == i & spp_scen == ispp)
+#       temp_mat = matrix( res_mat[res_df$n == i & res_df$spp_scen == ispp,], 
+#                          ncol = nstrata )
+#       
+#       max_mean_idx = which.max(temp_df$tot_mean)
+#       max_var_idx = which.max(temp_df$tot_var)
+#       
+#       range_mean = diff(range(temp_df$tot_mean))
+#       range_var = diff(range(temp_df$tot_var))
+#       
+#       dist_mean = (temp_df$tot_mean - max(temp_df$tot_mean)) / range_mean
+#       dist_var =  (temp_df$tot_var - max(temp_df$tot_var)) / range_var
+#       
+#       comp_idx = which.min(sqrt(dist_mean^2 + dist_var^2))
+#       
+#       sol_idx = c(max_mean_idx, comp_idx, max_var_idx)
+#       
+#       all_sol[ispp,,] = all_sol[ispp,,] + temp_mat[sol_idx,]
+#    }
+#    
+# }
+# 
+# all_sol[1,,]
+# 
+# plot(temp, col = grey.colors(max(all_sol[1,2,]))[all_sol[1,2,]], border = NA)
