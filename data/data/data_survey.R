@@ -2,8 +2,10 @@
 ## Import Data using Lewis's code
 ###########################
 library(dplyr)
-setwd("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/")
-data_wd = 'C:/Users/Zack Oyafuso/Desktop/AK_BTS/'
+#setwd("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/")
+setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
+#data_wd = 'C:/Users/Zack Oyafuso/Desktop/AK_BTS/'
+data_wd = '/Users/zackoyafuso//Desktop/AK_BTS/'
 
 data = read.csv(paste0(data_wd, "data-raw/cpue_GOA_selected_spp.csv"), 
                 stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
@@ -80,18 +82,18 @@ data$DEPTH2 = data$DEPTH^2
 # Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
 # Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
-data = subset(data,
-              COMMON_NAME %in% c('arrowtooth flounder', 'Dover sole',
-                                 'Pacific cod', 'Pacific halibut', 
-                                 'Pacific ocean perch', 'rex sole',
-                                 'walleye pollock'))
-
 # data = subset(data,
 #               COMMON_NAME %in% c('arrowtooth flounder', 'Dover sole',
-#                                  'dusky rockfish', 'flathead sole', 
 #                                  'Pacific cod', 'Pacific halibut', 
-#                                  'Pacific ocean perch', 'rex sole', 'sablefish',
-#                                  'walleye pollock', 'rock soles', 
-#                                  'B_R_rockfishes'))
+#                                  'Pacific ocean perch', 'rex sole',
+#                                  'walleye pollock'))
+
+data = subset(data,
+              COMMON_NAME %in% c('Pacific ocean perch', 'arrowtooth flounder', 
+                                 'Pacific cod', 'walleye pollock', 
+                                 'Pacific halibut', 
+                                 'rex sole', 'Dover sole',
+                                 'flathead sole', 'sablefish', 'dusky rockfish', 
+                                 'rock soles', 'B_R_rockfishes'))
 
 write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
