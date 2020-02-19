@@ -1,13 +1,13 @@
 ##Diagnostic plots
 #We first apply a set of standard model diagnostics to confirm that the model is reasonable and deserves further attention.  If any of these do not look reasonable, the model output should not be interpreted or used.
 
-library(VAST)
+library(VAST); library(mvtnorm)
 
 setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-VAST_model = 3
+VAST_model = "2a"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
-load('data/Spatial_Settings.RData')
+load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
 Opt = Save$Opt
 Report = Save$Report
@@ -17,16 +17,16 @@ Obj = Save$Obj
 if(!dir.exists(paste0('diagnostics/VAST_model', VAST_model))) 
   dir.create(paste0('diagnostics/VAST_model', VAST_model))
 
-DateFile = paste0('diagnostics/VAST_model', VAST_model)
+DateFile = paste0('diagnostics/VAST_model', VAST_model, '/')
 
 ## Plot data
 
 #It is always good practice to conduct exploratory analysis of data.  Here, I visualize the spatial distribution of data.  Spatio-temporal models involve the assumption that the probability of sampling a given location is statistically independent of the probability distribution for the response at that location.  So if sampling "follows" changes in density, then the model is probably not appropriate! Only ran once. 
 
-# plot_data(Extrapolation_List=Extrapolation_List, 
-#           Spatial_List=Spatial_List, 
-#           Data_Geostat=Data_Geostat, 
-#           PlotDir= 'data/' )
+plot_data(Extrapolation_List=Extrapolation_List,
+          Spatial_List=Spatial_List,
+          Data_Geostat=Data_Geostat,
+          PlotDir= DateFile)
 
 ## Convergence: Here I print the diagnostics generated during parameter estimation, and I confirm that (1) no parameter is hitting an upper or lower bound and (2) the final gradient for each fixed-effect is close to zero. For explanation of parameters, please see `?make_data`.
 pander::pandoc.table( Opt$diagnostics[,c('Param','Lower','MLE','Upper',
@@ -68,7 +68,7 @@ plot_residuals(Lat_i=Data_Geostat[,'Lat'],
                TmbData=TmbData, 
                Report=Report, 
                Q=Q, 
-               savdir  =DateFile, 
+               working_dir  =DateFile, 
                MappingDetails=MapDetails_List[["MappingDetails"]], 
                PlotDF=MapDetails_List[["PlotDF"]], 
                MapSizeRatio=MapDetails_List[["MapSizeRatio"]], 
@@ -98,7 +98,7 @@ Cov_List = summarize_covariance(
 
 ## Density surface for each year: We can visualize many types of output from the model.  Here I only show predicted density, but other options are obtained via other integers passed to `plot_set` as described in `?plot_maps`
 
-plot_maps(plot_set=c(3sd), 
+plot_maps(plot_set=c(3), 
           MappingDetails=MapDetails_List[["MappingDetails"]], 
           Report=Report, 
           TmbData = TmbData,
@@ -111,6 +111,7 @@ plot_maps(plot_set=c(3sd),
           Rotate=MapDetails_List[["Rotate"]], 
           Cex=MapDetails_List[["Cex"]], 
           Legend=MapDetails_List[["Legend"]], 
+          col = rev(heat.colors(100)),
           zone=MapDetails_List[["Zone"]], 
           mar=c(0,0,2,0), oma=c(3.5,3.5,0,0), cex=1.8, 
           category_names=levels(Data_Geostat[,'spp']))
@@ -127,26 +128,28 @@ Index = plot_biomass_index( DirName=DateFile,
 pander::pandoc.table( Index$Table[,c("Category","Year","Estimate_metric_tons","SD_mt")] ) ==
 
 ## Center of gravity and range expansion/contraction: We can detect shifts in distribution or range expansion/contraction.  
-plot_range_index(Report=Report, TmbData=TmbData, Sdreport=Opt[["SD"]], 
-                 Znames=colnames(TmbData$Z_xm), PlotDir=DateFile, 
-                 category_names=levels(Data_Geostat[,'spp']), Year_Set=Year_Set)
+# plot_range_index(Report=Report, TmbData=TmbData, Sdreport=Opt[["SD"]], 
+#                  Znames=colnames(TmbData$Z_xm), PlotDir=DateFile, 
+#                  category_names=levels(Data_Geostat[,'spp']), Year_Set=Year_Set)
 
 ## Plot overdispersion: We can also plot and inspect overdispersion (e.g., vessel effects, or tow-level fisher targetting), al==though this example doesn't include any.  
 
-Plot_Overdispersion( filename1=paste0(DateDir,"Overdispersion"), 
-                     filename2=paste0(DateDir,"Overdispersion--panel"), 
-                     Data=TmbData, ParHat=ParHat, 
-                     Report=Report, 
-                     ControlList1=list("Width"=5, "Height"=10, 
-                                       "Res"=200, "Units"='in'),
-                     ControlList2=list("Width"=TmbData$n_c, 
-                                       "Height"=TmbData$n_c, 
-                                       "Res"=200, "Units"='in') )
+# Plot_Overdispersion( filename1=paste0(DateDir,"Overdispersion"), 
+#                      filename2=paste0(DateDir,"Overdispersion--panel"), 
+#                      Data=TmbData, ParHat=ParHat, 
+#                      Report=Report, 
+#                      ControlList1=list("Width"=5, "Height"=10, 
+#                                        "Res"=200, "Units"='in'),
+#                      ControlList2=list("Width"=TmbData$n_c, 
+#                                        "Height"=TmbData$n_c, 
+#                                        "Res"=200, "Units"='in') )
 
 ## Plot factors: Finally, we can inspect the factor-decomposition for community-level patterns.  This generates many plots, only some of which are included in this tutorial document.
 
-Plot_factors( Report=Report, ParHat=Obj$env$parList(), 
-              Data=TmbData, SD=Opt$SD, 
+Plot_factors( Report=Report, 
+              ParHat=Obj$env$parList(), 
+              Data=TmbData, 
+              SD=Opt$SD, 
               mapdetails_list=MapDetails_List, 
               Year_Set=Year_Set, 
               category_names=levels(data[,'SCI']), 
