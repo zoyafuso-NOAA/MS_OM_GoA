@@ -56,7 +56,7 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
                           lower=TmbList[["Lower"]], 
                           upper=TmbList[["Upper"]], 
                           getsd=T, 
-                          savedir=DateFile, 
+                          savedir=getwd(), 
                           bias.correct=F, 
                           bias.correct.control=list(
                             sd=F, split=NULL, 
