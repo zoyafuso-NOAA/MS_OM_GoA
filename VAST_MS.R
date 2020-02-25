@@ -8,7 +8,7 @@ rm(list = ls())
 library(TMB)               # Can instead load library(TMBdebug)
 library(VAST)
 
-modelno = "3a"
+modelno = "4b"
 
 setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', modelno))
 
@@ -55,9 +55,11 @@ Obj = TmbList[["Obj"]]
 Opt = TMBhelper::fit_tmb( obj=Obj, 
                           lower=TmbList[["Lower"]], 
                           upper=TmbList[["Upper"]], 
-                          getsd=T, 
+                          getsd=TRUE,
+                          getJointPrecision = TRUE,
                           savedir=getwd(), 
                           bias.correct=F, 
+                          quiet = T,
                           bias.correct.control=list(
                             sd=F, split=NULL, 
                             nsplit=1, vars_to_correct="Index_cyl"), 

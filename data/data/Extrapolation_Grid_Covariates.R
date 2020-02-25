@@ -2,7 +2,7 @@
 ## Assign bathymetry value to each extrapolation grid
 ## Gulf of Alaska
 #################################
-setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
+setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
 ##################################
 ## Import Libraries
@@ -12,6 +12,12 @@ library(marmap); library(sp); library(RANN); library(raster);
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
+modelno = '4b'
+if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
+  dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
+}
+setwd(paste0('VAST_output', modelno, '/'))
+
 load('Spatial_Settings.RData')
 
 ##################################
@@ -67,6 +73,7 @@ while(neg_depths != 0){
 ## Center depth and calculate depth^2
 #############################
 Extrapolation_List$Data_Extrap$DEPTH = scale(Extrapolation_List$Data_Extrap$depth)
+Extrapolation_List$Data_Extrap$DEPTH2 = Extrapolation_List$Data_Extrap$DEPTH^2
 
 #############################
 ## Plot Bathyetry Field
@@ -80,8 +87,14 @@ test = raster::rasterize(
              ymx=max(Extrapolation_List$Data_Extrap$N_km),
              crs = CRS("+proj=utm +zone=5N")),
   field = Extrapolation_List$Data_Extrap$depth)
-plot(test, axes = F)
+
+par(mar = c(0,0,0,0))
+plot(test, axes = F, legend = F)
 
 ##########################
-## Save
+## Update Spatial Settings
 ##########################
+save(list = c("Data_Geostat","Extrapolation_List", "gulf_of_alaska_grid", 
+              "Method", "modelno","n_x", "Spatial_List", "strata.limits"), 
+     file = 'Spatial_Settings.RData')
+

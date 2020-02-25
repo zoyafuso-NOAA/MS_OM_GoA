@@ -4,14 +4,15 @@
 rm(list = ls())
 
 library(VAST)
+setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '3a'
-
-setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', modelno))
+modelno = '4b'
+if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
+  dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
+}
 
 ## Import Data
-data = read.csv(file = '../data/data/GOA_multspp.csv')
-data = subset(x = data, YEAR > 1990 & YEAR != 2001)
+data = read.csv(file = 'data/data/GOA_multspp.csv')
 
 # Prepare the Data-frame for catch-rate data
 Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
@@ -25,18 +26,7 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
                            "DEPTH2" = data$DEPTH2)
 rm(data)
 
-#Filter Species
-Data_Geostat = subset(x = Data_Geostat,
-                      spp %in% c('Gadus macrocephalus', 
-                                 'Atheresthes stomias',
-                                 'Sebastes alutus', 
-                                 'Gadus chalcogrammus',
-                                 'Hippoglossus stenolepis', 
-                                 "Hippoglossoides elassodon", 
-                                 "Microstomus pacificus",
-                                 'Glyptocephalus zachirus', 
-                                 "Anoplopoma fimbria",
-                                 "Sebastes variabilis"))
+#Drop factor levels of unused Species
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 
@@ -60,13 +50,15 @@ Extrapolation_List = make_extrapolation_info( Region= "Gulf_of_Alaska",
 
 ## Derived objects for spatio-temporal estimation: And we finally generate the information used for conducting spatio-temporal parameter estimation, bundled in list `Spatial_List`
 
+fine_scale = T
 Spatial_List = make_spatial_info( n_x=n_x, 
                                   Method=Method, 
                                   Lon_i=Data_Geostat[,'Lon'],
                                   Lat_i=Data_Geostat[,'Lat'],
                                   Extrapolation_List=Extrapolation_List,
                                   DirPath=getwd(), 
-                                  Save_Results=F )
+                                  fine_scale = fine_scale,
+                                  Save_Results=T )
 
 # Add knots to Data_Geostat
 Data_Geostat = cbind( Data_Geostat, 
@@ -76,4 +68,4 @@ Data_Geostat = cbind( Data_Geostat,
 plot(Spatial_List$latlon_i[,2:1])
 points(Spatial_List$latlon_x[,2:1], col = 'red', pch = 16, cex = 1)
 
-save.image('Spatial_Settings.RData')
+save.image(paste0(getwd(), '/VAST_output', modelno, '/Spatial_Settings.RData') )

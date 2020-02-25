@@ -1,11 +1,12 @@
 ###########################
 ## Import Data using Lewis's code
 ###########################
+
 library(dplyr)
-#setwd("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/")
-setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
-#data_wd = 'C:/Users/Zack Oyafuso/Desktop/AK_BTS/'
-data_wd = '/Users/zackoyafuso//Desktop/AK_BTS/'
+setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
+# setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
+data_wd = 'C:/Users/zack.oyafuso/Desktop/'
+# data_wd = '/Users/zackoyafuso//Desktop/AK_BTS/'
 
 data = read.csv(paste0(data_wd, "data-raw/cpue_GOA_selected_spp.csv"), 
                 stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
@@ -93,7 +94,10 @@ data = subset(data,
                                  'Pacific cod', 'walleye pollock', 
                                  'Pacific halibut', 
                                  'rex sole', 'Dover sole',
-                                 'flathead sole', 'sablefish', 'dusky rockfish', 
-                                 'rock soles', 'B_R_rockfishes'))
+                                 'flathead sole', 'sablefish', 
+                                 'dusky rockfish', 
+                                 "northern rock sole", "southern rock sole",
+                                 # 'rock soles', 
+                                 'B_R_rockfishes'))
 
 write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
