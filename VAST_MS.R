@@ -5,12 +5,16 @@
 rm(list = ls())
 
 # Getting started
-library(TMB)               # Can instead load library(TMBdebug)
+#utils::install.packages( "https://inla.r-inla-download.org/R/stable/bin/windows/contrib/3.5/INLA_18.07.12.zip" )
+#library(INLA)
+library(TMBdebug)
+#library(devtools)
+#devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "4b"
+modelno = "5b"
 
-setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', modelno))
+setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
 
 ## Import Settings
 load('Model_Settings.RData')
@@ -70,7 +74,7 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
 Report = Obj$report()
 
 Save = list('Obj' = Obj,"Opt"=Opt, "Report"=Report, "TmbData"=TmbData, 
-            'Spp' = unique(Data_Geostat$spp), "ParHat"=Obj$env$parList(Opt$par),
+            'Spp' = levels(Data_Geostat$spp), "ParHat"=Obj$env$parList(Opt$par),
             'TmbList' = TmbList)
 
 save(Save, file="VAST_MS_GoA_Run.RData")

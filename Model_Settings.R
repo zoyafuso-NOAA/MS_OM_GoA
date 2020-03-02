@@ -6,9 +6,9 @@ library(VAST)
 # Version of VAST
 rm(list = ls())
 
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
-modelno = '4b'
+modelno = '5b'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -16,7 +16,7 @@ if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
 Version = get_latest_version( package="VAST" )
 
 ## Model settings
-FieldConfig = c("Omega1"=3, "Epsilon1"=3, "Omega2"=3, "Epsilon2"=3) 
+FieldConfig = c("Omega1"=2, "Epsilon1"=2, "Omega2"=2, "Epsilon2"=2) 
 RhoConfig = c("Beta1"=0, "Beta2"=0, "Epsilon1"=0, "Epsilon2"=0) 
 OverdispersionConfig = c("Eta1"=0, "Eta2"=0)
 ObsModel = c(2,0)   

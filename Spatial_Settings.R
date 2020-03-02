@@ -4,9 +4,9 @@
 rm(list = ls())
 
 library(VAST)
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
-modelno = '4b'
+modelno = '5b'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -27,6 +27,8 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
 rm(data)
 
 #Drop factor levels of unused Species
+Data_Geostat = subset(Data_Geostat, spp %in% c('Lepidopsetta bilineata', 
+                                               'Lepidopsetta polyxystra') )
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 
@@ -50,13 +52,14 @@ Extrapolation_List = make_extrapolation_info( Region= "Gulf_of_Alaska",
 
 ## Derived objects for spatio-temporal estimation: And we finally generate the information used for conducting spatio-temporal parameter estimation, bundled in list `Spatial_List`
 
-fine_scale = T
+fine_scale = F
 Spatial_List = make_spatial_info( n_x=n_x, 
                                   Method=Method, 
                                   Lon_i=Data_Geostat[,'Lon'],
                                   Lat_i=Data_Geostat[,'Lat'],
                                   Extrapolation_List=Extrapolation_List,
-                                  DirPath=getwd(), 
+                                  DirPath=paste0(getwd(), '/VAST_output', 
+                                                 modelno, '/'), 
                                   fine_scale = fine_scale,
                                   Save_Results=T )
 
