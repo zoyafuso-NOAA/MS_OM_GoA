@@ -42,7 +42,7 @@ data <- data %>% select(YEAR, SURVEY, BOTTOM_DEPTH = GEAR_DEPTH,
 # filter to GOA survey, remove tows with 0 bottom depth, and drop 2001 year when
 # the survey was incomplete and years before 1990 when a different net was used
 data <- data %>% filter(SURVEY == "GOA", 
-                        BOTTOM_DEPTH > 0, YEAR != 2001 & YEAR > 1989)
+                        BOTTOM_DEPTH > 0, YEAR != 2001 & YEAR >= 1996)
 
 #sum catches of northern and southern rock sole with rock sole unid. (not distinguished until 1996)
 rock_soles <- data %>% dplyr::filter(COMMON_NAME %in% c("rock sole unid.", "southern rock sole", "northern rock sole")) %>%
