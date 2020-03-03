@@ -1,9 +1,9 @@
 
 library(VAST); library(mvtnorm)
 
-setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
+setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-VAST_model = "3a"
+VAST_model = "4b"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
