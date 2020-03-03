@@ -12,7 +12,7 @@ library(TMBdebug)
 #devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "5b"
+modelno = "5c"
 
 setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
 

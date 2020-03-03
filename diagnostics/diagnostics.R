@@ -5,14 +5,13 @@
 
 library(VAST); library(mvtnorm)
 
-setwd('C:/Users/zack.oyafuso/Desktop/VAST_Runs')
+setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
+source("summarize_covariance.R")
+source("plot_residuals.R")
+source("plot_factors.R")
 
-#setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
-source("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/summarize_covariance.R")
-source("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/plot_residuals.R")
-source("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/plot_factors.R")
-
-VAST_model = "4a"
+setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs')
+VAST_model = "5c"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
@@ -123,10 +122,9 @@ plot_settings = data.frame(plot_num = c(1:3,6,7),
 var_name = c('PoC','PosCPUE','log_density', 'epsilon', 'epsilon'), 
 stringsAsFactors = F)
 
-for(i in 1:2){#1:nrow(plot_settings)){S
+for(i in 1:nrow(plot_settings)){
 
 if(!dir.exists(paste0(DateFile, plot_settings$var_name[i] ))) dir.create(paste0(DateFile, plot_settings$var_name[i], '/' ))
-
 
 plot_maps(plot_set=plot_settings$plot_num[i], 
           Report=Report, 
@@ -140,9 +138,6 @@ plot_maps(plot_set=plot_settings$plot_num[i],
           mar=c(0,0,2,0), oma=c(3.5,3.5,0,0), cex=1.8, 
           category_names=levels(Data_Geostat[,'spp']))
 }
-
-
-
 
 
 ## Index of abundance: The index of abundance is generally most useful for stock 
