@@ -6,7 +6,7 @@ rm(list = ls())
 library(VAST)
 setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
-modelno = '5c'
+modelno = '4b'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -27,8 +27,20 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
 rm(data)
 
 #Drop factor levels of unused Species
-Data_Geostat = subset(Data_Geostat, spp %in% c('Lepidopsetta bilineata', 
-                                               'Lepidopsetta polyxystra') )
+Data_Geostat = subset(Data_Geostat, spp %in% c("Sebastes alutus",
+                                               "Atheresthes stomias",
+                                               "Gadus macrocephalus",
+                                               "Gadus chalcogrammus",
+                                               "Hippoglossus stenolepis",
+                                               "Glyptocephalus zachirus",
+                                               "Microstomus pacificus",
+                                               "Hippoglossoides elassodon",
+                                               "Anoplopoma fimbria",
+                                               "Sebastes variabilis",
+                                               "Lepidopsetta bilineata",
+                                               "Lepidopsetta polyxystra",
+                                               "Sebastes B_R" 
+                                               ) )
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 
@@ -39,9 +51,9 @@ n_x = 250   # Specify number of stations (a.k.a. "knots")
 
 ## Stratification for results
 strata.limits <- data.frame(
-  'STRATA' = c("All_areas", "west_of_140W"),
-  'west_border' = c(-Inf, -Inf),
-  'east_border' = c(Inf, -140)
+  'STRATA' = c("All_areas"),#, "west_of_140W"),
+  'west_border' = c(-Inf),#, -Inf),
+  'east_border' = c(Inf)#, -140)
 )
 
 ## Extrapolation grid: We also generate the extrapolation grid appropriate 
@@ -52,7 +64,7 @@ Extrapolation_List = make_extrapolation_info( Region= "Gulf_of_Alaska",
 
 ## Derived objects for spatio-temporal estimation: And we finally generate the information used for conducting spatio-temporal parameter estimation, bundled in list `Spatial_List`
 
-fine_scale = F
+fine_scale = T
 Spatial_List = make_spatial_info( n_x=n_x, 
                                   Method=Method, 
                                   Lon_i=Data_Geostat[,'Lon'],
