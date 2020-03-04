@@ -118,8 +118,8 @@ Cov_List = summarize_covariance(
 ## Here I only show predicted density, but other options are obtained via other integers 
 ## passed to `plot_set` as described in `?plot_maps`
 
-plot_settings = data.frame(plot_num = c(1:3,6,7), 
-var_name = c('PoC','PosCPUE','log_density', 'epsilon', 'epsilon'), 
+plot_settings = data.frame(plot_num = c(11,1:3,6,7), 
+var_name = c('covariates','PoC','PosCPUE','log_density', 'epsilon', 'epsilon'), 
 stringsAsFactors = F)
 
 for(i in 1:nrow(plot_settings)){
