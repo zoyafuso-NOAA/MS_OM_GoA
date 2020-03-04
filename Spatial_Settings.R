@@ -6,7 +6,7 @@ rm(list = ls())
 library(VAST)
 setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
-modelno = '4b'
+modelno = '2b'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -27,20 +27,11 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
 rm(data)
 
 #Drop factor levels of unused Species
-Data_Geostat = subset(Data_Geostat, spp %in% c("Sebastes alutus",
-                                               "Atheresthes stomias",
-                                               "Gadus macrocephalus",
-                                               "Gadus chalcogrammus",
-                                               "Hippoglossus stenolepis",
-                                               "Glyptocephalus zachirus",
-                                               "Microstomus pacificus",
-                                               "Hippoglossoides elassodon",
-                                               "Anoplopoma fimbria",
-                                               "Sebastes variabilis",
-                                               "Lepidopsetta bilineata",
-                                               "Lepidopsetta polyxystra",
-                                               "Sebastes B_R" 
-                                               ) )
+spp_df = read.csv("spp_df.csv", check.names=F, header = T, row.names = 'modelno')
+
+which_spp = unlist(spp_df[modelno,-1])
+
+Data_Geostat = subset(Data_Geostat, spp %in% colnames(spp_df)[which_spp])
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 
