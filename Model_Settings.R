@@ -8,7 +8,7 @@ rm(list = ls())
 
 setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '4b'
+modelno = '6'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }

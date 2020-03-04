@@ -90,14 +90,21 @@ data$DEPTH2 = data$DEPTH^2
 #                                  'walleye pollock'))
 
 data = subset(data,
-              COMMON_NAME %in% c('Pacific ocean perch', 'arrowtooth flounder', 
-                                 'Pacific cod', 'walleye pollock', 
+              COMMON_NAME %in% c('Pacific ocean perch', 
+                                 'arrowtooth flounder', 
+                                 'Pacific cod', 
+                                 'walleye pollock', 
                                  'Pacific halibut', 
-                                 'rex sole', 'Dover sole',
-                                 'flathead sole', 'sablefish', 
-                                 'dusky rockfish', 
-                                 "northern rock sole", "southern rock sole",
-                                 # 'rock soles', 
-                                 'B_R_rockfishes'))
+                                 'rex sole', 
+                                 'Dover sole',
+                                 'flathead sole', 
+                                 'sablefish', 
+                                 'dusky rockfish',
+                                 'northern rockfish',
+                                 "northern rock sole", 
+                                 "southern rock sole",
+                                 'B_R_rockfishes',
+                                 'shortspine thornyhead',
+                                 'yellowfin sole'))
 
 write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
