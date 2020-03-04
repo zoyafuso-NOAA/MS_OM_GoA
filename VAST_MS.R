@@ -12,7 +12,7 @@ library(TMBdebug)
 #devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "5c"
+modelno = "2b"
 
 setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
 
@@ -45,6 +45,14 @@ TmbData = make_data("Version"=Version,
                                            Year = NA)
 )
 
+#Add "true" and not interpolated covariate data
+load('../')
+X_gtp = array(dim = c(TmbData$n_g,TmbData$n_t, TmbData$n_p) )
+for(i in 1:TmbData$n_t) {
+  X_gtp[,i,] = as.matrix(Extrapolation_List$Data_Extrap[,c('DEPTH', 'DEPTH2')])
+}
+
+TmbData$X_gtp = X_gtp
 
 TmbList = make_model("TmbData"=TmbData, 
                      "RunDir"= getwd(), 
