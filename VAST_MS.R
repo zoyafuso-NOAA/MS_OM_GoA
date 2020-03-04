@@ -46,10 +46,10 @@ TmbData = make_data("Version"=Version,
 )
 
 #Add "true" and not interpolated covariate data
-load('../')
+load('../Extrapolation_depths.RData')
 X_gtp = array(dim = c(TmbData$n_g,TmbData$n_t, TmbData$n_p) )
 for(i in 1:TmbData$n_t) {
-  X_gtp[,i,] = as.matrix(Extrapolation_List$Data_Extrap[,c('DEPTH', 'DEPTH2')])
+  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
 }
 
 TmbData$X_gtp = X_gtp
