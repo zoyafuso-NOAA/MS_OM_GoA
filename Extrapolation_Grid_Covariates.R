@@ -2,7 +2,9 @@
 ## Assign bathymetry value to each extrapolation grid
 ## Gulf of Alaska
 #################################
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+
+# setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 
 ##################################
 ## Import Libraries
@@ -12,13 +14,13 @@ library(marmap); library(sp); library(RANN); library(raster);
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '4b'
+modelno = '1b'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
-setwd(paste0('VAST_output', modelno, '/'))
+#setwd(paste0('VAST_output', modelno, '/'))
 
-load('Spatial_Settings.RData')
+load(paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
 
 ##################################
 ## Extract fine-scale bathymetry map 
@@ -94,7 +96,8 @@ plot(test, axes = F, legend = F)
 ##########################
 ## Update Spatial Settings
 ##########################
-save(list = c("Data_Geostat","Extrapolation_List", "gulf_of_alaska_grid", 
-              "Method", "modelno","n_x", "Spatial_List", "strata.limits"), 
-     file = 'Spatial_Settings.RData')
+Extrapolation_depths = Extrapolation_List$Data_Extrap
+
+save(list = c("Extrapolation_depths"), 
+     file = 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Extrapolation_depths.RData')
 
