@@ -4,9 +4,10 @@
 rm(list = ls())
 
 library(VAST)
-setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
+#setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '2b'
+modelno = '3a'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -31,7 +32,7 @@ spp_df = read.csv("spp_df.csv", check.names=F, header = T, row.names = 'modelno'
 
 which_spp = unlist(spp_df[modelno,-1])
 
-Data_Geostat = subset(Data_Geostat, spp %in% colnames(spp_df)[which_spp])
+Data_Geostat = subset(Data_Geostat, spp %in% names(which_spp)[which_spp])
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ## Spatial settings: The following settings define the spatial resolution 
