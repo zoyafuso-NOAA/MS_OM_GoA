@@ -40,7 +40,8 @@ data <- data %>% select(YEAR, SURVEY, BOTTOM_DEPTH = GEAR_DEPTH,
   tidyr::drop_na(BOTTOM_DEPTH,LATITUDE,LONGITUDE) 
 
 # filter to GOA survey, remove tows with 0 bottom depth, and drop 2001 year when
-# the survey was incomplete and years before 1990 when a different net was used
+# the survey was incomplete and years before 1996 when a different net/soak time
+# was used
 data <- data %>% filter(SURVEY == "GOA", 
                         BOTTOM_DEPTH > 0, YEAR != 2001 & YEAR >= 1996)
 
