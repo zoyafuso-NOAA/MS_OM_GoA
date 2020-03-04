@@ -1,47 +1,43 @@
 
-library(VAST); library(mvtnorm)
+library(VAST); library(mvtnorm); library(SamplingStrata)
 
-setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
+# setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-VAST_model = "4b"
+VAST_model = "1b"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
-
-source('diagnostics/plot_factors.R')
-source('diagnostics/plot_residuals.R')
-source('diagnostics/summarize_covariance.r')
 
 Opt = Save$Opt
 Report = Save$Report
 TmbData = Save$TmbData
 Obj = Save$Obj
 
+Year_Set = seq(min(Data_Geostat[,'Year']),max(Data_Geostat[,'Year']))
+Years2Include = which( Year_Set %in% sort(unique(Data_Geostat[,'Year'])))
 
-Ests = array(data = Report$Index_gcyl[attributes(Opt$SD$value)$names == 'Index_gcyl'], 
-             dim =c(dim(Report$D_gcy), dim(Report$Index_cyl)[3]) )
+Ests = Report$Index_gcyl[,,Years2Include,]
 
-str(TmbData$X_gtp)
-
-depth_01 = (TmbData$X_gtp[,1,1] - min(TmbData$X_gtp[,1,1])) / diff(range(TmbData$X_gtp[,1,1]))
+depth_01 = Extrapolation_List$Data_Extrap$depth
 
 df = cbind(
   data.frame(Domain = "GoA",
-             x = 1:250,
+             x = 1:TmbData$n_g,
              depth = depth_01),
-  Ests[,,1,1]
+  apply(X = Ests, MARGIN = 1:2, FUN = mean)
 )
 
-names(df)[-(1:3)] = paste0('spp', 1:10)
+names(df)[-(1:3)] = gsub(x = Save$Spp, pattern = ' ', replacement = '_')
 
 frame1 <- buildFrameDF(df = df,
                        id = "x",
                        X = c("depth"),
-                       Y = paste0('spp', 1:10),
+                       Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                        domainvalue = "Domain")
 strata1 <- buildStrataDF(frame1, progress=F)
 
 cv = list()
-for(i in 1:10) cv[[paste0('CV', i)]] = 0.4
+for(i in 1:TmbData$n_c) cv[[paste0('CV', i)]] = 0.1
 cv[['DOM']] = 'GoA'; cv[['domainvalue']]=1
 cv <- as.data.frame(cv)
 cv
@@ -53,45 +49,10 @@ checkInput(errors = checkInput(errors = cv,
 allocation <- bethel(strata1,cv[1,])
 sum(allocation)
 
-set.seed(1234)
-solution1 <- optimStrata(method = "atomic",
-                         errors = cv, 
-                         nStrata = 10,
-                         framesamp = frame1,
-                         iter = 50,
-                         pops = 10)
-expected_CV(solution1$aggr_strata)
-
-
-frame2 <- buildFrameDF(df = df,
-                       id = "x",
-                       X = c("x"),
-                       Y = paste0('spp', 1:10),
-                       domainvalue = "Domain")
-head(frame2)
-strata2 <- buildStrataDF(frame2, progress=F)
-initial_solution2 <- KmeansSolution(strata = strata2,
-                                    errors = cv,
-                                    maxclusters = 10)  
-
-nstrata2 <- tapply(initial_solution2$suggestions,
-                   initial_solution2$domainvalue,
-                   FUN=function(x) length(unique(x)))
-nstrata2
-set.seed(1234)
-solution2 <- optimStrata(method = "atomic",
-                         errors = cv, 
-                         framesamp = frame2,
-                         iter = 50,
-                         pops = 10,
-                         nStrata = nstrata2,
-                         suggestions = initial_solution2)
-expected_CV(solution2$aggr_strata)
-
 frame3 <- buildFrameDF(df = df,
                        id = "x",
                        X = "depth",
-                       Y = paste0('spp', 1:10),
+                       Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                        domainvalue = "Domain")
 
 head(frame3)
@@ -118,33 +79,10 @@ solution3 <- optimStrata(method = "continuous",
 strataStructure <- summaryStrata(solution3$framenew,
                                  solution3$aggr_strata,
                                  progress=FALSE)
-head(strataStructure)
-
-eval3 <- evalSolution(frame = solution3$framenew, 
-                      outstrata = solution3$aggr_strata, 
-                      nsampl = 200,
-                      progress = FALSE) 
-
-eval3$coeff_var
-
-eval2 <- evalSolution(frame = solution2$framenew, 
-                      outstrata = solution2$aggr_strata, 
-                      nsampl = 200,
-                      progress = FALSE) 
-
-eval2$coeff_var
-
-eval1 <- evalSolution(frame = solution1$framenew, 
-                      outstrata = solution1$aggr_strata, 
-                      nsampl = 200,
-                      progress = FALSE) 
-
-eval3$coeff_var
+strataStructure
 
 colors = c('black', 'red', 'green', 'blue', 'orange', 'gold', 'brown')
-plot(Spatial_List$loc_g, pch = 16, cex = 1, 
+par(mar = c(0,0,0,0))
+plot(Spatial_List$loc_g, pch = 16, cex = 0.5, 
      col = colors[solution3$indices[,'X1']])
-plot(Spatial_List$loc_g, pch = 16, cex = 1, 
-     col = colors[solution2$indices])
-plot(Spatial_List$loc_g, pch = 16, cex = 1, 
-     col = colors[solution1$indices])
+expected_CV(strata = solution3$aggr_strata)
