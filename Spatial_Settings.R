@@ -30,7 +30,7 @@ rm(data)
 #Drop factor levels of unused Species
 spp_df = read.csv("spp_df.csv", check.names=F, header = T, row.names = 'modelno')
 
-which_spp = unlist(spp_df[modelno,-1])
+which_spp = unlist(spp_df[modelno,])
 
 Data_Geostat = subset(Data_Geostat, spp %in% names(which_spp)[which_spp])
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
