@@ -1,5 +1,5 @@
 # library(devtools)
-# devtools::install_local('C:/Users/Zack Oyafuso/Downloads/SamplingStrata-master/', upgrade = 'never', dependencies = F)
+# devtools::install_local('C:/Users/zack.oyafuso/Downloads/SamplingStrata-master/', force = T)
 library(SamplingStrata)
 library(sp)
 data("meuse")# locations (155 observed points)
@@ -53,18 +53,26 @@ solution <- optimStrata (
   errors=cv, 
   framesamp=frame,
   iter = 15,
-  pops = 10,
+  pops = 20,
+  mut_chance = 50,
   nStrata = 5,
   fitting = c(summary(lm_lead)$r.square,summary(lm_zinc)$r.square),
   range = c(kriging_lead$var_model$range[2],kriging_zinc$var_model$range[2]),
   kappa=1,
   writeFiles = FALSE,
-  showPlot = FALSE,
-  parallel = FALSE)
+  showPlot = TRUE,
+  parallel = TRUE)
+
+expected_CV(solution$aggr_strata)
 
 #Save Results
 framenew <- solution$framenew
 outstrata <- solution$aggr_strata
+
+strataStructure <- summaryStrata(solution$framenew,
+                                 solution$aggr_strata,
+                                 progress=FALSE)
+strataStructure
 
 #Plot resuts
 frameres <- SpatialPointsDataFrame(data=framenew, coords=cbind(framenew$LON,framenew$LAT) )
