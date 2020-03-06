@@ -3,6 +3,8 @@
 ## reasonable and deserves further attention.  If any of these do not look reasonable, 
 ## the model output should not be interpreted or used.
 
+rm(list = ls())
+
 library(VAST); library(mvtnorm)
 
 setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
@@ -11,7 +13,7 @@ source("plot_residuals.R")
 source("plot_factors.R")
 
 setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs')
-VAST_model = "1b-inputted covariates"
+VAST_model = "3a"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
@@ -62,7 +64,6 @@ Q = plot_quantile_diagnostic( TmbData=TmbData,
                               FileName_QQ="Q-Q_plot", 
                               FileName_Qhist="Q-Q_hist", 
                               DateFile=DateFile) 
-save(Q, file = paste0(DateFile, 'Q.RData'))
 
 ## Diagnostics for plotting residuals on a map: Finally, we visualize residuals on a map.  
 ## To do so, we first define years to plot and generate plotting inputs. useful plots by 
@@ -184,3 +185,7 @@ plot_factors( Report=Report,
 #                                        "Height"=TmbData$n_c, 
 #                                        "Res"=200, "Units"='in') )
 
+save(file = paste0(DateFile,"Diagnostics.RData"), 
+	list = c('Q', 'Cov_List', 'Enc_prob', 'Index', 'MapDetails_List',
+	         'modelno', 'plot_factors', 'plot_residuals', 'plot_settings',
+		   'Year_Set', 'Years2Include') )
