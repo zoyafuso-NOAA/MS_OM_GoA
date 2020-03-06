@@ -6,9 +6,10 @@ library(VAST)
 # Version of VAST
 rm(list = ls())
 
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
+# setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6'
+modelno = '1c'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }

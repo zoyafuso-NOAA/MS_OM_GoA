@@ -12,7 +12,7 @@ library(TMBdebug)
 #devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "2b"
+modelno = "1c"
 
 setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
 
@@ -63,18 +63,15 @@ TmbList = make_model("TmbData"=TmbData,
 Obj = TmbList[["Obj"]]
 
 ## Estimate fixed effects and predict random effects: Next, we use a gradient-based nonlinear minimizer to identify maximum likelihood estimates for fixed-effects
-
+bias_correct = T
 Opt = TMBhelper::fit_tmb( obj=Obj, 
                           lower=TmbList[["Lower"]], 
                           upper=TmbList[["Upper"]], 
                           getsd=TRUE,
                           getJointPrecision = TRUE,
                           savedir=getwd(), 
-                          bias.correct=F, 
-                          quiet = T,
-                          bias.correct.control=list(
-                            sd=F, split=NULL, 
-                            nsplit=1, vars_to_correct="Index_cyl"), 
+                          bias.correct=bias_correct, 
+                          quiet = T, 
                           newtonsteps=1 )
 
 
