@@ -59,7 +59,7 @@ settings = results = expand.grid(cv = c(0.2),
 
 ns = Save$TmbData$n_c
 
-rm(list  = ls()[!ls() %in% c('settings', 'frame', 'modelno', 'ns') ])
+# rm(list  = ls()[!ls() %in% c('settings', 'frame', 'modelno', 'ns') ])
 
 library(foreach)
 cl <- parallel::makeCluster(2)
