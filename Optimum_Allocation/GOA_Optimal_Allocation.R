@@ -3,14 +3,13 @@
 ## Method == "continous"
 #################################
 
-
 rm(list = ls())
 library(VAST); library(mvtnorm); library(SamplingStrata)
 
 setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 # setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-VAST_model = "2b"
+VAST_model = "4b"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 load("C:/Users/Zack Oyafuso/Documents/Github/MS_OM_GoA/Extrapolation_depths.RData")
@@ -35,19 +34,15 @@ frame1 <- buildFrameDF(df = df,
                        domainvalue = "Domain")
 strata1 <- buildStrataDF(frame1, progress=F)
 
-cv = list()
-for(i in 1:Save$TmbData$n_c) cv[[paste0('CV', i)]] = 0.1
-cv[['DOM']] = 'GoA'; cv[['domainvalue']]=1
-cv <- as.data.frame(cv)
-cv
 
 
-checkInput(errors = checkInput(errors = cv, 
-                               strata = strata1, 
-                               sampframe = frame1))
 
-allocation <- bethel(strata1,cv[1,])
-sum(allocation)
+# checkInput(errors = checkInput(errors = cv, 
+#                                strata = strata1, 
+#                                sampframe = frame1))
+# 
+# allocation <- bethel(strata1,cv[1,])
+# sum(allocation)
 
 frame <- buildFrameDF(df = df,
                       id = "x",
@@ -55,43 +50,51 @@ frame <- buildFrameDF(df = df,
                       Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                       domainvalue = "Domain")
 
-init_sol <- KmeansSolution2(frame=frame,
-                            errors=cv,
-                            maxclusters = 10)  
-
-nstrata <- tapply(init_sol$suggestions,
-                  init_sol$domainvalue,
-                  FUN=function(x) length(unique(x)))
-nstrata
-
 #Settings for optimizer
-settings = expand.grid(pops = c(25,50,100),
-                       minnumstr = c(10, 20),
-                       mut_change = c(0.01, 0.05, 0.1),
-                       elitism_rate = c(0.1, 0.2, 0.5))
+settings = results = expand.grid(cv = c(0.2),
+                                 pops = c(25,50,100),
+                                 minnumstr = c(25, 50),
+                                 mut_change = c(0.01, 0.05, 0.1, 0.5),
+                                 elitism_rate = c(0.1, 0.2, 0.5))
+
+ns = Save$TmbData$n_c
+
+rm(list  = ls()[!ls() %in% c('settings', 'frame', 'modelno', 'ns') ])
 
 library(foreach)
-initial_solution <- prepareSuggestion(init_sol,frame,nstrata)
-
-rm(list  = ls()[!ls() %in% c('settings', 'cv', 'frame', 
-                             'nstrata', 'initial_solution', 
-                             'modelno') ])
-
-cl <- parallel::makeCluster(6)
+cl <- parallel::makeCluster(2)
 doParallel::registerDoParallel(cl)
 
 foreach(i = 1:nrow(settings), 
         .packages = 'SamplingStrata',
-        .export = c('settings', 'cv', 'frame', 
-                    'nstrata', 'initial_solution', 'modelno') ) %do% 
+        .export = c('settings', 'frame',  'modelno', 'ns') ) %dopar% 
   {
     library(SamplingStrata)
     wd = paste0("C:/Users/Zack Oyafuso/Documents/",
-                "GitHub/MS_OM_GoA/Optimum_Allocation/model_", modelno, "/",
+                "GitHub/MS_OM_GoA/Optimum_Allocation/",
+                "model_", modelno, "/",
+                'cv_', settings$cv[i], '_', 
                 'pop_', settings$pops[i], '_',
                 'minnumstr_', settings$minnumstr[i], '_',
                 'mutchange_', settings$mut_change[i], '_',
                 'elitism_rate_', settings$elitism_rate[i], '.RData')
+    
+    cv = list()
+    for(i in 1:ns) cv[[paste0('CV', i)]] = settings$cv[i]
+    cv[['DOM']] = 'GoA'; cv[['domainvalue']]=1
+    cv <- as.data.frame(cv)
+    # cv
+    
+    init_sol <- KmeansSolution2(frame=frame,
+                                errors=cv,
+                                maxclusters = 10)  
+    
+    nstrata <- tapply(init_sol$suggestions,
+                      init_sol$domainvalue,
+                      FUN=function(x) length(unique(x)))
+    # nstrata
+    
+    initial_solution <- prepareSuggestion(init_sol,frame,nstrata)
     
     set.seed(1234 + i)
     solution <- optimStrata(method = "continuous",
@@ -103,7 +106,7 @@ foreach(i = 1:nrow(settings),
                             mut_chance = settings$mut_change[i],
                             nStrata = nstrata,
                             suggestions = initial_solution,
-                            showPlot = T,
+                            showPlot = F,
                             parallel = F)
     strataStructure <- summaryStrata(solution$framenew,
                                      solution$aggr_strata,

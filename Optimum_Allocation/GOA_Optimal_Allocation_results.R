@@ -1,16 +1,18 @@
-library(raster); library(RColorBrewer)
+library(raster); library(RColorBrewer); library(SamplingStrata)
 
 setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/')
 load('../Extrapolation_depths.RData')
 
-settings = results = expand.grid(pops = c(25,50,100),
-                                 minnumstr = c(10, 20),
-                                 mut_change = c(0.01, 0.05, 0.1),
+settings = results = expand.grid(cv = c(0.2),
+                                 pops = c(25,50,100),
+                                 minnumstr = c(25, 50),
+                                 mut_change = c(0.01, 0.05, 0.1, 0.5),
                                  elitism_rate = c(0.1, 0.2, 0.5))
-modelno = '1b'
+modelno = '4b'
 
 for(i in 1:nrow(settings)){
   wd = paste0("model_", modelno, "/",
+              'cv_0.1_', 
               'pop_', settings$pops[i], '_',
               'minnumstr_', settings$minnumstr[i], '_',
               'mutchange_', settings$mut_change[i], '_',
@@ -39,4 +41,7 @@ goa_ras =rasterize(x = goa, y = goa_ras, field = 'X1')
 
 par(mar = c(0,0,0,0))
 nstrata = nrow(strataStructure)
-plot(goa_ras, col = brewer.pal(n = nstrata, name= 'Paired'), legend = F )
+plot(goa_ras, col = brewer.pal(n = nstrata, name= 'Paired'), legend = T )
+
+expected_CV(solution$aggr_strata)
+sum(strataStructure$Allocation)
