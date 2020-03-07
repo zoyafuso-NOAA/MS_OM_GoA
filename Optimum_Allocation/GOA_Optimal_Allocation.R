@@ -51,23 +51,21 @@ frame <- buildFrameDF(df = df,
                       domainvalue = "Domain")
 
 #Settings for optimizer
-settings = results = expand.grid(cv = c(0.2),
-                                 pops = c(25,50,100),
-                                 minnumstr = c(25, 50),
-                                 mut_change = c(0.01, 0.05, 0.1, 0.5),
+settings = results = expand.grid(cv = c(0.1, 0.2, 0.3),
+                                 nstrata = c(5,10),
+                                 mut_change = c(0.01, 0.1, 0.5),
                                  elitism_rate = c(0.1, 0.2, 0.5))
 
 ns = Save$TmbData$n_c
 
-# rm(list  = ls()[!ls() %in% c('settings', 'frame', 'modelno', 'ns') ])
+rm(list  = ls()[!ls() %in% c('settings', 'frame', 'modelno', 'ns') ])
 
 library(foreach)
 cl <- parallel::makeCluster(2)
 doParallel::registerDoParallel(cl)
 
 foreach(i = 1:nrow(settings), 
-        .packages = 'SamplingStrata',
-        .export = c('settings', 'frame',  'modelno', 'ns') ) %dopar% 
+        .packages = 'SamplingStrata' ) %dopar% 
   {
     library(SamplingStrata)
     wd = paste0("C:/Users/Zack Oyafuso/Documents/",
@@ -80,14 +78,14 @@ foreach(i = 1:nrow(settings),
                 'elitism_rate_', settings$elitism_rate[i], '.RData')
     
     cv = list()
-    for(i in 1:ns) cv[[paste0('CV', i)]] = settings$cv[i]
+    for(i in 1:ns) cv[[paste0('CV', i)]] = 0.3 #settings$cv[i]
     cv[['DOM']] = 'GoA'; cv[['domainvalue']]=1
     cv <- as.data.frame(cv)
     # cv
     
     init_sol <- KmeansSolution2(frame=frame,
                                 errors=cv,
-                                maxclusters = 10)  
+                                maxclusters = 100)  
     
     nstrata <- tapply(init_sol$suggestions,
                       init_sol$domainvalue,
@@ -101,12 +99,11 @@ foreach(i = 1:nrow(settings),
                             errors = cv, 
                             framesamp = frame,
                             iter = 50,
-                            pops = settings$pops[i],
-                            minnumstr=settings$minnumstr[i],
+                            pops = 100,
                             mut_chance = settings$mut_change[i],
-                            nStrata = nstrata,
-                            suggestions = initial_solution,
-                            showPlot = F,
+                            nStrata = 5,
+                            # suggestions = initial_solution,
+                            showPlot = T,
                             parallel = F)
     strataStructure <- summaryStrata(solution$framenew,
                                      solution$aggr_strata,

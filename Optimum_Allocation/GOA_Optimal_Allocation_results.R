@@ -12,7 +12,7 @@ modelno = '4b'
 
 for(i in 1:nrow(settings)){
   wd = paste0("model_", modelno, "/",
-              'cv_0.1_', 
+              'cv_0.15_', 
               'pop_', settings$pops[i], '_',
               'minnumstr_', settings$minnumstr[i], '_',
               'mutchange_', settings$mut_change[i], '_',
@@ -24,6 +24,7 @@ for(i in 1:nrow(settings)){
 
 winner = which.min(settings$n)
 wd = paste0("model_", modelno, "/",
+            'cv_0.15_', 
             'pop_', settings$pops[winner], '_',
             'minnumstr_', settings$minnumstr[winner], '_',
             'mutchange_', settings$mut_change[winner], '_',
@@ -45,3 +46,4 @@ plot(goa_ras, col = brewer.pal(n = nstrata, name= 'Paired'), legend = T )
 
 expected_CV(solution$aggr_strata)
 sum(strataStructure$Allocation)
+
