@@ -14,7 +14,7 @@ library(marmap); library(sp); library(RANN); library(raster);
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '1b'
+modelno = '6c'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -74,7 +74,7 @@ while(neg_depths != 0){
 #############################
 ## Center depth and calculate depth^2
 #############################
-Extrapolation_List$Data_Extrap$DEPTH = scale(Extrapolation_List$Data_Extrap$depth)
+Extrapolation_List$Data_Extrap$DEPTH = scale(log(Extrapolation_List$Data_Extrap$depth))
 Extrapolation_List$Data_Extrap$DEPTH2 = Extrapolation_List$Data_Extrap$DEPTH^2
 
 #############################

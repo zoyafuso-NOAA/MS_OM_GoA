@@ -39,9 +39,10 @@ TmbData = make_data("Version"=Version,
                     "t_i"=Data_Geostat[,'Year'], 
                     "spatial_list"=Spatial_List, 
                     "Options"=Options ,
-                    formula = "Catch_KG ~ DEPTH + DEPTH2",
+                    # formula = "Catch_KG ~ DEPTH + DEPTH2",
+                    formula = "Catch_KG ~ LOG_DEPTH",
                     covariate_data = cbind(Data_Geostat[,c('Lat', 'Lon', 
-                                                           'DEPTH', 'DEPTH2',
+                                                           'LOG_DEPTH',
                                                            'Catch_KG')], 
                                            Year = NA)
 )
@@ -50,7 +51,8 @@ TmbData = make_data("Version"=Version,
 load('../Extrapolation_depths.RData')
 X_gtp = array(dim = c(TmbData$n_g,TmbData$n_t, TmbData$n_p) )
 for(i in 1:TmbData$n_t) {
-  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
+  # X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
+  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH')])
 }
 
 TmbData$X_gtp = X_gtp
@@ -69,7 +71,6 @@ Opt = TMBhelper::fit_tmb( obj=Obj,
                           lower=TmbList[["Lower"]], 
                           upper=TmbList[["Upper"]], 
                           getsd=TRUE,
-                          getJointPrecision = FALSE,
                           savedir=getwd(), 
                           bias.correct=bias_correct, 
                           quiet = T, 

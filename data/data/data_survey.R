@@ -64,7 +64,7 @@ B_R_rockfishes <- data %>% dplyr::filter(COMMON_NAME %in% c("blackspotted rockfi
 data <- as.data.frame(rbind(data, B_R_rockfishes))
 
 # scale bottom depth, provide depth^2
-data$DEPTH = scale(x = data$BOTTOM_DEPTH)
+data$DEPTH = scale(x = log(data$BOTTOM_DEPTH))
 data$DEPTH2 = data$DEPTH^2
 
 # Filter species to make it easier to import later
