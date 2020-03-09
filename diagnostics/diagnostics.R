@@ -7,13 +7,17 @@ rm(list = ls())
 
 library(VAST); library(mvtnorm)
 
-setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
+setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/')
+# setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
 source("summarize_covariance.R")
 source("plot_residuals.R")
 source("plot_factors.R")
+source("plot_maps_density.R")
+source("plot_variable_density.R")
 
-setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs')
-VAST_model = "3a"
+setwd('C:/Users/zack.oyafuso/Desktop/VAST_Runs')
+# setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs')
+VAST_model = "6"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
@@ -21,6 +25,7 @@ Opt = Save$Opt
 Report = Save$Report
 TmbData = Save$TmbData
 Obj = Save$Obj
+
 
 DateFile = paste0('diagnostics/VAST_model', VAST_model, '/')
 if(!dir.exists(DateFile)) dir.create(DateFile)

@@ -7,7 +7,7 @@ library(VAST)
 # setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6a'
+modelno = '6c'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -39,7 +39,7 @@ Data_Geostat$spp = droplevels(Data_Geostat$spp)
 ## for the model, and whether to use a grid or mesh approximation
 Method = c("Grid", "Mesh", "Spherical_mesh")[2]
 #grid_size_km = 50
-n_x = 250   # Specify number of stations (a.k.a. "knots")
+n_x = 500   # Specify number of stations (a.k.a. "knots")
 
 ## Stratification for results
 strata.limits <- data.frame(
