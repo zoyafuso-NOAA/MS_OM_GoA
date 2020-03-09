@@ -3,19 +3,17 @@ library(raster); library(RColorBrewer); library(SamplingStrata)
 setwd('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/')
 load('../Extrapolation_depths.RData')
 
-settings = results = expand.grid(cv = c(0.2),
-                                 pops = c(25,50,100),
-                                 minnumstr = c(25, 50),
-                                 mut_change = c(0.01, 0.05, 0.1, 0.5),
-                                 elitism_rate = c(0.1, 0.2, 0.5))
-modelno = '4b'
+settings = expand.grid(cv = c(0.1, 0.3),
+                       mut_change = c(0.01, 0.1, 0.5),
+                       elitism_rate = c(0.1, 0.2, 0.5))
+VAST_model = '6'
 
 for(i in 1:nrow(settings)){
-  wd = paste0("model_", modelno, "/",
-              'cv_0.15_', 
-              'pop_', settings$pops[i], '_',
-              'minnumstr_', settings$minnumstr[i], '_',
-              'mutchange_', settings$mut_change[i], '_',
+  wd = paste0("C:/Users/Zack Oyafuso/Documents/",
+              "GitHub/MS_OM_GoA/Optimum_Allocation/",
+              "model_", VAST_model, "/",
+              'cv_', settings$cv[i], '_', 
+              'mut_change_', settings$mut_change[i], '_',
               'elitism_rate_', settings$elitism_rate[i], '.RData')
   
   load(wd)
@@ -23,11 +21,12 @@ for(i in 1:nrow(settings)){
 }
 
 winner = which.min(settings$n)
-wd = paste0("model_", modelno, "/",
-            'cv_0.15_', 
-            'pop_', settings$pops[winner], '_',
-            'minnumstr_', settings$minnumstr[winner], '_',
-            'mutchange_', settings$mut_change[winner], '_',
+wd = paste0("C:/Users/Zack Oyafuso/Documents/",
+            "GitHub/MS_OM_GoA/Optimum_Allocation/",
+            "model_", VAST_model, "/",
+            'cv_', settings$cv[winner], '_', 
+            'nstrata_', settings$nstrata[winner], '_',
+            'mut_change_', settings$mut_change[winner], '_',
             'elitism_rate_', settings$elitism_rate[winner], '.RData')
 
 load(wd)
