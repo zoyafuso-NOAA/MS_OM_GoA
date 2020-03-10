@@ -16,8 +16,8 @@ Index_SDs = matrix(data = Save$Opt$SD$sd[attributes(Save$Opt$SD$value)$names == 
 
 
 {tiff(paste0('diagnostics/VAST_model', modelno, '/indices_comparison_DBE.tiff'),
-     width = 6, height = 6, units = 'in', res = 500, compression = 'lzw')
-par(mfrow = c(5,3), mar = c(1,3,2,1))
+     width = 12, height = 6, units = 'in', res = 500, compression = 'lzw')
+par(mfrow = c(3,5), mar = c(3,3,2,1))
 for(spp in (1:length(Save$Spp))[-12] ){
   
   temp_DBE = subset(GOA_DBE, SPECIES_NAME == Save$Spp[spp] & YEAR %in% Year_Set[Years2Include])
@@ -54,6 +54,6 @@ for(spp in (1:length(Save$Spp))[-12] ){
   mtext(side = 3, unique(temp_DBE$COMMON_NAME), font = 1)
   
 }
-
+plot(1, type = 'n', axes = F, ann = F); legend('center', legend = c('DBE', 'VAST'), col = c('red', 'black'), pch = 16, lty=1, cex = 3)
 dev.off()
 }

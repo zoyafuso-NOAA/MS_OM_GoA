@@ -6,7 +6,7 @@
 rm(list = ls())
 library(VAST); library(mvtnorm); library(SamplingStrata)
 
-VAST_model = "6"
+VAST_model = "6c"
 setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 # setwd('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
