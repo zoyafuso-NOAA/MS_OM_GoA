@@ -45,14 +45,14 @@ ns = Save$TmbData$n_c
 
 rm(list  = ls()[!ls() %in% c('settings', 'frame', 'VAST_model', 'ns') ])
 
-for(i in 1:nrow(settings)){
-  
-  wd = paste0("C:/Users/Zack Oyafuso/Documents/",
-              "GitHub/MS_OM_GoA/Optimum_Allocation/",
-              "model_", VAST_model, "/",
-              'cv_', settings$cv[i], '_', 
-              'mut_change_', settings$mut_change[i], '_',
-              'elitism_rate_', settings$elitism_rate[i], '.RData')
+# for(i in 1:nrow(settings)){
+#   
+#   wd = paste0("C:/Users/Zack Oyafuso/Documents/",
+#               "GitHub/MS_OM_GoA/Optimum_Allocation/",
+#               "model_", VAST_model, "/",
+#               'cv_', settings$cv[i], '_', 
+#               'mut_change_', settings$mut_change[i], '_',
+#               'elitism_rate_', settings$elitism_rate[i], '.RData')
   
   cv = list()
   for(spp in 1:ns) cv[[paste0('CV', spp)]] = settings$cv[i]
@@ -63,11 +63,11 @@ for(i in 1:nrow(settings)){
   solution <- optimStrata(method = "continuous",
                           errors = cv, 
                           framesamp = frame,
-                          iter = 50,
+                          iter = 20,
                           pops = 100,
                           elitism_rate = settings$elitism_rate[i],
                           mut_chance = settings$mut_change[i],
-                          nStrata = 10,
+                          nStrata = 7,
                           showPlot = T,
                           parallel = F)
   
@@ -75,8 +75,22 @@ for(i in 1:nrow(settings)){
                                    solution$aggr_strata,
                                    progress=FALSE)
   
-  save(list=c('strataStructure', 'solution'), file = wd)
-}
+#   save(list=c('strataStructure', 'solution'), file = wd)
+# }
 
-
-
+  library(RColorBrewer)
+  load('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Extrapolation_depths.RData')
+  
+  goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
+                               data = cbind(solution$framenew[,paste0('Y',1:ns)],
+                                            X1 = solution$indices$X1) )
+  # goa = SpatialPoints(coords = Extrapolation_depths[,c('E_km', 'N_km')] )
+  goa_ras = raster(goa, resolution = 5)
+  goa_ras =rasterize(x = goa, y = goa_ras, field = 'X1')
+  
+  par(mar = c(0,0,0,0))
+  nstrata = nrow(strataStructure)
+  plot(goa_ras, col = brewer.pal(n = nstrata, name= 'Paired'), legend = T )
+  
+  expected_CV(solution$aggr_strata)
+  sum(strataStructure$Allocation)

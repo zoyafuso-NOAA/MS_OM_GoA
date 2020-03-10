@@ -23,9 +23,19 @@ TotVar = apply(X = Ests, MARGIN = c(1,2), FUN = function(x) var(as.vector(x)) )
 Ests_means =apply(Ests, MARGIN = 1:2, mean)
 Ests_CV = sqrt(TotVar)/ Ests_means
 
-tiff("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/MeanCV_plots.tiff", width = 12, height = 7, units = 'in', res = 500, compression = 'lzw')
-par(mar = c(0,1,2,3), mfrow = c(5,6), oma = c(1,0,0,0))
+
+
+
 for(i in 1:length(Save$Spp)){
+    if(i %in% c(1, 5, 9, 13)){
+        plot_number = ceiling(i/4)
+        plot_name = paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA",
+                           "/Optimum_Allocation/MeanCV_plots", plot_number,
+                           ".tiff")
+        tiff(filename = plot_name, width = 12, height =6, units = 'in', 
+             res = 500, compression = 'lzw')
+        par(mar = c(2,2,2,4), mfrow = c(2,4), oma = c(1,0,0,0))
+    }
     temp = as.data.frame(cbind(Ests_means[,i], Ests_CV[,i]))
     names(temp) = c("Mean", 'CV')
     
@@ -60,7 +70,7 @@ for(i in 1:length(Save$Spp)){
                                                   seq(0.25, 1, 0.25), 
                                                   na.rm = T), 2), 
                           rect.col = rev(terrain.colors(4)), 
-                          cex = 0.5, 
+                          cex = 0.75, 
                           align = align, 
                           gradient = gradient)
 
@@ -75,9 +85,11 @@ plotrix::color.legend(xl = xl, yb = yb, xr = xr, yt = yt,
                                               seq(0.25, 1, 0.25), 
                                               na.rm = T), 2), 
                       rect.col = rev(terrain.colors(4)), 
-                      cex = 0.4, 
+                      cex = 0.75, 
                       align = align, 
                       gradient = gradient)
+
+if(i %in% c(4,8,12,15)) dev.off()
 }
-dev.off()
+
 
