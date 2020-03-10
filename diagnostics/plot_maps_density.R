@@ -321,7 +321,7 @@ plot_maps_density = function (plot_set = 3, Report, PlotDF, Sdreport = NULL, Tmb
                 file_name = paste0(plot_code, ifelse(Nplot > 
                   1, paste0("--", category_names[cI]), 
                   ""))
-                plot_args = plot_variable(Y_gt = Mat_xt[, Years2Include, 
+                plot_args = plot_variable_density(Y_gt = Mat_xt[, Years2Include, 
                   drop = FALSE], map_list = list(PlotDF = PlotDF, 
                   MapSizeRatio = MapSizeRatio), projargs = projargs, 
                   working_dir = working_dir, panel_labels = Year_Set[Years2Include], 
@@ -340,7 +340,7 @@ plot_maps_density = function (plot_set = 3, Report, PlotDF, Sdreport = NULL, Tmb
                 file_name = paste0(plot_code, ifelse(Nplot > 
                   1, paste0("--", Year_Set[Years2Include][tI]), 
                   ""))
-                plot_args = plot_variable(Y_gt = Mat_xc, map_list = list(PlotDF = PlotDF, 
+                plot_args = plot_variable_density(Y_gt = Mat_xc, map_list = list(PlotDF = PlotDF, 
                   MapSizeRatio = MapSizeRatio), projargs = projargs, 
                   working_dir = working_dir, panel_labels = category_names, 
                   file_name = file_name, n_cells = n_cells, ...)

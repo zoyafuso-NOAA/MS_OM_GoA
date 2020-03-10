@@ -3,7 +3,7 @@ plot_variable_density = function (Y_gt, map_list, panel_labels, projargs = "+pro
     working_dir = paste0(getwd(), "/"), Format = "png", 
     Res = 200, add = FALSE, outermargintext = c("Eastings", 
         "Northings"), zlim, col, mar = c(0, 0, 2, 0), oma = c(4, 
-        4, 0, 0), legend_x = c(0, 0.05), legend_y = c(0.05, 0.45), 
+        4, 0, 0), legend_x = c(0, 0.05), legend_y = c(0.05, 0.85), 
     cex.legend = 1, mfrow, land_color = "grey", n_cells, 
     xlim, ylim, ...) 
 {
@@ -92,7 +92,7 @@ plot_variable_density = function (Y_gt, map_list, panel_labels, projargs = "+pro
             ylim = Raster_proj@bbox[2, ]
 			
 		plot_this = unlist(Y_gt[,tI])
-		breaks_ = c(min(plot_this), 0, quantile(plot_this[plot_this>0], seq(0,1,length = 4))) 
+		breaks_ = c(min(plot_this), 0, quantile(plot_this[plot_this>0], seq(0.25,1,length = 4))) 
         image(Raster_proj, col = col, zlim = zlim, xlim = xlim, ylim = ylim, 
 			breaks = breaks_)
 			
