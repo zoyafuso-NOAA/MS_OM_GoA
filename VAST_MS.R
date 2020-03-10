@@ -12,7 +12,7 @@ library(TMBdebug)
 #devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "1c"
+modelno = "6d"
 
 setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', modelno))
 # setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
@@ -39,10 +39,10 @@ TmbData = make_data("Version"=Version,
                     "t_i"=Data_Geostat[,'Year'], 
                     "spatial_list"=Spatial_List, 
                     "Options"=Options ,
-                    # formula = "Catch_KG ~ DEPTH + DEPTH2",
-                    formula = "Catch_KG ~ LOG_DEPTH",
+                    formula = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
                     covariate_data = cbind(Data_Geostat[,c('Lat', 'Lon', 
                                                            'LOG_DEPTH',
+                                                           'LOG_DEPTH2',
                                                            'Catch_KG')], 
                                            Year = NA)
 )

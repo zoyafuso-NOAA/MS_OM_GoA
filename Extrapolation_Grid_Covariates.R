@@ -14,13 +14,12 @@ library(marmap); library(sp); library(RANN); library(raster);
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '6c'
-if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
-  dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
-}
-#setwd(paste0('VAST_output', modelno, '/'))
+modelno = '6d'
+
+setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
 load(paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
+observed_depths = read.csv('data/data/GOA_multspp.csv')$BOTTOM_DEPTH 
 
 ##################################
 ## Extract fine-scale bathymetry map 
@@ -41,13 +40,13 @@ cord.UTM <- sp::spTransform(bathymap_coord, CRS("+proj=utm +zone=5N"))
 bathymap[,c('E_km', 'N_km')] = cord.UTM@coords / 1000
 
 #####################
-## Assign bathymetry values for each extrapolation grid cell to
-## the nearest point in the bathymetry map
+## Asssign bathymetry values of extrapolation cells to the nearest
+## value in the bathymetry map
 #####################
 
 bathy_idx = RANN::nn2(query=Extrapolation_List$Data_Extrap[,c('E_km','N_km')],
                       data = bathymap[,c('E_km', 'N_km')],
-                      k = 300)$nn.idx
+                      k = 1)$nn.idx
 
 Extrapolation_List$Data_Extrap$depth = -bathymap$z[bathy_idx[,1]]
 
@@ -58,18 +57,19 @@ plot(Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], pch = '.')
 points(Extrapolation_List$Data_Extrap[Extrapolation_List$Data_Extrap$depth <=0,c('E_km', 'N_km')], pch = 16, col = 'red')
 
 #####################
-## Assign nearest bathymetry values to those grid cells where depths are 
-## negative. This involes an iterative while loop
+## Assign negative bathymetry values (presumably land) to the shallowest
+## bathymetry observed in the dataset
 #####################
+Extrapolation_List$Data_Extrap$depth[Extrapolation_List$Data_Extrap$depth <= 0] = min(observed_depths)
 
-neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
-k = 2
-while(neg_depths != 0){
-  idxs = which(Extrapolation_List$Data_Extrap$depth <= 0)
-  Extrapolation_List$Data_Extrap$depth[idxs] = -bathymap$z[bathy_idx[idxs,k]]
-  neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
-  k = k + 1
-}
+# neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
+# k = 2
+# while(neg_depths != 0){
+#   idxs = which(Extrapolation_List$Data_Extrap$depth <= 0)
+#   Extrapolation_List$Data_Extrap$depth[idxs] = -bathymap$z[bathy_idx[idxs,k]]
+#   neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
+#   k = k + 1
+# }
 
 #############################
 ## Center depth and calculate depth^2
