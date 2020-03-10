@@ -1,8 +1,8 @@
 rm(list = ls())
 
-GOA_DBE = readRDS(file = "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/GOA_biomass_indices_wnames.rds")
+GOA_DBE = readRDS(file = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/GOA_biomass_indices_wnames.rds")
 
-setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/")
+setwd("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/")
 modelno = '6c'
 
 load(file = paste0('VAST_output', modelno, '/', 'VAST_MS_GoA_Run.RData'))
@@ -15,7 +15,8 @@ Index_Ests = Save$Report$Index_cyl[,Years2Include,1]
 Index_SDs = matrix(data = Save$Opt$SD$sd[attributes(Save$Opt$SD$value)$names == "Index_cyl"], nrow = length(Save$Spp))[,Years2Include]
 
 
-
+{tiff(paste0('diagnostics/VAST_model', modelno, '/indices_comparison_DBE.tiff'),
+     width = 6, height = 6, units = 'in', res = 500, compression = 'lzw')
 par(mfrow = c(5,3), mar = c(1,3,2,1))
 for(spp in (1:length(Save$Spp))[-12] ){
   
@@ -54,3 +55,5 @@ for(spp in (1:length(Save$Spp))[-12] ){
   
 }
 
+dev.off()
+}
