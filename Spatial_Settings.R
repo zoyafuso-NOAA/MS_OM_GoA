@@ -4,10 +4,10 @@
 rm(list = ls())
 
 library(VAST)
-# setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
+# setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6d'
+modelno = '6e'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
