@@ -4,7 +4,8 @@
 #################################
 
 rm(list = ls())
-library(VAST); library(mvtnorm); library(SamplingStrata); library(sp)
+library(VAST); 
+library(mvtnorm); library(SamplingStrata); library(sp)
 library(RColorBrewer); library(raster)
 
 VAST_model = "6c"
@@ -46,9 +47,15 @@ frame <- buildFrameDF(df = df,
                       domainvalue = "Domain")
 
 #Settings for optimizer
-settings = expand.grid(cv = c(0.3),
+settings = expand.grid(cv = c(0.2),
                        mut_change = c(0.01, 0.1, 0.5),
-                       elitism_rate = c(0.1, 0.2, 0.5))
+                       elitism_rate = c(0.1, 0.2, 0.5),
+                       dom1 = 2:5,
+                       dom2 = 2:5,
+                       dom3 = 2:5,
+                       dom4 = 2:5,
+                       dom5 = 2.5)
+
 
 ns = Save$TmbData$n_c
 domains = unique(df$Domain)
@@ -75,11 +82,11 @@ set.seed(1234 + i)
 solution <- optimStrata(method = "continuous",
                         errors = cv, 
                         framesamp = frame,
-                        iter = 20,
-                        pops = 50,
+                        iter = 50,
+                        pops = 100,
                         elitism_rate = settings$elitism_rate[i],
                         mut_chance = settings$mut_change[i],
-                        nStrata = rep(3, ndom),
+                        nStrata = rep(5, ndom),
                         showPlot = T,
                         parallel = T)
 
