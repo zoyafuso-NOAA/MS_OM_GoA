@@ -3,7 +3,7 @@ rm(list = ls())
 GOA_DBE = readRDS(file = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/GOA_biomass_indices_wnames.rds")
 
 setwd("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/")
-modelno = '6c'
+modelno = '6d'
 
 load(file = paste0('VAST_output', modelno, '/', 'VAST_MS_GoA_Run.RData'))
 load(file = paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
