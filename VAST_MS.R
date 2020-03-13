@@ -12,7 +12,7 @@ library(TMBdebug)
 #devtools::install_local("C:/Users/Zack Oyafuso/Downloads/FishStatsUtils-2.5.0")
 library(VAST)
 
-modelno = "6e"
+modelno = "6d"
 
 # setwd(paste0('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/VAST_output', modelno))
 setwd(paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/VAST_output', modelno))
@@ -39,10 +39,10 @@ TmbData = make_data("Version"=Version,
                     "t_i"=Data_Geostat[,'Year'], 
                     "spatial_list"=Spatial_List, 
                     "Options"=Options ,
-                    formula = "Catch_KG ~ LOG_DEPTH",
+                    formula = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
                     covariate_data = cbind(Data_Geostat[,c('Lat', 'Lon', 
                                                            'LOG_DEPTH',
-                                                           # 'LOG_DEPTH2',
+                                                           'LOG_DEPTH2',
                                                            'Catch_KG')], 
                                            Year = NA)
 )
@@ -51,8 +51,8 @@ TmbData = make_data("Version"=Version,
 load('../Extrapolation_depths.RData')
 X_gtp = array(dim = c(TmbData$n_g,TmbData$n_t, TmbData$n_p) )
 for(i in 1:TmbData$n_t) {
-  # X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
-  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH')])
+  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
+  #X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH')])
 }
 
 TmbData$X_gtp = X_gtp
