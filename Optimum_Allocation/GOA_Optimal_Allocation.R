@@ -2,13 +2,13 @@
 ## Parallelize the Optimization Process
 ## Method == "continous"
 #################################
-
 rm(list = ls())
+
 library(VAST); 
 library(mvtnorm); library(SamplingStrata); library(sp)
 library(RColorBrewer); library(raster)
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[1]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
 
 VAST_wd = c('/Users/zackoyafuso/Google Drive/VAST_Runs/',
             'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/',
@@ -31,12 +31,15 @@ load(paste0(VAST_wd, 'VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
 
 load(paste0(c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
-       "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
-       'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/'),
-       'Extrapolation_depths.RData')[which_machine])
+              "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
+              'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/'),
+            'Extrapolation_depths.RData')[which_machine])
 
 Year_Set = seq(min(Data_Geostat[,'Year']),max(Data_Geostat[,'Year']))
 Years2Include = which( Year_Set %in% sort(unique(Data_Geostat[,'Year'])))
+NTime = length(Years2Include)
+
+df = df_raw = NULL
 
 df = cbind(
   data.frame(Domain = cut(x = Extrapolation_depths$Lon, 
@@ -47,8 +50,8 @@ df = cbind(
              lat = Extrapolation_depths$N_km,
              lon = Extrapolation_depths$E_km - min(Extrapolation_depths$E_km),
              depth = Extrapolation_depths$depth),
-  apply(X = Save$Report$Index_gcyl[,,Years2Include,], MARGIN = 1:2, FUN = mean)
-)
+  apply(X=Save$Report$Index_gcyl[,,Years2Include,], MARGIN = 1:2, FUN = mean ) )
+
 names(df)[-(1:5)] = gsub(x = Save$Spp, pattern = ' ', replacement = '_')
 
 frame <- buildFrameDF(df = df,
@@ -57,8 +60,28 @@ frame <- buildFrameDF(df = df,
                       Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                       domainvalue = "Domain")
 
+for(iT in 1:NTime){
+  df_raw = rbind(df_raw, cbind(
+    data.frame(Domain = cut(x = Extrapolation_depths$Lon, 
+                                 breaks = c(-171, -159, -154, -147, -140, -130), 
+                                 labels = paste(1:5)),
+               x = 1:Save$TmbData$n_g,
+               year = iT,
+               lat = Extrapolation_depths$N_km,
+               lon = Extrapolation_depths$E_km - min(Extrapolation_depths$E_km),
+               depth = Extrapolation_depths$depth),
+    Save$Report$Index_gcyl[,,Years2Include[iT],] )
+  )
+}
+names(df_raw)[-(1:6)] = gsub(x = Save$Spp, pattern = ' ', replacement = '_')
+frame_raw <- buildFrameDF(df = df_raw,
+                      id = "x",
+                      X = c("depth"),#, 'lon'),
+                      Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
+                      domainvalue = "Domain")
+
 #Settings for optimizer
-settings = expand.grid(cv = c(0.2),
+settings = expand.grid(cv = c(0.3),
                        mut_change = c(0.01, 0.1, 0.5),
                        elitism_rate = c(0.1, 0.2, 0.5),
                        dom1 = 2:5,
@@ -101,11 +124,12 @@ set.seed(1234 + i)
 solution <- optimStrata(method = "continuous",
                         errors = cv, 
                         framesamp = frame,
-                        iter = 50,
-                        pops = 100,
+                        iter = 20,
+                        pops = 10,
                         elitism_rate = settings$elitism_rate[i],
                         mut_chance = settings$mut_change[i],
-                        nStrata = unlist(settings[i, paste0('dom',1:ndom)]),
+                        nStrata = rep(3, ndom),
+                        # nStrata = unlist(settings[i, paste0('dom',1:ndom)]),
                         showPlot = F,
                         parallel = T)
 
