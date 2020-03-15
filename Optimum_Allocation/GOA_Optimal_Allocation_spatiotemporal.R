@@ -107,7 +107,7 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-for(ii in 1:nrow(settings)){
+for(ii in 2:nrow(settings)){
   
   par(mfrow = c(3,2))
   plot_this = (ii%%10 == 0)
@@ -138,10 +138,9 @@ for(ii in 1:nrow(settings)){
   
   res_df = cbind(res_df, solution$indices$X1)
   
-  if(i %% 1 == 0) {
+  if(ii %% 1 == 0) {
     save(list = c('strata_list', 'res_df'), 
-         file = paste0(output_wd, '/Optimum_Allocation/model_', 
-                       VAST_model, '/optimization_spatiotemporal.RData'))
+         file = paste0(output_wd, '/optimization_spatiotemporal.RData'))
   }
 }
 
