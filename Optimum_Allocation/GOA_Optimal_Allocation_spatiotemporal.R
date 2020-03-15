@@ -90,58 +90,58 @@ frame_raw <- buildFrameDF(df = df_raw,
 
 #Settings for optimizer
 settings = expand.grid(cv = c(0.3),
-                       mut_change = c(0.01, 0.1),
-                       elitism_rate = c(0.1, 0.2),
-                       dom1 = 2:4,
-                       dom2 = 2:4,
-                       dom3 = 2:4,
-                       dom4 = 2:4,
-                       dom5 = 2:4)
-
+                       mut_change = c(0.1),
+                       elitism_rate = c(0.2),
+                       dom = c(2:5))
 
 ns = Save$TmbData$n_c
 domains = unique(df$Domain)
 ndom_ = length(unique(frame$domainvalue))
+
 
 rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
             'Method', 'modelno', 'n_x', 'which_spp', 'Year_Set', 
             'Years2Include', 'Data_Geostat', 'df', 'Extrapolation_List',
             'gulf_of_alaska_grid', 'ifile', 'iT'))
 
-# for(i in which_runs){
-#   
-#   wd = paste0("C:/Users/Zack Oyafuso/Documents/",
-#               "GitHub/MS_OM_GoA/Optimum_Allocation/",
-#               "model_", VAST_model, "/",
-#               'cv_', settings$cv[i], '_', 
-#               'mut_change_', settings$mut_change[i], '_',
-#               'elitism_rate_', settings$elitism_rate[i], '.RData')
+res_df = as.matrix(frame[,c('id', 'domainvalue')])
+strata_list = list()
 
-ii=1
-cv = list()
-for(spp in 1:ns) cv[[paste0('CV', spp)]] = rep(settings$cv[ii], ndom_)
-cv[['DOM']] = levels(domains)
-cv[['domainvalue']] = as.numeric(domains)
-cv <- as.data.frame(cv)
-
-set.seed(1234 + ii)
-solution <- optimStrata(method = "continuous",
-                        errors = cv, 
-                        framesamp = frame,
-                        iter = 20,
-                        pops = 10,
-                        elitism_rate = settings$elitism_rate[ii],
-                        mut_chance = settings$mut_change[ii],
-                        # nStrata = rep(5, ndom_),
-                        nStrata = unlist(settings[ii, paste0('dom',1:ndom_)]),
-                        showPlot = T,
-                        parallel = T,
-                        cores = 2)
-
-strataStructure <- summaryStrata(solution$framenew,
-                                 solution$aggr_strata,
-                                 progress=FALSE)
-# expected_CV(strata = solution$aggr_strata)
-#   save(list=c('strataStructure', 'solution'), file = wd)
-# }
+for(ii in 1:nrow(settings)){
+  
+  par(mfrow = c(3,2))
+  plot_this = (ii%%10 == 0)
+  
+  cv = list()
+  for(spp in 1:ns) cv[[paste0('CV', spp)]] = rep(settings$cv[ii], ndom_)
+  cv[['DOM']] = levels(domains)
+  cv[['domainvalue']] = as.numeric(domains)
+  cv <- as.data.frame(cv)
+  
+  set.seed(1234 + ii)
+  solution <- optimStrata(method = "continuous",
+                          errors = cv, 
+                          framesamp = frame,
+                          iter = 100,
+                          pops = 10,
+                          elitism_rate = settings$elitism_rate[ii],
+                          mut_chance = settings$mut_change[ii],
+                          # nStrata = rep(5, ndom_),
+                          nStrata = rep(settings$dom[ii],ndom_),
+                          showPlot = plot_this,
+                          parallel = T,
+                          cores = 2)
+  
+  strata_list[[ii]] =  summaryStrata(solution$framenew,
+                                    solution$aggr_strata,
+                                    progress=FALSE) 
+  
+  res_df = cbind(res_df, solution$indices$X1)
+  
+  if(i %% 1 == 0) {
+    save(list = c('strata_list', 'res_df'), 
+         file = paste0(output_wd, '/Optimum_Allocation/model_', 
+                       VAST_model, '/optimization_spatiotemporal.RData'))
+  }
+}
 
