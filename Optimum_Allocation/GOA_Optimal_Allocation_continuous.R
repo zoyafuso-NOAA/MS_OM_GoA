@@ -82,8 +82,8 @@ frame_raw <- buildFrameDF(df = df_raw,
 
 #Settings for optimizer
 settings = expand.grid(cv = c(0.3),
-                       mut_change = c(0.01, 0.1),
-                       elitism_rate = c(0.1, 0.2),
+                       mut_change = c(0.1),
+                       elitism_rate = c(0.2),
                        dom1 = 2:4,
                        dom2 = 2:4,
                        dom3 = 2:4,
@@ -116,8 +116,8 @@ for(i in 11:nrow(settings)){
   solution <- optimStrata(method = "continuous",
                           errors = cv, 
                           framesamp = frame,
-                          iter = 50,
-                          pops = 50,
+                          iter = 30,
+                          pops = 30,
                           elitism_rate = settings$elitism_rate[i],
                           mut_chance = settings$mut_change[i],
                           nStrata = unlist(settings[i, paste0('dom',1:ndom)]),
@@ -132,7 +132,7 @@ for(i in 11:nrow(settings)){
                                     solution$aggr_strata,
                                     progress=FALSE) 
   
-  res_df = cbind(res_df, solution$indices$X1)
+  res_df = cbind(res_df, solution$framenew$STRATO)
   
   if(i %% 10 == 0) {
     save(list = c('strata_list', 'res_df'), 
