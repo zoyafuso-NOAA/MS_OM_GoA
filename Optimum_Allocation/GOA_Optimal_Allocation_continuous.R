@@ -102,7 +102,7 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-for(i in 11:nrow(settings)){
+for(i in 1:nrow(settings)){
   par(mfrow = c(3,2))
   plot_this = (i%%10 == 0)
   
@@ -125,9 +125,11 @@ for(i in 11:nrow(settings)){
                           writeFiles = F,
                           parallel = T)
   
-  plot(0, type = 'n', axes = F, ann = F)
-  text(1,1, paste('Iteration', i), cex = 1.5)
-  
+  if(plot_this){
+    plot(0, type = 'n', axes = F, ann = F)
+    text(1,1, paste('Iteration', i), cex = 1.5)
+  }
+
   strata_list[[i]] =  summaryStrata(solution$framenew,
                                     solution$aggr_strata,
                                     progress=FALSE) 
