@@ -122,7 +122,7 @@ for(ii in 2:nrow(settings)){
   solution <- optimStrata(method = "continuous",
                           errors = cv, 
                           framesamp = frame,
-                          iter = 100,
+                          iter = 50,
                           pops = 10,
                           elitism_rate = settings$elitism_rate[ii],
                           mut_chance = settings$mut_change[ii],
@@ -136,7 +136,7 @@ for(ii in 2:nrow(settings)){
                                     solution$aggr_strata,
                                     progress=FALSE) 
   
-  res_df = cbind(res_df, solution$indices$X1)
+  res_df = cbind(res_df, solution$framenew$STRATO)
   
   if(ii %% 1 == 0) {
     save(list = c('strata_list', 'res_df'), 
