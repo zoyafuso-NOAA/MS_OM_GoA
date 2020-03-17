@@ -1,7 +1,8 @@
 library(raster); library(RColorBrewer); library(SamplingStrata)
 
 which_machine = c('Zack_MAC' = 1)
-result_wd = c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/')[1]
+result_wd = c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/', 
+              'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/')[2]
 
 setwd(result_wd)
 load('../Extrapolation_depths.RData')
@@ -11,16 +12,16 @@ load(paste0('model_', VAST_model, '/optimization.RData'))
 res_df = as.data.frame(res_df)
 sample_sizes = sapply(strata_list, FUN = function(x) sum(x$Allocation))
 
-winner = 3#which.min(sample_sizes)
+winner = which.min(sample_sizes)
 
 ns = 15
 ndom = 5
 
 goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
-                             data = data.frame(X1=res_df[,paste0('V',winner)],
+                             data = data.frame(X1=res_df[,paste0('V',winner+2)],
                                                domainvalue = res_df$domainvalue) )
 
-{tiff('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/solution_map.tiff', res = 200, width = 190, height = 200, units = 'mm',
+{tiff('solution_map.tiff', res = 200, width = 190, height = 200, units = 'mm',
       compression = 'lzw')
   par(mfrow = c(3,2), oma = rep(1,4), family = 'serif' )
   
@@ -28,18 +29,19 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
   for(idom in 1:ndom){
     goa_ras = raster(subset(goa, domainvalue == idom ), 
                      resolution = 5)
-    goa_ras =rasterize(x = goa, y = goa_ras, field = 'X1')
+    goa_ras =rasterize(x = subset(goa, domainvalue == idom ), 
+                       y = goa_ras, field = 'X1')
     
     colorRamp = colorRampPalette(
       
-      list(c('yellow', 'red', 'brown'),
+      list(c('grey', 'yellow', 'red', 'brown'),
            c('grey', 'yellow', 'gold'),
-           c('lawngreen', 'green', 'darkgreen'),
-           c('grey', 'blue', 'darkblue'),
+           c('grey', 'lawngreen', 'green', 'darkgreen'),
+           c('grey', 'cyan','blue', 'darkblue'),
            c('grey', 'purple', 'darkorchid4'))[[idom]]
     )(10)
     
-    temp_df = subset(strata_list[[376]], Domain == idom)
+    temp_df = subset(strata_list[[winner]], Domain == idom)
     nstrata = nrow(temp_df)
     
     par(mar = c(0,0,0,0))
@@ -65,7 +67,7 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
            y = par()$usr[3]+yrange*c(0.975,0.975,0.275,0.98,0.975)[idom],
            legend = legend_label, bty = 'n', pt.cex = 3,
            title = paste0('Region ', idom),
-           col = colorRamp[c(10,7,3)], pch = 15, cex = 0.9)
+           col = colorRamp[c(10,7,3,1)[1:nstrata]], pch = 15, cex = 0.9)
   }
   
   par( mar = c(0,0,0,0) )
@@ -81,7 +83,7 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
   text(x = par()$usr[1]+xrange*0.35,
        y = par()$usr[3]+yrange*0.85,
        paste0('Optimal Sample Size: ', 
-              sum(strata_list[[376]]$Allocation), '\n',
+              sum(strata_list[[winner]]$Allocation), '\n',
               'CV constraint: ', unique(0.3)*100, '%'),
        cex = 2)
   
