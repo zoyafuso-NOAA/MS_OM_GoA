@@ -102,7 +102,7 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-for(i in 161:nrow(settings)){
+for(i in 1:nrow(settings)){
   par(mfrow = c(3,2))
   plot_this = (i%%10 == 0)
   

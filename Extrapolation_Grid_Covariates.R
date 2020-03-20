@@ -11,12 +11,15 @@ setwd( 'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 #################################
 library(marmap); library(sp); library(RANN); library(raster);
 
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
+
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '6d'
+modelno = '6g'
 
-setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
+setwd( c('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/',
+         'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')[which_machine] )
 
 load(paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
 observed_depths = read.csv('data/data/GOA_multspp.csv')$BOTTOM_DEPTH 
@@ -60,7 +63,7 @@ points(Extrapolation_List$Data_Extrap[Extrapolation_List$Data_Extrap$depth <=0,c
 ## Assign negative bathymetry values (presumably land) to the shallowest
 ## bathymetry observed in the dataset
 #####################
-Extrapolation_List$Data_Extrap$depth[Extrapolation_List$Data_Extrap$depth <= 0] = min(observed_depths)
+Extrapolation_List$Data_Extrap$depth[Extrapolation_List$Data_Extrap$depth <= min(observed_depths)] = min(observed_depths)
 
 # neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
 # k = 2
@@ -98,6 +101,5 @@ plot(test, axes = F, legend = F)
 ##########################
 Extrapolation_depths = Extrapolation_List$Data_Extrap
 
-save(list = c("Extrapolation_depths"), 
-     file = 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/Extrapolation_depths.RData')
+save(list = c("Extrapolation_depths"), file = 'Extrapolation_depths.RData')
 

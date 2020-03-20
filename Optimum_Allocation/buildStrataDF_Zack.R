@@ -121,6 +121,7 @@ buildStrataDF <- function(dataset,
   ## X1 values of the dataset
   ##################################
   dataset_raw$X1 = dataset$X1[match(dataset_raw$ID, dataset$ID)]
+  dataset_raw$X2 = dataset$X2[match(dataset_raw$ID, dataset$ID)]
   
   for (d in (levels(dataset$DOMAINVALUE))) {
     if (progress == TRUE) Sys.sleep(0.1)
