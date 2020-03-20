@@ -5,14 +5,13 @@
 # Author: Giulio Barcaroli
 # Date: October 2019
 # ----------------------------------------------------
-
-
 buildStrataDF <- function(dataset, 
+                          ############ Zack #############
                           dataset_raw = frame_raw,
+                          ############ Zack #############
                           model=NULL, 
                           progress=TRUE,
                           verbose=TRUE) {
-  # stop()
   # stdev1 is for sampling data
   stdev1 <- function(x, w) {
     mx <- sum(x * w)/sum(w)
@@ -65,9 +64,7 @@ buildStrataDF <- function(dataset,
   }
   colnames(dataset) <- toupper(colnames(dataset))
   colnames(dataset_raw) <- toupper(colnames(dataset_raw))
-  
   # if (is.factor(dataset$DOMAINVALUE)) levels(dataset$DOMAINVALUE) <- levels(droplevels(dataset$DOMAINVALUE))
-  
   nvarX <- length(grep("X", names(dataset)))
   nvarY <- length(grep("Y", names(dataset)))
   if (length(grep("WEIGHT", names(dataset))) == 1) {
@@ -103,7 +100,10 @@ buildStrataDF <- function(dataset,
   }
   #--------------------------------------------------------- 
   dataset$DOMAINVALUE <- factor(dataset$DOMAINVALUE)
+  
+  ############ Zack #############
   dataset_raw$DOMAINVALUE = factor(dataset_raw$DOMAINVALUE)
+  ############ Zack #############
   
   # dataset$DOMAINVALUE <- droplevels(dataset$DOMAINVALUE)
   numdom <- length(levels(dataset$DOMAINVALUE))
@@ -116,12 +116,15 @@ buildStrataDF <- function(dataset,
   # for (d in unique(dataset$DOMAINVALUE)) {
   # dataset$DOMAINVALUE <- as.numeric(dataset$DOMAINVALUE)
   
+  ############ Zack #############
   ##################################
   ## Change X1 values of dataset_raw based on the 
   ## X1 values of the dataset
   ##################################
   dataset_raw$X1 = dataset$X1[match(dataset_raw$ID, dataset$ID)]
   dataset_raw$X2 = dataset$X2[match(dataset_raw$ID, dataset$ID)]
+  ############ Zack #############
+  
   
   for (d in (levels(dataset$DOMAINVALUE))) {
     if (progress == TRUE) Sys.sleep(0.1)
@@ -131,8 +134,9 @@ buildStrataDF <- function(dataset,
     # dom <- levels(as.factor(dataset$DOMAINVALUE))[d]
     dom <- d
     domain <- dataset[dataset$DOMAINVALUE == dom, ]
+    ############ Zack #############
     domain_raw <- dataset_raw[dataset_raw$DOMAINVALUE == dom, ]
-    
+    ############ Zack #############
     listX <- NULL
     namesX <- NULL
     for (i in 1:nvarX) {
@@ -151,6 +155,7 @@ buildStrataDF <- function(dataset,
                   ",sep='*'))", sep = "")
     eval(parse(text = stmt))
     
+    ############ Zack #############
     listX <- NULL
     namesX <- NULL
     for (i in 1:nvarX) {
@@ -162,6 +167,8 @@ buildStrataDF <- function(dataset,
     stmt <- paste("domain_raw$STRATO <- as.factor(paste(", listX, 
                   ",sep='*'))", sep = "")
     eval(parse(text = stmt))
+    ############ Zack #############
+    
     if (!is.null(dataset$COST)) {
       cost <- tapply(domain$WEIGHT * domain$COST,domain$STRATO,sum) / tapply(domain$WEIGHT,domain$STRATO,sum)
     }
@@ -169,6 +176,7 @@ buildStrataDF <- function(dataset,
       WEIGHT <- NULL
       STRATO <- NULL
       Y <- NULL
+      ############ Zack #############
       stmt <- paste("Y <- domain_raw$Y", i, "[!is.na(domain_raw$Y", 
                     i, ")]", sep = "")
       eval(parse(text = stmt))
@@ -181,6 +189,7 @@ buildStrataDF <- function(dataset,
       eval(parse(text = stmt))
       stmt <- paste("STRATO <- domain_raw$STRATO[!is.na(domain_raw$Y", 
                     i, ")]", sep = "")
+      ############ Zack #############
       eval(parse(text = stmt))
       STRATO <- factor(STRATO)
       # Computation of M and S without model --------------------------
@@ -188,17 +197,24 @@ buildStrataDF <- function(dataset,
         stmt <- paste("M", i, " <- tapply(WEIGHT * Y,STRATO,sum) / tapply(WEIGHT,STRATO,sum)", sep = "")
         eval(parse(text = stmt))
         samp <- NULL
+        ############ Zack #############
         samp_raw= NULL
+        ############ Zack #############
         stmt <- paste("samp <- domain[!is.na(domain$Y", i, "),]", sep = "")
         eval(parse(text = stmt))
+        
+        ############ Zack #############
         stmt <- paste("samp_raw <- domain_raw[!is.na(domain_raw$Y", i, "),]", sep = "")
         eval(parse(text = stmt))
+        ############ Zack #############
         
         l.split <- split(samp, samp$STRATO, drop = TRUE)
+        ############ Zack #############
         l.split_raw =split(samp_raw, samp_raw$STRATO, drop = TRUE)
         stmt <- paste("S", i, " <- sapply(l.split_raw, function(df,x,w) ", 
                       stdev, "(df[,x],df[,w]), x='Y", i, "', w='WEIGHT')", 
                       sep = "")
+        ############ Zack #############
         eval(parse(text = stmt))
       }
       if (!is.null(model)) {

@@ -8,11 +8,11 @@ library(VAST);
 library(mvtnorm); library(SamplingStrata); library(sp)
 library(RColorBrewer); library(raster)
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
 
 VAST_wd = c('/Users/zackoyafuso/Google Drive/VAST_Runs/',
             'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/',
-            'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine]
+            'C:/Users/zack.oyafuso/Desktop/VAST_Runs/')[which_machine]
 
 VAST_model = "6g"
 output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
@@ -20,7 +20,7 @@ output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
               paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                      "Optimum_Allocation/model_", VAST_model),
               paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model))[which_machine]
+                     "Optimum_ALlocation/model_", VAST_model))[which_machine]
 
 setwd(VAST_wd)
 
@@ -76,10 +76,11 @@ frame_raw <- buildFrameDF(df = df_raw,
                           domainvalue = "Domain")
 
 #Settings for optimizer
-settings = expand.grid(cv = c(0.3),
+settings = expand.grid(cv = c(0.2, 0.15),
                        mut_change = c(0.1),
                        elitism_rate = c(0.2),
-                       nstata = c(5,10,15,20,25))
+                       nstata = c(5,7,10),
+                       iter = 1:10)
 
 ns = Save$TmbData$n_c
 
