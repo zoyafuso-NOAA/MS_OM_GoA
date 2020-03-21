@@ -16,7 +16,7 @@ source("plot_variable_density.R")
 
 # setwd('C:/Users/zack.oyafuso/Desktop/VAST_Runs')
 setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs')
-VAST_model = "6f"
+VAST_model = "6h"
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
 load(paste0('VAST_output',VAST_model,'/Spatial_Settings.RData'))
 
