@@ -12,7 +12,7 @@ for(ifile in dir('C:/Users/Zack Oyafuso/Downloads/SamplingStrata-master/R', full
   source(ifile)
 source('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/buildStrataDF_Zack.R')
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
 
 VAST_wd = c('/Users/zackoyafuso/Google Drive/VAST_Runs/',
             'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/',
@@ -97,9 +97,9 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-iter_range = unlist(list('Zack_MAC'=1, 'Zack_PC' =1:33, 'Zack_GI_PC'=3)[which_machine])
+iter_range = unlist(list('Zack_MAC'=1, 'Zack_PC' =34:100, 'Zack_GI_PC'=101:170, 'VM' = 171:240)[which_machine])
 
-for(ii in 1:nrow(settings)){
+for(ii in iter_range){
   
   cv = list()
   for(spp in 1:ns) cv[[paste0('CV', spp)]] = settings$cv[ii]
