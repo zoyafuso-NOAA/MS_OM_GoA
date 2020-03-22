@@ -3,18 +3,14 @@
 ## Method == "continous"
 #################################
 rm(list = ls())
-# library(SamplingStrata);
-library(memoise); library(doParallel); library(foreach); library(iterators); library(parallel); library(pbapply); library(formattable)
+library(VAST);  library(mvtnorm); library(sp); library(RColorBrewer); 
+library(raster)
+library(memoise); library(doParallel); library(foreach); library(iterators); 
+library(parallel); library(pbapply); library(formattable)
 
 for(ifile in dir('C:/Users/Zack Oyafuso/Downloads/SamplingStrata-master/R', full.names = T))
   source(ifile)
 source('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/buildStrataDF_Zack.R')
-
-library(VAST); 
-library(mvtnorm); 
-# 
-library(sp)
-library(RColorBrewer); library(raster)
 
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
 
@@ -101,9 +97,9 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
+iter_range = unlist(list('Zack_MAC'=1, 'Zack_PC' =1:33, 'Zack_GI_PC'=3)[which_machine])
+
 for(ii in 1:nrow(settings)){
-  
-  # par(mfrow = c(2,1))
   
   cv = list()
   for(spp in 1:ns) cv[[paste0('CV', spp)]] = settings$cv[ii]
@@ -131,7 +127,8 @@ for(ii in 1:nrow(settings)){
   
   save(list = c('strata_list', 'res_df', 'settings', 
                 'frame', 'ns', 'NTime', 'VAST_model'), 
-       file = paste0(output_wd, '/optimization_spatiotemporal.RData'))
+       file = paste0(output_wd, '/optimization_spatiotemporal_',
+                     min(iter_range), '-', ii,'.RData') )
   
   #Plot
   goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
