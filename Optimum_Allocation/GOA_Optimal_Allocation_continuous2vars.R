@@ -77,8 +77,8 @@ frame_raw <- buildFrameDF(df = df_raw,
 
 #Settings for optimizer
 settings = expand.grid(cv = c(0.2, 0.15),
-                       mut_change = c(0.1),
-                       elitism_rate = c(0.2),
+                       mut_change = c(0.1, 0.01),
+                       elitism_rate = c(0.2, 0.1),
                        nstata = c(5,7,10),
                        iter = 1:10)
 
@@ -92,7 +92,7 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-for(i in 2:nrow(settings)){
+for(i in 1:nrow(settings)){
   par(mfrow = c(2,1))
   
   cv = list()
@@ -110,7 +110,7 @@ for(i in 2:nrow(settings)){
                           elitism_rate = settings$elitism_rate[i],
                           mut_chance = settings$mut_change[i],
                           nStrata = settings$nstata[i],
-                          showPlot = F,
+                          showPlot = T,
                           writeFiles = F,
                           parallel = F)
   
@@ -120,7 +120,7 @@ for(i in 2:nrow(settings)){
   
   res_df = cbind(res_df, solution$framenew$STRATO)
   
-  save(list = c('strata_list', 'res_df'), 
+  save(list = c('strata_list', 'res_df', 'settings', 'ns', 'frame'), 
        file = paste0(output_wd, '/optimization.RData'))
   
   #Plot
@@ -134,7 +134,3 @@ for(i in 2:nrow(settings)){
   plot(goa_ras, col = terrain.colors(10)[-10], axes = F)
 }
 
-plot(goa_ras, col = 'white', axes = F)
-goa_ras = raster(subset(goa, Str_no == 1), resolution = 5)
-goa_ras =rasterize(x = subset(goa, Str_no == 1), y = goa_ras, field = 'Str_no')
-plot(goa_ras, col = 'blue')
