@@ -40,8 +40,8 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
   
   xrange = diff(par()$usr[1:2])
   yrange = diff(par()$usr[3:4])
-  text(x = par()$usr[1]+xrange*0.35,
-       y = par()$usr[3]+yrange*0.85,
+  text(x = par()$usr[1]+xrange*0.725,
+       y = par()$usr[3]+yrange*0.475,
        paste0('Optimal Sample Size: ', 
               sum(temp_df$Allocation), '\n',
               'CV constraint: ', settings$cv[winner]*100, '%'),

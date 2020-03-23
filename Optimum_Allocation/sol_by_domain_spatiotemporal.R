@@ -7,14 +7,13 @@ result_wd = c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/
 setwd(result_wd)
 load('../Extrapolation_depths.RData')
 VAST_model = '6g'
-load(paste0('model_', VAST_model, '/optimization_spatiotemporal.RData'))
+load(paste0('model_', VAST_model, '/optimization_ST_master.RData'))
 
 which_cv = which(settings$cv[1:length(strata_list)] == 0.15)
 settings = settings[which_cv,]
 strata_list = strata_list[which_cv]
 res_df = as.data.frame(res_df)
-res_df = res_df[,paste0('V', which_cv + 2)] 
-colnames(res_df) = paste0('sol_', 1:ncol(res_df))
+res_df = res_df[,which_cv] 
 
 sample_sizes = sapply(strata_list, FUN = function(x) sum(x$Allocation))
 
@@ -39,8 +38,8 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
   
   xrange = diff(par()$usr[1:2])
   yrange = diff(par()$usr[3:4])
-  text(x = par()$usr[1]+xrange*0.35,
-       y = par()$usr[3]+yrange*0.85,
+  text(x = par()$usr[1]+xrange*0.725,
+       y = par()$usr[3]+yrange*0.475,
        paste0('Optimal Sample Size: ', 
               sum(temp_df$Allocation), '\n',
               'CV constraint: ', settings$cv[winner]*100, '%'),
@@ -93,19 +92,19 @@ for(j in 1:(length(lon_cuts)-1) ){
 }
 
 {tiff(paste0('model_', VAST_model, '/solution_space_spatiotemporal.tiff'), 
-      res = 200, width = 7, height = 4.2, units = 'in', compression = 'lzw')
+      res = 200, width = 6, height = 4.2, units = 'in', compression = 'lzw')
   par(mar = c(4,4,1,1), oma = c(0,0.5,1,0.5))
   sol_ras = raster(matrix_space, xmn = 0, xmx = ncol(matrix_space),
                    ymn = 0, ymx = nrow(matrix_space) )
   image(sol_ras, axes = F, asp = 1, xlab = 'Eastings (km)', ylab = 'Depth (m)', 
         col = c(brewer.pal(n = nstrata, 'Paired'), 'black'))
   axis(side = 1, at = 0:(sol_ras@extent[2]) ,
-       labels = lon_cuts, las = 1, cex.axis = 0.5)
+       labels = lon_cuts, las = 2, cex.axis = 0.75)
   axis(side = 2, at = (sol_ras@extent[4]):0 , 
        labels = depth_cuts, las = 1)
   
   abline(h = 0:length(depth_cuts), v = 0:length(lon_cuts))
-  legend(x = -0.5, y = 10.25, legend = 1:nstrata, horiz = T, xpd = NA, 
-         bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
+  legend(x = -0.25, y = 11, legend = 1:nstrata, horiz = T, xpd = NA, 
+         cex = 0.8, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
   dev.off()
 }
