@@ -1,6 +1,6 @@
 library(raster); library(RColorBrewer); library(SamplingStrata)
 
-which_machine = c('Zack_MAC' = 1)
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
 result_wd = c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/', 
               'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/')[which_machine]
 
@@ -108,3 +108,4 @@ for(j in 1:(length(lon_cuts)-1) ){
          cex = 0.8, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
   dev.off()
 }
+

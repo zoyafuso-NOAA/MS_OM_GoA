@@ -2,9 +2,10 @@
 ## Thread spatiotemporal results back together
 ###########################
 rm(list = ls())
-which_machine = c('Zack_MAC' = 1)
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
 modelno = '6g'
-results_dir = paste0(c('/Users/zackoyafuso/Documents/')[which_machine],
+results_dir = paste0(c('/Users/zackoyafuso/Documents/', 
+                       'C:/Users/Zack Oyafuso/Documents/')[which_machine],
                      'GitHub/MS_OM_GoA/Optimum_Allocation/', 'model_',
                      modelno)
 setwd(results_dir)

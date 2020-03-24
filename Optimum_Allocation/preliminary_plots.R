@@ -7,7 +7,7 @@ rm(list = ls())
 library(VAST); library(mvtnorm); library(SamplingStrata); 
 library(sp); library(raster)
 
-VAST_model = "6c"
+VAST_model = "6g"
 setwd('C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 
 load(paste0('VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
@@ -23,73 +23,64 @@ TotVar = apply(X = Ests, MARGIN = c(1,2), FUN = function(x) var(as.vector(x)) )
 Ests_means =apply(Ests, MARGIN = 1:2, mean)
 Ests_CV = sqrt(TotVar)/ Ests_means
 
+yrange = diff(range(Extrapolation_List$Data_Extrap[,c('N_km')]))
 
 
+figure_wd = c('',
+              'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/figure_plot/')[which_machine]
 
-for(i in 1:length(Save$Spp)){
-    if(i %in% c(1, 5, 9, 13)){
-        plot_number = ceiling(i/4)
-        plot_name = paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA",
-                           "/Optimum_Allocation/MeanCV_plots", plot_number,
-                           ".tiff")
-        tiff(filename = plot_name, width = 12, height =6, units = 'in', 
-             res = 500, compression = 'lzw')
-        par(mar = c(2,2,2,4), mfrow = c(2,4), oma = c(1,0,0,0))
+
+tiff(paste0(figure_wd, 'Mean_CV.tiff'),
+     width = 190, height = 200, units = 'mm', res = 200, compression = 'lzw')
+par(mar = c(0,0,0,0), mfrow = c(1,2))
+
+for(itype in c('Mean', 'CV')){
+    plot(1, type = 'n', axes = F, ann = F,
+         xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
+         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')])-9*yrange,
+                  max(Extrapolation_List$Data_Extrap[,c('N_km')]))
+    )
+    
+    offset = 0
+    
+    
+    for(i in 1:length(Save$Spp)){
+        
+        temp = as.data.frame(cbind(Ests_means[,i], Ests_CV[,i]))
+        names(temp) = c("Mean", 'CV')
+        
+        goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 
+                                                                      'N_km')], 
+                                     data = temp)
+        
+        goa_ras = raster(goa, resolution = 5)
+        goa_ras =rasterize(x = goa, y = goa_ras, field = itype)
+        
+        vals  = values(goa_ras)
+        
+        if(itype == 'CV') val_cuts = c(0,0.25,0.5,0.75,1,2,10)
+        
+        if(itype == 'Mean')     {
+            vals = vals[vals > 1]
+            val_cuts = c(0, quantile(vals , na.rm = T, 
+                                     probs = seq(0,1, length = 11))[-1])
+        } 
+        
+        values(goa_ras) = cut(x = values(goa_ras), breaks = val_cuts)
+        
+        #offset
+        goa_ras = raster::shift(x = goa_ras, dy = -yrange/1.5*offset)
+        offset = offset + 1
+        
+        image(goa_ras, asp = 1, axes = F, ann = F, add = T,
+              col = hcl.colors(c('Mean' = 10, 'CV' = 6)[itype], 
+                               "YlOrRd", rev = TRUE))
+        
+        text(x = goa_ras@extent[1] + 0.175*diff(goa_ras@extent[1:2]),
+             y = goa_ras@extent[3]+ 0.35*diff(goa_ras@extent[3:4]),
+             Save$Spp[i], cex = 0.6, srt = 10)
+        
     }
-    temp = as.data.frame(cbind(Ests_means[,i], Ests_CV[,i]))
-    names(temp) = c("Mean", 'CV')
-    
-    goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 
-                                                                  'N_km')], 
-                                 data = temp)
-    
-    goa_ras = raster(goa, resolution = 5)
-    
-    goa_ras2 =rasterize(x = goa, y = goa_ras, field = 'Mean')
-    
-    goa_ras_plot = cut( goa_ras2, quantile(values(goa_ras2), na.rm = T))
-    
-    plot(goa_ras_plot, 
-         axes = F, col = rev(terrain.colors(4)), legend = F )
-    mtext(side = 3, paste(Save$Spp[i], 'Mean'), cex =  0.75)
-    
-    legend_x = c(1.05, 1.1); legend_y = c(0.05, 0.85)
-    xl = (1 - legend_x[1]) * par("usr")[1] + (legend_x[1]) * 
-        par("usr")[2]
-    xr = (1 - legend_x[2]) * par("usr")[1] + (legend_x[2]) * 
-        par("usr")[2]
-    yb = (1 - legend_y[1]) * par("usr")[3] + (legend_y[1]) * 
-        par("usr")[4]
-    yt = (1 - legend_y[2]) * par("usr")[3] + (legend_y[2]) * 
-        par("usr")[4]
-    align = c("lt", "rb")[2]
-    gradient = c("x", "y")[2]
-    
-    plotrix::color.legend(xl = xl, yb = yb, xr = xr, yt = yt, 
-                          legend = round(quantile(values(goa_ras2), 
-                                                  seq(0.25, 1, 0.25), 
-                                                  na.rm = T), 2), 
-                          rect.col = rev(terrain.colors(4)), 
-                          cex = 0.75, 
-                          align = align, 
-                          gradient = gradient)
-
-goa_ras2 =rasterize(x = goa, y = goa_ras, field = 'CV')
-
-plot(cut(goa_ras2, quantile(values(goa_ras2), na.rm = T)), axes = F, col = rev(terrain.colors(4)), legend = F )
-
-mtext(side = 3, paste(Save$Spp[i], 'CV'), cex = 0.75)
-
-plotrix::color.legend(xl = xl, yb = yb, xr = xr, yt = yt, 
-                      legend = round(quantile(values(goa_ras2), 
-                                              seq(0.25, 1, 0.25), 
-                                              na.rm = T), 2), 
-                      rect.col = rev(terrain.colors(4)), 
-                      cex = 0.75, 
-                      align = align, 
-                      gradient = gradient)
-
-if(i %in% c(4,8,12,15)) dev.off()
+    mtext(side = 3, line = -1, text = itype)
 }
-
-
+dev.off()
