@@ -4,6 +4,7 @@
 #################################
 
 rm(list = ls())
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
 library(VAST); library(mvtnorm); library(SamplingStrata); 
 library(sp); library(raster)
 
@@ -25,19 +26,18 @@ Ests_CV = sqrt(TotVar)/ Ests_means
 
 yrange = diff(range(Extrapolation_List$Data_Extrap[,c('N_km')]))
 
-
 figure_wd = c('',
               'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/figure_plot/')[which_machine]
 
 
 tiff(paste0(figure_wd, 'Mean_CV.tiff'),
-     width = 190, height = 200, units = 'mm', res = 200, compression = 'lzw')
+     width = 90, height = 180, units = 'mm', res = 500, compression = 'lzw')
 par(mar = c(0,0,0,0), mfrow = c(1,2))
 
 for(itype in c('Mean', 'CV')){
     plot(1, type = 'n', axes = F, ann = F,
          xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
-         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')])-9*yrange,
+         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')])-10*yrange,
                   max(Extrapolation_List$Data_Extrap[,c('N_km')]))
     )
     
@@ -76,11 +76,22 @@ for(itype in c('Mean', 'CV')){
               col = hcl.colors(c('Mean' = 10, 'CV' = 6)[itype], 
                                "YlOrRd", rev = TRUE))
         
-        text(x = goa_ras@extent[1] + 0.175*diff(goa_ras@extent[1:2]),
+        text(x = goa_ras@extent[1] + 0.2*diff(goa_ras@extent[1:2]),
              y = goa_ras@extent[3]+ 0.35*diff(goa_ras@extent[3:4]),
-             Save$Spp[i], cex = 0.6, srt = 10)
+             Save$Spp[i], cex = 0.4, srt = 27, xpd = NA)
         
     }
     mtext(side = 3, line = -1, text = itype)
+    
+    if(itype == 'Mean') val_cuts = seq(0,100,10)
+    if(itype == 'CV') val_cuts = c(0,0.25,0.5,0.75,1,2,10)
+    legend('bottom',  bty = 'n', cex = c('Mean' = 0.6, 'CV' = 0.8)[itype],
+           ncol = c('Mean' = 3, 'CV' = 2)[itype],
+           fill = hcl.colors(c('Mean' = 10, 'CV' = 6)[itype], 
+                             "YlOrRd", rev = TRUE), 
+           legend = paste0(val_cuts[1:(length(val_cuts)-1)], '-',
+                           val_cuts[2:length(val_cuts)]) )
+    box() 
+    abline(h = c(6786, -1585))
 }
 dev.off()
