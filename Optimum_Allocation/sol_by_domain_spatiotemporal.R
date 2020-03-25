@@ -9,7 +9,8 @@ load('../Extrapolation_depths.RData')
 VAST_model = '6g'
 load(paste0('model_', VAST_model, '/optimization_ST_master.RData'))
 
-which_cv = which(settings$cv[1:length(strata_list)] == 0.15)
+CV = 0.15
+which_cv = which(settings$cv[1:length(strata_list)] == CV)
 settings = settings[which_cv,]
 strata_list = strata_list[which_cv]
 res_df = as.data.frame(res_df)
@@ -17,7 +18,7 @@ res_df = res_df[,which_cv]
 
 sample_sizes = sapply(strata_list, FUN = function(x) sum(x$Allocation))
 
-winner = which.min(sample_sizes)
+winner = names(sample_sizes)[which.min(sample_sizes)]
 ns = 15
 goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
                              data = data.frame(X1=res_df[,winner]) )
@@ -38,11 +39,13 @@ goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
   
   xrange = diff(par()$usr[1:2])
   yrange = diff(par()$usr[3:4])
+  
+  
   text(x = par()$usr[1]+xrange*0.725,
        y = par()$usr[3]+yrange*0.475,
        paste0('Optimal Sample Size: ', 
               sum(temp_df$Allocation), '\n',
-              'CV constraint: ', settings$cv[winner]*100, '%'),
+              'CV constraint: ', CV*100, '%'),
        cex = 1.5)
   
   dev.off()
@@ -92,7 +95,7 @@ for(j in 1:(length(lon_cuts)-1) ){
 }
 
 {tiff(paste0('model_', VAST_model, '/solution_space_spatiotemporal.tiff'), 
-      res = 200, width = 6, height = 4.2, units = 'in', compression = 'lzw')
+      res = 200, width = 5, height = 3.75, units = 'in', compression = 'lzw')
   par(mar = c(4,4,1,1), oma = c(0,0.5,1,0.5))
   sol_ras = raster(matrix_space, xmn = 0, xmx = ncol(matrix_space),
                    ymn = 0, ymx = nrow(matrix_space) )
@@ -104,8 +107,8 @@ for(j in 1:(length(lon_cuts)-1) ){
        labels = depth_cuts, las = 1)
   
   abline(h = 0:length(depth_cuts), v = 0:length(lon_cuts))
-  legend(x = -0.25, y = 11, legend = 1:nstrata, horiz = T, xpd = NA, 
-         cex = 0.8, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
+  legend(x = -2, y = 11.25, legend = 1:nstrata, horiz = T, xpd = NA, 
+         cex = 0.75, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
   dev.off()
 }
 
