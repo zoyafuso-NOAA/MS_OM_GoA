@@ -32,7 +32,7 @@ figure_wd = c('',
 
 
 tiff(paste0(figure_wd, 'Mean_CV.tiff'),
-     width = 90, height = 200, units = 'mm', res = 500, compression = 'lzw')
+     width = 190, height = 190, units = 'mm', res = 500, compression = 'lzw')
 par(mar = c(0,0,0,0), mfrow = c(5,3))
 
 for(i in 1:length(Save$Spp)){
@@ -76,7 +76,6 @@ for(i in 1:length(Save$Spp)){
         legend(x = goa_ras@extent[1] + xrange*0.55,
                y = goa_ras@extent[3] + yrange*0.7,
                bty = 'n', cex = 0.75,
-               ncol = c('Mean' = 3, 'CV' = 2)[itype],
                fill = list('Mean' = hcl.colors(n=4, "YlOrRd", rev = TRUE), 
                            'CV' = hcl.colors(n=5, palette='viridis', rev=T))[[itype]], 
                legend = paste0(val_cuts[1:(length(val_cuts)-1)], '-',
@@ -84,10 +83,12 @@ for(i in 1:length(Save$Spp)){
         
         if(itype == 'Mean') text(x = goa_ras@extent[1] + xrange*0.15, 
                                  y = goa_ras@extent[4] - yrange*0.15,
-                                 gsub(Save$Spp[i], pattern = ' ', replacement = '\n'),
+                                 gsub(Save$Spp[i], pattern = ' ', 
+                                      replacement = '\n'),
                                  font = 3)
     }
     box()
 }
 
 dev.off()
+
