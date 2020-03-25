@@ -107,7 +107,7 @@ VAST_model = '6g'
          labels = depth_cuts, las = 1, cex.axis = 0.75)
     
     abline(h = 0:length(depth_cuts), v = 0:length(lon_cuts))
-    legend(x = 1, y = 14, horiz = F, xpd = NA, ncol = 2,
+    legend(x = 0, y = 14, horiz = F, xpd = NA, ncol = 2,
            legend = paste0('Stratum ', 1:nstrata, ': ', temp_df$Population,
                            ' units (n = ', temp_df$Allocation, ')'), 
            cex = 0.7, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))

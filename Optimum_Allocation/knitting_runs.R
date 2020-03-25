@@ -35,7 +35,7 @@ names(master_strata_list) = paste0('sol_', 1:length(master_strata_list))
 settings = settings[(1:length(master_strata_list))[!sapply(master_strata_list, is.null)],]
 master_strata_list = master_strata_list[!sapply(master_strata_list, is.null)]
 
-res_df = master_res
+res_df = master_res[,order(as.integer(gsub(names(master_res), pattern = 'sol_', replacement = '')))]
 strata_list = master_strata_list
 
 save(list = c('strata_list', 'res_df', 'settings', 
