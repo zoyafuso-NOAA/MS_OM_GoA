@@ -9,10 +9,10 @@ load('../Extrapolation_depths.RData')
 VAST_model = '6g'
 
 {
-  tiff(paste0('model_', VAST_model, '/solution_ST.tiff'), 
-       res = 200, width =190, height = 100, units = 'mm', compression = 'lzw')
+  tiff(paste0('model_', VAST_model, '/solution_ST.tiff'),
+       res = 1000, width =190, height = 100, units = 'mm', compression = 'lzw')
   
-  par(mar = c(0,0,0,0), oma = rep(0,4), family = 'serif' )
+  par(oma = rep(0,4), family = 'serif' )
   layout(mat = matrix(c(1,2,3,4), ncol = 2), heights = c(.5,1))
   
   for(CV in c(0.15, 0.20)){
@@ -37,6 +37,7 @@ VAST_model = '6g'
     temp_df = strata_list[[winner]]
     nstrata = nrow(temp_df)
     
+    par(mar = c(0,0,0,0))
     image(goa_ras, asp = 1, axes = F,
           col = brewer.pal(n = nstrata, name = 'Paired'))
     
@@ -44,12 +45,11 @@ VAST_model = '6g'
     yrange = diff(par()$usr[3:4])
     
     
-    text(x = par()$usr[1]+xrange*0.725,
+    text(x = par()$usr[1]+xrange*0.72,
          y = par()$usr[3]+yrange*0.475,
-         paste0('Optimal Sample Size: ', 
-                sum(temp_df$Allocation), '\n',
-                'CV Constraint: ', CV*100, '%'),
-         cex = 0.7)
+         paste0(CV*100, '% CV Constraint\n',
+                'Optimal Sample Size: ', sum(temp_df$Allocation) ),
+         cex = 1, font = 2)
     
     temp_df = strata_list[[winner]]
     nstrata = nrow(temp_df)
@@ -94,23 +94,23 @@ VAST_model = '6g'
       }
     }
     
-    par(mar = c(3,3,3,1))
+    par(mar = c(3,3,3,1.5))
     sol_ras = raster(matrix_space, xmn = 0, xmx = ncol(matrix_space),
                      ymn = 0, ymx = nrow(matrix_space) )
     image(sol_ras, axes = F, ann = F,
           col = c(brewer.pal(n = nstrata, 'Paired'), 'black'))
-    mtext(side = 1, 'Eastings (km)', line = 1.75, cex = 0.75)
-    mtext(side = 2, 'Depth (m)', line = 2, cex = 0.75)
+    mtext(side = 1, 'Eastings (km)', line = 1.9, cex = 0.75)
+    mtext(side = 2, 'Depth (m)', line = 2.2, cex = 0.75)
     axis(side = 1, at = 0:(sol_ras@extent[2]) ,
-         labels = lon_cuts, las = 2, cex.axis = 0.5)
+         labels = lon_cuts, las = 2, cex.axis = 0.75)
     axis(side = 2, at = (sol_ras@extent[4]):0 , 
-         labels = depth_cuts, las = 1, cex.axis = 0.5)
+         labels = depth_cuts, las = 1, cex.axis = 0.75)
     
     abline(h = 0:length(depth_cuts), v = 0:length(lon_cuts))
-    legend(x = -1, y = 15, horiz = F, xpd = NA, ncol = 2,
+    legend(x = 1, y = 14, horiz = F, xpd = NA, ncol = 2,
            legend = paste0('Stratum ', 1:nstrata, ': ', temp_df$Population,
                            ' units (n = ', temp_df$Allocation, ')'), 
-           cex = 0.6, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
+           cex = 0.7, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
   }
 
   dev.off()
