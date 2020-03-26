@@ -1,3 +1,4 @@
+rm(list = ls())
 library(raster); library(RColorBrewer); library(SamplingStrata)
 
 which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
