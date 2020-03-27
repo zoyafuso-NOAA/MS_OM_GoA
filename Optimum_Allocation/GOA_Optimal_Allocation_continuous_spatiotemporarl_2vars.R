@@ -128,8 +128,8 @@ rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = NA, 
-                         'Zack_GI_PC'=241:250, 'VM' = NA)[which_machine])
+iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = 241:320,
+                         'Zack_GI_PC'=321:400, 'VM' = 401:480)[which_machine])
 
 for(ii in iter_range){
   
