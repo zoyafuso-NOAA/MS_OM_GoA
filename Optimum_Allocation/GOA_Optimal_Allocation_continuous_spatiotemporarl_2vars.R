@@ -3,46 +3,70 @@
 ## Method == "continous"
 #################################
 rm(list = ls())
+
+###############################
+## Import required packages
+###############################
 library(VAST);  library(mvtnorm); library(sp); library(RColorBrewer); 
 library(raster)
 library(memoise); library(doParallel); library(foreach); library(iterators); 
 library(parallel); library(pbapply); library(formattable)
 
-for(ifile in dir('C:/Users/Zack Oyafuso/Downloads/SamplingStrata-master/R', full.names = T))
-  source(ifile)
-source('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/Optimum_Allocation/buildStrataDF_Zack.R')
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
+###############################
+## Set up directories
+###############################
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[3]
 
-VAST_wd = c('/Users/zackoyafuso/Google Drive/VAST_Runs/',
-            'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/',
-            'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine]
-
+SamplingStrata_dir = paste0(c('', 
+                              'C:/Users/Zack Oyafuso',
+                              'C:/Users/zack.oyafuso',
+                              'C:/Users/zack.oyafuso')[which_machine],
+                            '/Downloads/SamplingStrata-master/R')
+github_dir = paste0(c('', 
+                      'C:/Users/Zack Oyafuso/Documents',
+                      'C:/Users/zack.oyafuso/Work',
+                      'C:/Users/zack.oyafuso/Work')[which_machine],
+                    '/GitHub/MS_OM_GoA/Optimum_Allocation/')
 VAST_model = "6g"
+VAST_dir = paste0(c('', '', 
+                    'C:/Users/zack.oyafuso/Desktop/',
+                    'C:/Users/zack.oyafuso/Desktop/')[which_machine],
+                  'VAST_Runs/VAST_output', VAST_model)
+
 output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
                      'Optimum_Allocation/model_', VAST_model),
               paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                      "Optimum_Allocation/model_", VAST_model),
               paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
+                     "Optimum_Allocation/model_", VAST_model),
+              paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
                      "Optimum_Allocation/model_", VAST_model))[which_machine]
 
-setwd(VAST_wd)
+#########################
+## Load functions from SamplingStrata packages into global environment
+## Load modified buildStrataDF function
+#########################
+for(ifile in dir(SamplingStrata_dir, full.names = T)) source(ifile)
+source(paste0(github_dir, '/buildStrataDF_Zack.R'))
 
-if(!dir.exists(output_wd)) dir.create(output_wd)
+#########################
+## Load VAST products
+#########################
+load(paste0(VAST_dir, '/VAST_MS_GoA_Run.RData'))
+load(paste0(VAST_dir, '/Spatial_Settings.RData'))
+load(paste0(dirname(github_dir), '/Extrapolation_depths.RData'))
 
-load(paste0(VAST_wd, 'VAST_output',VAST_model,'/VAST_MS_GoA_Run.RData'))
-load(paste0(VAST_wd, 'VAST_output',VAST_model,'/Spatial_Settings.RData'))
-
-
-load(paste0(c('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
-              "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
-              'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/'),
-            'Extrapolation_depths.RData')[which_machine])
-
+#########################
+## Index years that had data
+#########################
 Year_Set = seq(min(Data_Geostat[,'Year']),max(Data_Geostat[,'Year']))
 Years2Include = which( Year_Set %in% sort(unique(Data_Geostat[,'Year'])))
 NTime = length(Years2Include)
 
+##########################
+## Create the data inputs to SamplingStrata
+##########################
 df = df_raw = NULL
 
 df = cbind(
@@ -79,25 +103,33 @@ frame_raw <- buildFrameDF(df = df_raw,
                           Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                           domainvalue = "Domain")
 
-
-#Settings for optimizer
-settings = expand.grid(cv = c(0.2, 0.15),
-                       mut_change = c(0.1, 0.01),
-                       elitism_rate = c(0.2, 0.1),
-                       nstata = c(5,7,10),
-                       iter = 1:10)
+############################
+## Settings for optimizer
+############################
+settings = rbind(expand.grid(cv = c(0.2, 0.15),
+                             mut_change = c(0.1, 0.01),
+                             elitism_rate = c(0.2, 0.1),
+                             nstata = c(5,7,10),
+                             iter = 1:10),
+                 expand.grid(cv = c(0.2, 0.15),
+                             mut_change = 0.1,
+                             elitism_rate = 0.1,
+                             nstata = c(6,8,11:20),
+                             iter = 1:10)
+)
 
 ns = Save$TmbData$n_c
 
 rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
             'Method', 'modelno', 'n_x', 'which_spp', 'Year_Set', 
             'Years2Include', 'Data_Geostat', 'df', 'Extrapolation_List',
-            'gulf_of_alaska_grid', 'ifile', 'iT'))
+            'gulf_of_alaska_grid', 'ifile', 'iT', 'Extrapolation_depths', 'df_raw'))
 
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-iter_range = unlist(list('Zack_MAC'=1, 'Zack_PC' =211:240, 'Zack_GI_PC'=101:170, 'VM' = 171:240)[which_machine])
+iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = NA, 
+                         'Zack_GI_PC'=241:250, 'VM' = NA)[which_machine])
 
 for(ii in iter_range){
   
@@ -131,7 +163,7 @@ for(ii in iter_range){
                      min(iter_range), '-', ii,'.RData') )
   
   #Plot
-  goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
+  goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
                                data = cbind(solution$framenew[,paste0('Y',1:ns)],
                                             Str_no = solution$framenew$STRATO,
                                             depth = solution$framenew$X1,
