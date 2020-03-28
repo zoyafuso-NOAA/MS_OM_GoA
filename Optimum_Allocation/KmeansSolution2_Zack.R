@@ -85,8 +85,11 @@ KmeansSolution2 = function(frame,
     cat("\n Number of strata: ",best_num_strata[i])
     cat("\n Sample size     : ",best[i])
   }
-  solutionKmean <- as.data.frame(cbind(id,suggestions,domainvalue))
-  solutionKmean$domainvalue <- as.integer(solutionKmean$domainvalue)
+  solutionKmean = list()
+  solutionKmean$sol <- as.data.frame(cbind(id,suggestions,domainvalue))
+  solutionKmean$sol$domainvalue <- as.integer(solutionKmean$sol$domainvalue)
+  solutionKmean$nstrata = nlevels(solutionKmean$sol$suggestions)
+  solutionKmean$samplesize = best[[1:ndom]]
   return(solutionKmean)
 }
 
