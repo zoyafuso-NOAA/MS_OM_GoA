@@ -37,10 +37,11 @@ VAST_model = '6g'
     
     temp_df = strata_list[[winner]]
     nstrata = nrow(temp_df)
+    color_idx = sample(x = nstrata, replace = F)
     
     par(mar = c(0,0,0,0))
     image(goa_ras, asp = 1, axes = F,
-          col = brewer.pal(n = nstrata, name = 'Paired'))
+          col = hcl.colors(n = nstrata, palette  = 'Spectral')[color_idx])
     
     xrange = diff(par()$usr[1:2])
     yrange = diff(par()$usr[3:4])
@@ -54,6 +55,7 @@ VAST_model = '6g'
     
     temp_df = strata_list[[winner]]
     nstrata = nrow(temp_df)
+
     depth_cuts = unique(ceiling(sort(c(temp_df$Lower_X1, temp_df$Upper_X1))))
     lon_cuts = unique(ceiling(sort(c(temp_df$Lower_X2, temp_df$Upper_X2))))
     
@@ -99,19 +101,20 @@ VAST_model = '6g'
     sol_ras = raster(matrix_space, xmn = 0, xmx = ncol(matrix_space),
                      ymn = 0, ymx = nrow(matrix_space) )
     image(sol_ras, axes = F, ann = F,
-          col = c(brewer.pal(n = nstrata, 'Paired'), 'black'))
+          col = c( hcl.colors(n = nstrata, palette  = 'Spectral')[color_idx],
+                   'black'))
     mtext(side = 1, 'Eastings (km)', line = 1.9, cex = 0.75)
     mtext(side = 2, 'Depth (m)', line = 2.2, cex = 0.75)
     axis(side = 1, at = 0:(sol_ras@extent[2]) ,
          labels = lon_cuts, las = 2, cex.axis = 0.75)
-    axis(side = 2, at = (sol_ras@extent[4]):0 , 
+    axis(side = 2, at = (sol_ras@extent[4]):0 ,
          labels = depth_cuts, las = 1, cex.axis = 0.75)
-    
+
     abline(h = 0:length(depth_cuts), v = 0:length(lon_cuts))
-    legend(x = 0, y = 14, horiz = F, xpd = NA, ncol = 2,
-           legend = paste0('Stratum ', 1:nstrata, ': ', temp_df$Population,
-                           ' units (n = ', temp_df$Allocation, ')'), 
-           cex = 0.7, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
+    # legend(x = 0, y = 14, horiz = F, xpd = NA, ncol = 2,
+    #        legend = paste0('Stratum ', 1:nstrata, ': ', temp_df$Population,
+    #                        ' units (n = ', temp_df$Allocation, ')'), 
+    #        cex = 0.7, bty = 'n', fill = brewer.pal(n = nstrata, 'Paired'))
   }
 
   dev.off()
