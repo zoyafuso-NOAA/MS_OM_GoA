@@ -49,6 +49,7 @@ summary(perm_check)
                       psi = 13)
   
   print(summary(my.seg))
+  print(slope(my.seg))
   
   pred_stata = seq(min(temp_df$nstata), max(temp_df$nstata), length = 100)
   pred_val = predict(my.seg, newdata = data.frame(nstata = pred_stata))
