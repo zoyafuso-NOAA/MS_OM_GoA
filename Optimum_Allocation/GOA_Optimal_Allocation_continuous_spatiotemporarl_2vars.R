@@ -115,6 +115,11 @@ settings = rbind(expand.grid(cv = c(0.2, 0.15),
                              mut_change = 0.1,
                              elitism_rate = 0.1,
                              nstata = c(6,8,11:20),
+                             iter = 1:10),
+                 expand.grid(cv = c(0.2, 0.15),
+                             mut_change = 0.1,
+                             elitism_rate = 0.1,
+                             nstata = 9,
                              iter = 1:10)
 )
 
