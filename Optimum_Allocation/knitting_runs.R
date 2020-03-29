@@ -2,7 +2,7 @@
 ## Thread spatiotemporal results back together
 ###########################
 rm(list = ls())
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[1]
 modelno = '6g'
 results_dir = paste0(c('/Users/zackoyafuso/Documents/', 
                        'C:/Users/Zack Oyafuso/Documents/')[which_machine],
@@ -12,7 +12,7 @@ setwd(results_dir)
 
 res_files = dir(pattern = 'optimization_spatiotemporal_')
 
-load('optimization.RData')
+load('optimization_spatiotemporal_241-259.RData')
 master_res = as.data.frame(res_df)[,1:2]
 master_strata_list = list()
 
@@ -24,6 +24,7 @@ for(ifile in res_files){
  filenos = sort(unlist(lapply(filenos, FUN = function(x) x[1]:x[2])))
  
  res_df = as.data.frame(res_df)[,-1:-2]
+ if(length(filenos) == 1) res_df = data.frame(res_df)
  names(res_df) = paste0('sol_', filenos)
  
  master_res = cbind(master_res, res_df)
@@ -34,6 +35,7 @@ master_res = master_res[,-c(1:2)]
 names(master_strata_list) = paste0('sol_', 1:length(master_strata_list))
 settings = settings[(1:length(master_strata_list))[!sapply(master_strata_list, is.null)],]
 master_strata_list = master_strata_list[!sapply(master_strata_list, is.null)]
+
 
 res_df = master_res[,order(as.integer(gsub(names(master_res), pattern = 'sol_', replacement = '')))]
 strata_list = master_strata_list
