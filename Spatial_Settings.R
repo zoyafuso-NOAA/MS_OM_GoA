@@ -7,7 +7,7 @@ library(VAST)
 setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 # setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6d'
+modelno = '6i'
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
@@ -28,7 +28,8 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
 rm(data)
 
 #Drop factor levels of unused Species
-spp_df = read.csv("spp_df.csv", check.names=F, header = T, row.names = 'modelno')
+spp_df = read.csv("spp_df.csv", check.names=F, header = T, 
+                  row.names = 'modelno')
 
 which_spp = unlist(spp_df[modelno,])
 
