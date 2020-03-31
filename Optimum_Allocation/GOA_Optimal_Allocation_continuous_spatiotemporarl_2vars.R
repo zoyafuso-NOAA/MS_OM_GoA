@@ -29,7 +29,8 @@ github_dir = paste0(c('',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/Optimum_Allocation/')
 VAST_model = "6g"
-VAST_dir = paste0(c('', '', 
+VAST_dir = paste0(c('', 
+                    'C:/Users/Zack Oyafuso/Google Drive/', 
                     'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/VAST_output', VAST_model)
@@ -134,12 +135,12 @@ ns = Save$TmbData$n_c
 rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
             'Method', 'modelno', 'n_x', 'which_spp', 'Year_Set', 
             'Years2Include', 'Data_Geostat', 'df', 'Extrapolation_List',
-            'gulf_of_alaska_grid', 'ifile', 'iT', 'Extrapolation_depths', 'df_raw'))
+            'gulf_of_alaska_grid', 'ifile', 'iT', 'df_raw'))
 
 res_df = as.matrix(frame[,c('id', 'domainvalue')])
 strata_list = list()
 
-iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = 241:320,
+iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = 651:700,
                          'Zack_GI_PC'=321:400, 'VM' = 401:480)[which_machine])
 
 for(ii in iter_range){
