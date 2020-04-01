@@ -1,7 +1,10 @@
-#################################
-## Parallelize the Optimization Process
-## Method == "continous"
-#################################
+######################################
+## Calculate sampling CV
+######################################
+
+#####################################
+## Optimal Solutions from 5-20 strata
+#####################################
 rm(list = ls())
 
 ###############################
@@ -44,12 +47,6 @@ output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
               paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
                      "Optimum_Allocation/model_", VAST_model))[which_machine]
 
-#########################
-## Load functions from SamplingStrata packages into global environment
-## Load modified buildStrataDF function
-#########################
-for(ifile in dir(SamplingStrata_dir, full.names = T)) source(ifile)
-source(paste0(github_dir, '/buildStrataDF_Zack.R'))
 
 #########################
 ## Load VAST products
@@ -103,86 +100,105 @@ frame_raw <- buildFrameDF(df = df_raw,
                           X = c("depth", 'lon'),
                           Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                           domainvalue = "Domain")
-
-############################
-## Settings for optimizer
-############################
-settings = rbind(expand.grid(cv = c(0.2, 0.15),
-                             mut_change = c(0.1, 0.01),
-                             elitism_rate = c(0.2, 0.1),
-                             nstata = c(5,7,10),
-                             iter = 1:10),
-                 expand.grid(cv = c(0.2, 0.15),
-                             mut_change = 0.1,
-                             elitism_rate = 0.1,
-                             nstata = c(6,8,11:20),
-                             iter = 1:10),
-                 expand.grid(cv = c(0.2, 0.15),
-                             mut_change = 0.1,
-                             elitism_rate = 0.1,
-                             nstata = 9,
-                             iter = 1:10),
-                 expand.grid(cv = c(0.2, 0.15),
-                             mut_change = 0.1,
-                             elitism_rate = 0.1,
-                             nstata = 5:20,
-                             iter = 11:20)
-                 
-)
+frame_raw$year = rep(1:11, each = nrow(frame))
 
 ns = Save$TmbData$n_c
+sci_names = Save$Spp
+
 
 rm(list = c('Save', 'Spatial_List', 'spp_df', 'strata.limits', 'fine_scale',
             'Method', 'modelno', 'n_x', 'which_spp', 'Year_Set', 
             'Years2Include', 'Data_Geostat', 'df', 'Extrapolation_List',
-            'gulf_of_alaska_grid', 'ifile', 'iT', 'df_raw'))
+            'gulf_of_alaska_grid', 'iT', 'df_raw'))
 
-res_df = as.matrix(frame[,c('id', 'domainvalue')])
-strata_list = list()
 
-iter_range = unlist(list('Zack_MAC'= NA, 'Zack_PC' = 616:650,
-                         'Zack_GI_PC'=321:400, 'VM' = 401:480)[which_machine])
+load('optimization_ST_master.RData')
 
-for(ii in as.integer(iter_range)){
+strata_list = strata_list[settings$mut_change == 0.10 & settings$elitism_rate == 0.10 & settings$cv == 0.15]
+res_df = res_df[,settings$mut_change == 0.10 & settings$elitism_rate == 0.10 & settings$cv == 0.15]
+settings = subset(settings, (mut_change == 0.10 & elitism_rate == 0.10 & cv == 0.15))
+settings$n = sapply(strata_list, FUN = function(x) sum(x$Allocation))
+
+best_sol = aggregate(n ~ nstata + cv, data = settings, FUN = min)
+
+
+
+
+ids = as.numeric(rownames(res_df))
+N = length(ids)
+
+cv_array = array(dim = c(11, ns, 16, 100), 
+                 dimnames = list(paste0('Year_', 1:11),
+                                 sci_names, paste0('strata_', 5:20), NULL))
+
+
+for(istrata in 1:nrow(best_sol)) {
+  #rownames of settings with the strata number
+  row_idx = row.names(settings)[settings$nstata == best_sol$nstata[istrata]]
+  best_sol_idx = which.min(settings[row_idx, 'n'])
+  idx = row_idx[best_sol_idx]
+  solno = paste0('sol_', idx)
   
-  cv = list()
-  for(spp in 1:ns) cv[[paste0('CV', spp)]] = settings$cv[ii]
-  cv[['DOM']] = 1
-  cv[['domainvalue']] = 1
-  cv <- as.data.frame(cv)
-  
-  set.seed(1234 + ii)
-  solution <- optimStrata(method = "continuous",
-                          errors = cv, 
-                          framesamp = frame,
-                          iter = 50,
-                          pops = 30,
-                          elitism_rate = settings$elitism_rate[ii],
-                          mut_chance = settings$mut_change[ii],
-                          nStrata = settings$nstata[ii],
-                          showPlot = T,
-                          parallel = F)
-  
-  strata_list[[ii]] =  summaryStrata(solution$framenew,
-                                     solution$aggr_strata,
-                                     progress=FALSE) 
-  
-  res_df = cbind(res_df, solution$framenew$STRATO)
-  
-  save(list = c('strata_list', 'res_df', 'settings', 
-                'frame', 'ns', 'NTime', 'VAST_model'), 
-       file = paste0(output_wd, '/optimization_spatiotemporal_',
-                     min(iter_range), '-', ii,'.RData') )
-  
-  #Plot
-  goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
-                               data = cbind(solution$framenew[,paste0('Y',1:ns)],
-                                            Str_no = solution$framenew$STRATO,
-                                            depth = solution$framenew$X1,
-                                            lon = solution$framenew$X2) )
-  goa_ras = raster(goa, resolution = 5)
-  goa_ras =rasterize(x = goa, y = goa_ras, field = 'Str_no')
-  plot(goa_ras, col = terrain.colors(10)[-10], axes = F)
+  strata_allocation = strata_list[[solno]]$Allocation
+  stratapop = strata_list[[solno]]$Population
+  for(iyear in 1:11){
+    for(iter in 1:100){
+      sample_vec = c()
+      for(i in 1:length(strata_allocation)){
+        available_cells = which(res_df[,solno] == i)
+        sample_cells = sample(x = available_cells, 
+                              size = strata_allocation[i], 
+                              replace = F)
+        sample_vec = c(sample_vec, sample_cells)
+      }
+      
+      sample_vec = sort(sample_vec)
+      stratano =  res_df[sample_vec,solno]
+      sample_df = subset(frame_raw, year == iyear)[sample_vec,]
+      stmt = paste0('aggregate(cbind(',
+                    paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
+                    ") ~ stratano, data = sample_df, FUN = mean)")
+      sample_mean = eval(parse(text = stmt))[,-1]
+      stmt = paste0('aggregate(cbind(',
+                    paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
+                    ") ~ stratano, data = sample_df, FUN = var)")
+      sample_var = eval(parse(text = stmt))[,-1]
+      
+      SRS_var = colSums(sweep(x = sample_var, MARGIN = 1, 
+                              STATS = 1/strata_allocation * (stratapop - strata_allocation)/stratapop * (stratapop/N)^2,
+                              FUN = '*'))
+
+      SRS_mean = colSums(sweep(x = sample_mean, MARGIN = 1, 
+                               STATS = stratapop / N,
+                               FUN = '*'))
+      
+      strata_cv = sqrt(SRS_var) / SRS_mean * 100
+      
+      cv_array[paste0('Year_', iyear), , 
+               paste0('strata_', (5:20)[istrata]),iter] = strata_cv
+      
+    }
+  }
 }
 
+for(ispp in sci_names){
+  plot(1, type = 'n', xlim = c(5,20), ylim = c(0,5), las = 1, main = ispp)
+  
+  for(istrata in 5:20){
+    boxplot(at = istrata, apply(cv_array[,ispp,paste0('strata_', istrata),], MARGIN = 2, FUN = function(x)sd(x) ), add = T, axes = F )
+  }
+}
 
+for(ispp in sci_names){
+  plot(1, type = 'n', xlim = c(5,20), ylim = c(0,20), las = 1, main = ispp)
+  
+  for(istrata in 5:20){
+    boxplot(at = istrata, apply(cv_array[,ispp,paste0('strata_', istrata),], MARGIN = 2, FUN = mean), add = T, axes = F )
+  }
+}
+
+ 
+100*apply(cv_array[,,paste0('strata_', istrata),], MARGIN = 1:2, FUN = sd) / 
+  apply(cv_array[,,paste0('strata_', istrata),], MARGIN = 1:2, FUN = mean)
+
+boxplot(t(cv_array[,'Atheresthes stomias',paste0('strata_', istrata),]))
