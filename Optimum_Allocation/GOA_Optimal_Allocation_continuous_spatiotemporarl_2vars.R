@@ -185,3 +185,4 @@ for(ii in iter_range){
   plot(goa_ras, col = terrain.colors(10)[-10], axes = F)
 }
 
+
