@@ -24,7 +24,7 @@ best_sol = aggregate(n ~ nstata + cv, data = settings, FUN = min)
 yrange = diff(range(Extrapolation_depths[,c('N_km')]))
 
 {tiff(paste0('../../figure_plot/solution_by_strata.tiff'),
-      res = 400, width =190, height = 70, units = 'mm', compression = 'lzw')
+      res = 400, width =190, height = 60, units = 'mm', compression = 'lzw')
   par(mfrow = c(1,4), mar = c(0,0,0,0), family = 'serif')
   for(istrata in 1:nrow(best_sol)) {
     if(istrata%%4 == 1) {
