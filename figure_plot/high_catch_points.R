@@ -2,9 +2,16 @@
 ## Where do 1%/5% of the highest catches occur for each species
 ######################################
 rm(list = ls())
+
+######################################
+## Import Libraries
+######################################
 library(raster); library(RColorBrewer); library(SamplingStrata)
 
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
+######################################
+##Set up directories
+######################################
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[1]
 github_dir = paste0(c('', 
                       'C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
@@ -18,6 +25,9 @@ VAST_dir = paste0(c('',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/VAST_output', VAST_model)
 
+######################################
+## Import data
+######################################
 setwd(github_dir)
 
 load('../Extrapolation_depths.RData')
@@ -25,7 +35,6 @@ load(paste0(VAST_dir, '/Spatial_Settings.RData'))
 Data_Geostat[,c("E_km", "N_km")] = Spatial_List$loc_i
 
 nstrata = c('0.15' = 10, '0.2' = 8)
-
 yrange = diff(range(Extrapolation_depths[,c('N_km')]))
 
 for(percentile in c(5,1)){
@@ -43,9 +52,8 @@ for(percentile in c(5,1)){
         offset = 0
       }
       
-      
-      
       for(CV in c(0.15, 0.20)[1]){
+
         load(paste0('model_', VAST_model, '/optimization_ST_master.RData'))
         which_cv = which(settings$cv[1:length(strata_list)] == CV 
                          & settings$nstata == nstrata[paste0(CV)])
@@ -58,6 +66,10 @@ for(percentile in c(5,1)){
         
         winner = names(sample_sizes)[which.min(sample_sizes)]
         ns = 15
+        
+        ######################################
+        ## Set up spatial object
+        ######################################
         goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')], 
                                      data = data.frame(X1=res_df[,winner]) )
         

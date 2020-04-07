@@ -15,14 +15,14 @@ library(parallel); library(pbapply); library(formattable)
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[4]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[1]
 
 SamplingStrata_dir = paste0(c('', 
                               'C:/Users/Zack Oyafuso',
                               'C:/Users/zack.oyafuso',
                               'C:/Users/zack.oyafuso')[which_machine],
                             '/Downloads/SamplingStrata-master/R')
-github_dir = paste0(c('', 
+github_dir = paste0(c(, 
                       'C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
