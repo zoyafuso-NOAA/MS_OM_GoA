@@ -108,4 +108,5 @@ data = subset(data, select = c(YEAR, STRATUM,
 
 data$CPUE = data$WEIGHT / data$EFFORT
 data = spread(data, key = COMMON_NAME, value = CPUE, fill = 0)
+
 write.csv(x = data, file = "data/GOA_multspp_with_strata.csv", row.names = F)
