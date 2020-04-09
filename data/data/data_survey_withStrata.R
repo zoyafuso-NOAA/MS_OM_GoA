@@ -91,7 +91,4 @@ data$DEPTH2 = data$DEPTH^2
 #                                  'Pacific ocean perch', 'rex sole',
 #                                  'walleye pollock'))
 
-data = subset(data,
-              COMMON_NAME %in% c('Pacific ocean perch'))
-
 write.csv(x = data, file = "data/GOA_multspp_with_strata.csv", row.names = F)
