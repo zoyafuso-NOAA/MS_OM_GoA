@@ -2,7 +2,7 @@
 ## Import Data using Lewis's code
 ###########################
 
-library(dplyr); library(tidyr)
+library(dplyr)
 setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
 # setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
 data_wd = 'C:/Users/zack.oyafuso/Desktop/'
@@ -85,6 +85,7 @@ data$DEPTH2 = data$DEPTH^2
 # Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
 # Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
+<<<<<<< HEAD
 data = subset(data,
               COMMON_NAME %in% c('Pacific ocean perch',
                                  'arrowtooth flounder',
