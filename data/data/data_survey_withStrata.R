@@ -2,7 +2,7 @@
 ## Import Data using Lewis's code
 ###########################
 
-library(dplyr)
+library(dplyr); library(tidyr)
 setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
 # setwd("/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/data/")
 data_wd = 'C:/Users/zack.oyafuso/Desktop/'
@@ -85,13 +85,27 @@ data$DEPTH2 = data$DEPTH^2
 # Rougheye and blackspotted rockfishes (Sebastes aleutianus and Sebastes melanostictus, respectively, codes 30050,30051,30052)
 # Northern and Southern rock sole (Lepidopsetta polyxystra and Lepidopseta bilineata, respectivity, codes 10260,10261,10262)
 
-# data = subset(data,
-#               COMMON_NAME %in% c('arrowtooth flounder', 'Dover sole',
-#                                  'Pacific cod', 'Pacific halibut', 
-#                                  'Pacific ocean perch', 'rex sole',
-#                                  'walleye pollock'))
-
 data = subset(data,
-              COMMON_NAME %in% c('Pacific ocean perch'))
+              COMMON_NAME %in% c('Pacific ocean perch', 
+                                 'arrowtooth flounder', 
+                                 'Pacific cod', 
+                                 'walleye pollock', 
+                                 'Pacific halibut', 
+                                 'rex sole', 
+                                 'Dover sole',
+                                 'flathead sole', 
+                                 'sablefish', 
+                                 'dusky rockfish',
+                                 'northern rockfish',
+                                 "northern rock sole", 
+                                 "southern rock sole",
+                                 'B_R_rockfishes',
+                                 'shortspine thornyhead',
+                                 'yellowfin sole'))
 
+data = subset(data, select = c(YEAR, STRATUM,
+                               COMMON_NAME, WEIGHT, EFFORT))
+
+data$CPUE = data$WEIGHT / data$EFFORT
+data = spread(data, key = COMMON_NAME, value = CPUE, fill = 0)
 write.csv(x = data, file = "data/GOA_multspp_with_strata.csv", row.names = F)
