@@ -41,18 +41,19 @@ output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
 #########################
 ## Load data
 #########################
-load(paste0(github_dir, '/optimization_results.RData'))
 load(paste0(github_dir, '/optimization_data_model_', VAST_model, '.RData'))
+load(paste0(github_dir, '/optimization_results.RData'))
 
 ids = as.numeric(rownames(res_df))
 N = length(ids)
-strata = c(5,7,5,10,15,20,25,30,40,50,60)
+strata = sort(unique(settings$nstrata))
 Nstrata = length(strata)
 Niters = 100
-sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", "Gadus macrocephalus", 
-              "Glyptocephalus zachirus" , "Hippoglossoides elassodon", 
-              "Hippoglossus stenolepis", "Lepidopsetta bilineata", 
-              "Lepidopsetta polyxystra", "Limanda aspera", "Microstomus pacificus",
+sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", 
+              "Gadus macrocephalus", "Glyptocephalus zachirus" , 
+              "Hippoglossoides elassodon", "Hippoglossus stenolepis", 
+              "Lepidopsetta bilineata", "Lepidopsetta polyxystra", 
+              "Limanda aspera", "Microstomus pacificus",
               "Sebastes alutus", "Sebastes B_R", "Sebastes polyspinis", 
               "Sebastes variabilis", "Sebastolobus alascanus" )
 
@@ -74,6 +75,7 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, nrow(settings), Niters),
                                           NULL, 
                                           NULL))
 
+set.seed(134235)
 for(irow in 1:nrow(settings)) {
    
    print(paste0('Settings: ', settings$nstrata[irow], ' strata, ', 
@@ -131,59 +133,45 @@ for(irow in 1:nrow(settings)) {
    }
 }
 
-save(list = c('sim_mean', 'sim_cv', 'true_mean', 'N', 'ns', 'Nstrata',
-              'NTime', 'sci_names', 'strata', 'VAST_model', 'true_mean'),
-     file = paste0(github_dir, '/Stratified_RS_Simulation_Results.RData'))
+#################################
+## Simulation Metrics
+#################################
+#True CV
+true_cv_array = cv_cv_array = rrmse_cv_array = 
+   array(dim = c(NTime, ns, nrow(settings)), 
+         dimnames = list(paste0('Year_', 1:NTime), sci_names, NULL ))
 
-
-
-#Save results here
-
-spp = 3
-temp_settings = cbind(settings, 
-                      true_cv = colMeans(true_cv_array[,spp,]),
-                      cv_cv = colMeans(cv_cv_array[,spp,]),
-                      rrmse_cv = colMeans(rrmse_cv_array[,spp,]) )
-n_550 = data.frame()
-
-for(istrata in sort(unique(temp_settings$nstrata))){
-   temp_df = subset(temp_settings, nstrata == istrata)
-   n_550 = rbind(n_550,
-                 temp_df[which.min((temp_df$n - 550)),])
-}
-n_550
-
-#Average sampling rate of strata 
-for(istrata in sort(unique(temp_settings$nstrata))){
-   temp_strata = strata_list[settings$nstrata == istrata]
-   temp_df = subset(temp_settings, nstrata == istrata)
-   which_row = which.min(temp_df$n - 550)
-   print(quantile(temp_strata[[which_row]]$Allocation / temp_strata[[which_row]]$Population))
+for(iyear in 1:NTime){
+   for(irow in 1:nrow(settings) ){
+      for(spp in sci_names){
+         true_cv_array[paste0('Year_', iyear), spp, 
+                       irow] = 
+            sd(sim_mean[paste0('Year_', iyear), spp, 
+                        irow,]) / true_mean[iyear,spp]
+         
+         cv_cv_array[paste0('Year_', iyear), spp, 
+                     irow] = 
+            sd(sim_cv[paste0('Year_', iyear), spp, irow, ] ) / 
+            mean(sim_cv[paste0('Year_', iyear), spp, irow, ] )
+         
+         rrmse_cv_array[paste0('Year_', iyear), spp, irow] = 
+            (sum((sim_cv[paste0('Year_', iyear), spp, irow,] - 
+                     true_cv_array[paste0('Year_', iyear), spp, irow])^2) / Niters)^0.5 / mean(sim_cv[paste0('Year_', iyear), spp, irow ,])
+      }
+   }
 }
 
-apply(true_cv_array, MARGIN = 2:3, mean)
-apply(cv_cv_array, MARGIN = 2:3, mean)
-apply(rrmse_cv_array, MARGIN = 2:3, mean)
-
-n_550 = data.frame()
-for(istrata in sort(unique(temp_settings$nstrata))){
-   
-   which_rows = which(settings$nstrata == istrata)
-   which_row = which_rows[length(which_rows)]
-   print(settings[which_row,])
-   print(mean(strata_list[[which_row]]$SamplingRate))
-   # temp = t(data.frame(colMeans(true_cv_array[,,which_row])))
-    temp = t(data.frame(colMeans(cv_cv_array[,,which_row])))
-   # temp = t(data.frame(colMeans(rrmse_cv_array[,,which_row])))
-    
-   #mean cv
-   #temp = t(data.frame(colMeans(apply(sim_cv[,,which_row,], MARGIN = c(1:2), mean))))
-   rownames(temp) = NULL
-   
-   temp = cbind(settings[which_row,], temp)
-   n_550 = rbind(n_550, temp)
+#######################
+## Save results
+#######################
+for(ivar in  c('cv_cv_array', 'rrmse_cv_array', 'true_cv_array', 
+               'sim_mean', 'sim_cv')){
+   assign(x=paste0('STRS_', ivar), value = get(ivar))
 }
-n_550[,]
 
-par(mar = c(12,6,1,1))
-barplot(sort(unlist(n_550[1,sci_names])), las = 2, ylim = c(0,0.4))
+save(file = paste0(github_dir, '/Stratified_RS_Simulation_Results.RData'),
+     list = c(paste0('STRS_', c('cv_cv_array', 'rrmse_cv_array', 
+                               'true_cv_array', 'sim_mean', 'sim_cv')),
+              'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N'))
+
+

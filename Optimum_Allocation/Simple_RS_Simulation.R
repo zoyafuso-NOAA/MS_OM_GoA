@@ -62,6 +62,9 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, length(nsamples), Niters),
                                           sci_names, 
                                           paste0('size_', nsamples), 
                                           NULL))
+
+#Do Runs
+set.seed(233)
 for(iyear in 1:NTime){
  for(isample in nsamples){
   for(iter in 1:Niters){
@@ -119,8 +122,17 @@ for(iyear in 1:NTime){
  }
 }
 
-save(list = c('sim_mean', 'sim_cv', 'true_mean', 'N', 'ns', 
-              'NTime', 'sci_names', 'VAST_model', 'true_mean',
-              'true_cv_array', 'cv_cv_array', 'rrmse_cv_array',
-              'nsamples'),
-     file = paste0(github_dir, '/Simple_RS_Simulation_Results.RData') )
+#######################
+## Save results
+#######################
+for(ivar in  c('cv_cv_array', 'rrmse_cv_array', 'true_cv_array', 
+               'sim_mean', 'sim_cv')){
+   assign(x=paste0('SRS_', ivar), value = get(ivar))
+}
+
+save(file = paste0(github_dir, '/Simple_RS_Simulation_Results.RData'),
+     list = c(paste0('SRS_', c('cv_cv_array', 'rrmse_cv_array', 
+                                  'true_cv_array', 'sim_mean', 'sim_cv')),
+              'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N', 
+              'nsamples'))
+
