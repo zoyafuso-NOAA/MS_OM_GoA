@@ -12,12 +12,14 @@ library(SamplingStrata)
 ############################
 ## Set up directories
 #############################
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[1]
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2, 'Zack_GI' = 3)[3]
 modelno = '6g'
 github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
-                      'C:/Users/Zack Oyafuso/Documents/')[which_machine], 'GitHub/MS_OM_GoA/')
-VAST_dir = paste0(c('/Users/zackoyafuso/Google Drive/VAST_Runs/', 
-                    'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/'),
+                      'C:/Users/Zack Oyafuso/Documents/',
+                      'C:/Users/zack.oyafuso/Work/')[which_machine], 'GitHub/MS_OM_GoA/')
+VAST_dir = paste0(c('/Users/zackoyafuso/Google Drive/VAST_Runs/',
+                    'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/',
+                    'C:\\Users\\zack.oyafuso\\Desktop\\VAST_Runs\\'),
                   'VAST_output', modelno)[which_machine]
 
 ############################
@@ -61,27 +63,29 @@ sample_var = spread(data = aggregate(CPUE ~ SPECIES_NAME + STRATUM + YEAR,
                      key = SPECIES_NAME, value = CPUE)[,-(1:2)]
 names(sample_var) = paste0('S', 1:ns)
 
+sample_mean[is.na(sample_var)] = 0
+sample_var[is.na(sample_var)] = 0
 temp_stratapop = stratapop[temp_strata]
 
 
-df = cbind(data.frame(stratum = 1:length(temp_strata),
-           N = as.vector(temp_stratapop),
-           X1 = factor(1:length(temp_strata)),
-           cens = 0,
-           cost = 1,
-           DOM1 = 'tot'),
-           sample_mean, sample_var)
+df = cbind(data.frame(stratum = temp_strata,
+           N = as.vector(temp_stratapop)),#,
+           #X1 = factor(1:length(temp_strata))),
+           sample_mean, sqrt(sample_var),
+           data.frame(cens = 0,
+                      cost = 1,
+                      DOM1 = 'tot'))
 
-stmt = paste0('cbind(', paste0("CV", 1:ns, '=', 0.3, collapse = ', '), ')' )
+
+total_sample_size = c()
+for(icv in seq(0.1, 0.3, by = 0.01)){
+  
+}
+
+stmt = paste0('cbind(', paste0("CV", 1:ns, '=', 0.2, collapse = ', '), ')' )
 CVs = eval(parse(text = stmt))
 errors = cbind(data.frame(DOM = 'DOM1'), CVs, domainvalue = 1)
 
-n <- bethel(df, errors, printa=TRUE)
+n = bethel(stratif = df, errors = errors, printa=TRUE, epsilon = 1e-11, maxiter = 200)
 
-library(SamplingStrata)
-data(strata)
-data(errors)
-n <- bethel(strata, errors, printa=TRUE)
-sum(n)
-attributes(n)$confr
-attributes(n)$outcv
+
