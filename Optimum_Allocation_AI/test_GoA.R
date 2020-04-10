@@ -50,42 +50,55 @@ strata = colnames(samples_by_str)
 
 
 ######
-iyear = '2019'
-sample_df = subset(survey_data, YEAR == iyear)
-temp_strata = paste(sort(unique(sample_df$STRATUM)))
-sample_mean = spread(data = aggregate(CPUE ~ SPECIES_NAME + STRATUM + YEAR,
-                                      data = sample_df, FUN = mean, drop = F),
-                     key = SPECIES_NAME, value = CPUE)[,-(1:2)]
-names(sample_mean) = paste0('M', 1:ns)
 
-sample_var = spread(data = aggregate(CPUE ~ SPECIES_NAME + STRATUM + YEAR,
-                                      data = sample_df, FUN = var, drop = F),
-                     key = SPECIES_NAME, value = CPUE)[,-(1:2)]
-names(sample_var) = paste0('S', 1:ns)
+CVs = seq(0.10, 0.35, by = 0.01)
+Years = paste(sort(unique(survey_data$YEAR)))
+sample_allocation = array(data = 0, dim = c(NTime, length(CVs), length(strata)),
+                          dimnames = list(Years, CVs, strata))
 
-sample_mean[is.na(sample_var)] = 0
-sample_var[is.na(sample_var)] = 0
-temp_stratapop = stratapop[temp_strata]
-
-
-df = cbind(data.frame(stratum = temp_strata,
-           N = as.vector(temp_stratapop)),#,
-           #X1 = factor(1:length(temp_strata))),
-           sample_mean, sqrt(sample_var),
-           data.frame(cens = 0,
-                      cost = 1,
-                      DOM1 = 'tot'))
-
-
-total_sample_size = c()
-for(icv in seq(0.1, 0.3, by = 0.01)){
+for(iyear in Years){
+  sample_df = subset(survey_data, YEAR == iyear)
+  temp_strata = paste(sort(unique(sample_df$STRATUM)))
+  sample_mean = spread(data = aggregate(CPUE ~ SPECIES_NAME + STRATUM + YEAR,
+                                        data = sample_df, FUN = mean, drop = F),
+                       key = SPECIES_NAME, value = CPUE)[,-(1:2)]
+  names(sample_mean) = paste0('M', 1:ns)
+  
+  sample_var = spread(data = aggregate(CPUE ~ SPECIES_NAME + STRATUM + YEAR,
+                                       data = sample_df, FUN = var, drop = F),
+                      key = SPECIES_NAME, value = CPUE)[,-(1:2)]
+  names(sample_var) = paste0('S', 1:ns)
+  
+  sample_mean[is.na(sample_var)] = 0
+  sample_var[is.na(sample_var)] = 0
+  temp_stratapop = stratapop[temp_strata]
+  
+  
+  df = cbind(data.frame(stratum = temp_strata,
+                        N = as.vector(temp_stratapop)),#,
+             #X1 = factor(1:length(temp_strata))),
+             sample_mean, sqrt(sample_var),
+             data.frame(cens = 0,
+                        cost = 1,
+                        DOM1 = 'tot'))
+  
+  for(icv in CVs){
+    stmt = paste0('cbind(', paste0("CV", 1:ns, '=', icv, collapse = ', '), ')' )
+    CV = eval(parse(text = stmt))
+    errors = cbind(data.frame(DOM = 'DOM1'), CV, domainvalue = 1)
+    
+    n = bethel(stratif = df, errors = errors, printa=TRUE, epsilon = 1e-11, maxiter = 200)
+    sample_allocation[iyear, paste(icv), temp_strata] = as.numeric(n)
+  }
   
 }
 
-stmt = paste0('cbind(', paste0("CV", 1:ns, '=', 0.2, collapse = ', '), ')' )
-CVs = eval(parse(text = stmt))
-errors = cbind(data.frame(DOM = 'DOM1'), CVs, domainvalue = 1)
 
-n = bethel(stratif = df, errors = errors, printa=TRUE, epsilon = 1e-11, maxiter = 200)
 
+
+total_sample_size = apply(sample_allocation, MARGIN = 2, sum)
+plot(x = CVs, y = total_sample_size, pch = 16, las = 1, ylim = c(0, 2000))
+lines(x = CVs, y = total_sample_size)
+
+attributes(n)$outcv
 
