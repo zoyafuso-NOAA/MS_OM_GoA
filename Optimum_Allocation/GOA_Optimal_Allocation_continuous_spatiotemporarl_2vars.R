@@ -14,7 +14,7 @@ library(parallel); library(pbapply); library(formattable)
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[4]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
 
 SamplingStrata_dir = paste0(c('', 
                               'C:/Users/Zack Oyafuso',
@@ -63,7 +63,7 @@ nstrata = unlist(list('Zack_MAC'=NA,
                'Zack_GI_PC'= c(20,25,30), 
                'VM' = c(40,50,60))[which_machine])
 
-nstrata = 40
+nstrata = 10
 
 settings = data.frame()
 res_df = data.frame(id = 1:nrow(frame))
