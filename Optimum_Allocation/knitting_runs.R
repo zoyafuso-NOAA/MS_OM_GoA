@@ -51,3 +51,4 @@ strata_list = master_strata_list[order(master_settings$nstrata)]
 
 save(list = c('res_df', 'settings', 'strata_list'),
      file = paste0(github_dir, 'optimization_results.RData'))
+

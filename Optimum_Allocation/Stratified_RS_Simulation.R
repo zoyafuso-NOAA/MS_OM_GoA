@@ -75,7 +75,22 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, nrow(settings), Niters),
                                           NULL, 
                                           NULL))
 
-set.seed(134235)
+getseed = function(temp_time, temp_nstrata, temp_CV, temp_Niter){
+   
+   NTime = 11 #11 observed Years
+   NStrata = 60 #60 possible strata, only a subset are considered
+   NCV = length(seq(0, 0.5, 0.005)) #101 possible CV values
+   NIter = 1000 #1000 iterations, only 100 explored
+   
+   temp_CV2 = which(as.integer(temp_CV*1000)==as.integer(seq(0,0.5,0.005)*1000))
+   
+   return((NTime*NStrata*NCV) * (temp_Niter-1) +
+             (NTime * NStrata) * (temp_CV2-1) +
+             (NTime) * (temp_nstrata - 1) +
+             temp_time )
+}
+
+
 for(irow in 1:nrow(settings)) {
    
    print(paste0('Settings: ', settings$nstrata[irow], ' strata, ', 
@@ -90,6 +105,14 @@ for(irow in 1:nrow(settings)) {
    for(iyear in 1:NTime){
       for(iter in 1:Niters){
          
+         #Set Unique Seed
+         temp_seed =  getseed(temp_time = iyear, 
+                              temp_nstrata = settings$nstrata[irow], 
+                              temp_CV = settings$cv[irow], 
+                              temp_Niter = iter)
+         set.seed(temp_seed)
+         
+         #Sample based on the stratification allocations
          sample_vec = c()
          for(i in temp_strata ){
             available_cells = which(res_df[,irow] == i)
@@ -99,11 +122,13 @@ for(irow in 1:nrow(settings)) {
             sample_vec = c(sample_vec, sample_cells)
          }
          
+         #Organize sample set and total number of samples
          sample_vec = sort(sample_vec)
          n = length(sample_vec)
-         
          stratano =  res_df[sample_vec,irow]
          sample_df = subset(frame_raw, year == iyear)[sample_vec,]
+         
+         #Calculate Stratum Mean and Variance
          stmt = paste0('aggregate(cbind(',
                        paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
                        ") ~ stratano, data = sample_df, FUN = mean)")
@@ -113,9 +138,12 @@ for(irow in 1:nrow(settings)) {
                        ") ~ stratano, data = sample_df, FUN = var)")
          sample_var = eval(parse(text = stmt))[,-1]
          
+         #How many samples are allocated in each strata
+         #How many sampling units are in each strata
          temp_strata_allocation = strata_allocation[temp_strata]
          temp_stratapop = stratapop[temp_strata]
          
+         #Calculate Total Mean and Variance, calculate CV
          SRS_var = colSums(sweep(x = sample_var, MARGIN = 1, 
                                  STATS = (temp_stratapop/N)^2*(1 - temp_strata_allocation/temp_stratapop)/temp_strata_allocation,
                                  FUN = '*'))
@@ -126,6 +154,7 @@ for(irow in 1:nrow(settings)) {
          
          strata_cv = sqrt(SRS_var) / SRS_mean 
          
+         #Record mean and CV values
          sim_mean[paste0('Year_', iyear), , irow,iter] = SRS_mean
          sim_cv[paste0('Year_', iyear), , irow,iter] = strata_cv
          
@@ -171,7 +200,8 @@ for(ivar in  c('cv_cv_array', 'rrmse_cv_array', 'true_cv_array',
 
 save(file = paste0(github_dir, '/Stratified_RS_Simulation_Results.RData'),
      list = c(paste0('STRS_', c('cv_cv_array', 'rrmse_cv_array', 
-                               'true_cv_array', 'sim_mean', 'sim_cv')),
-              'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N'))
+                                'true_cv_array', 'sim_mean', 'sim_cv')),
+              'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N',
+              'getseed'))
 
 
