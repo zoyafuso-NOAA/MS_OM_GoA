@@ -99,7 +99,7 @@ data = subset(data,
                                  'rex sole', 
                                  'Dover sole',
                                  'flathead sole', 
-                                 'sablefish', 
+                                 # 'sablefish', 
                                  'dusky rockfish',
                                  'northern rockfish',
                                  "northern rock sole", 
@@ -107,5 +107,7 @@ data = subset(data,
                                  'B_R_rockfishes',
                                  'shortspine thornyhead',
                                  'yellowfin sole'))
+
+data = data[order(data$YEAR, data$SPECIES_NAME),]
 
 write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
