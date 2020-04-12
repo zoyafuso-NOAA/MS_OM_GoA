@@ -11,15 +11,16 @@ setwd( 'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
 #################################
 library(marmap); library(sp); library(RANN); library(raster);
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
 
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '6g'
+modelno = '6j'
 
-setwd( c('C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/',
-         'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')[which_machine] )
+setwd( c('',
+         'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/',
+         'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine] )
 
 load(paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
 observed_depths = read.csv('data/data/GOA_multspp.csv')$BOTTOM_DEPTH 

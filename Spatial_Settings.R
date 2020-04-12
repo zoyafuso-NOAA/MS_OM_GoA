@@ -7,7 +7,7 @@ library(VAST)
 setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 # setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6i'
+modelno = '6j' #6j is going to be same as 6g but resorted
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
