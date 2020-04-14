@@ -204,4 +204,3 @@ save(file = paste0(github_dir, '/Stratified_RS_Simulation_Results.RData'),
               'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N',
               'getseed'))
 
-
