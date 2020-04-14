@@ -34,11 +34,12 @@ load(paste0(github_dir, 'optimization_results.RData'))
    
    for(icv in unique(settings$cv)[1:22 %% 2 == 1] ) {
       lines(n ~ nstrata, data = settings, subset = cv == icv)
-      points(n ~ nstrata, data = settings, subset = cv == icv, pch = 16)
+      points(n ~ nstrata, data = settings, subset = cv == icv, 
+             pch = 16, cex = 0.75)
       text(x = max(settings$nstrata[settings$cv == icv]),
            y = settings$n[settings$cv == icv][which.max(settings$nstrata[settings$cv == icv])],
            paste0(icv*100, '% CV'),
-           pos = 4, cex = 1)
+           pos = 4, cex = 0.75)
    }
 
    text(x = 65, y = c(300, 570, 820), c('1 Boat', '2 Boats', '3 Boats'), col = 'grey')

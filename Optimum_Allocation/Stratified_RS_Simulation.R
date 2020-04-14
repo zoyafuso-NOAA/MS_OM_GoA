@@ -1,15 +1,8 @@
 ######################################
-## Calculate sampling CV
+## Simulate Random Sampling according to the optimized
+## stratifications
 ######################################
-
-#####################################
-## Optimal Solutions from 5-20 strata
-#####################################
 rm(list = ls())
-
-###############################
-## Import required packages
-###############################
 
 ###############################
 ## Set up directories
@@ -44,6 +37,7 @@ output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
 load(paste0(github_dir, '/optimization_data_model_', VAST_model, '.RData'))
 load(paste0(github_dir, '/optimization_results.RData'))
 
+#Constants
 ids = as.numeric(rownames(res_df))
 N = length(ids)
 strata = sort(unique(settings$nstrata))
@@ -57,8 +51,27 @@ sci_names = c("Atheresthes stomias", "Gadus chalcogrammus",
               "Sebastes alutus", "Sebastes B_R", "Sebastes polyspinis", 
               "Sebastes variabilis", "Sebastolobus alascanus" )
 
+#Add year column to the raw dataframe, modify res_df 
 frame_raw$year = rep(1:NTime, each = N)
 res_df = res_df[,-1]
+
+#################
+## Function to reproduce unique seed
+#################
+getseed = function(temp_time, temp_nstrata, temp_CV, temp_Niter){
+   
+   NTime = 11 #11 observed Years
+   NStrata = 60 #60 possible strata, only a subset are considered
+   NCV = length(seq(0, 0.5, 0.005)) #101 possible CV values
+   NIter = 1000 #1000 iterations, only 100 explored
+   
+   temp_CV2 = which(as.integer(temp_CV*1000)==as.integer(seq(0,0.5,0.005)*1000))
+   
+   return((NTime*NStrata*NCV) * (temp_Niter-1) +
+             (NTime * NStrata) * (temp_CV2-1) +
+             (NTime) * (temp_nstrata - 1) +
+             temp_time )
+}
 
 #################
 # true density
@@ -75,22 +88,9 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, nrow(settings), Niters),
                                           NULL, 
                                           NULL))
 
-getseed = function(temp_time, temp_nstrata, temp_CV, temp_Niter){
-   
-   NTime = 11 #11 observed Years
-   NStrata = 60 #60 possible strata, only a subset are considered
-   NCV = length(seq(0, 0.5, 0.005)) #101 possible CV values
-   NIter = 1000 #1000 iterations, only 100 explored
-   
-   temp_CV2 = which(as.integer(temp_CV*1000)==as.integer(seq(0,0.5,0.005)*1000))
-   
-   return((NTime*NStrata*NCV) * (temp_Niter-1) +
-             (NTime * NStrata) * (temp_CV2-1) +
-             (NTime) * (temp_nstrata - 1) +
-             temp_time )
-}
-
-
+##########################
+## Simulating each optimization
+##########################
 for(irow in 1:nrow(settings)) {
    
    print(paste0('Settings: ', settings$nstrata[irow], ' strata, ', 
@@ -165,7 +165,7 @@ for(irow in 1:nrow(settings)) {
 #################################
 ## Simulation Metrics
 #################################
-#True CV
+#True CV, Cv of Cv, Rrmse of Cv
 true_cv_array = cv_cv_array = rrmse_cv_array = 
    array(dim = c(NTime, ns, nrow(settings)), 
          dimnames = list(paste0('Year_', 1:NTime), sci_names, NULL ))
