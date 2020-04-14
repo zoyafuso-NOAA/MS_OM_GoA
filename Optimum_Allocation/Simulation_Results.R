@@ -25,16 +25,16 @@ load(paste0(github_dir, 'optimization_results.RData'))
 
 
 plot_set = data.frame(spp = sci_names,
-                      true_ymax = c(0.10, 0.25, 0.10, 
-                                    0.15, 0.15, 0.06, 
-                                    0.20, 0.20, 0.30, 
-                                    0.25, 0.40, 0.20, 
-                                    0.30, 0.40, 0.25),
-                      rrmse_ymax =c(0.30, 0.50, 0.50, 
-                                    0.50, 0.25, 0.30, 
-                                    0.40, 0.50, 0.30, 
-                                    0.60, 0.60, 0.45, 
-                                    0.50, 0.80, 0.40))
+                      true_ymax = c(0.15, 0.30, 0.12, 
+                                    0.15, 0.15, 0.08, 
+                                    0.25, 0.25, 0.35, 
+                                    0.35, 0.40, 0.35, 
+                                    0.35, 0.40, 0.40),
+                      rrmse_ymax =c(0.45, 0.50, 0.40, 
+                                    0.50, 0.30, 0.50, 
+                                    0.45, 0.50, 0.30, 
+                                    0.66, 0.60, 0.60, 
+                                    0.50, 0.80, 0.60))
 
 for(spp in 1:15){
   if(spp%%3 == 1){
@@ -91,21 +91,21 @@ for(spp in 1:15){
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-800) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
              axes = F, at = 7)
-    
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-550) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1, col = 'blue',
              axes = F, at = 8)
+    row_idx = which_strata[which.min(abs(settings[which_strata,'n']-280) )]
+    boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
+             axes = F, at = 9, col = 'red')
     
     #Simulated Stratified Random Sampling, 20 strata
     which_strata = which(settings$nstrata == 20)
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-800) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
              axes = F, at = 11)
-    
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-550) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
              axes = F, at = 12, col = 'blue')
-    
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-280) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
              axes = F, at = 13, col = 'red')
@@ -118,6 +118,9 @@ for(spp in 1:15){
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-550) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
              axes = F, at = 16, col = 'blue')
+    row_idx = which_strata[which.min(abs(settings[which_strata,'n']-280) )]
+    boxplot( STRS_result[,spp,row_idx], add = T, width = 1,
+             axes = F, at = 17, col = 'red')
     
     #Simulated Stratified Random Sampling, 60 strata
     which_strata = which(settings$nstrata == 60)
