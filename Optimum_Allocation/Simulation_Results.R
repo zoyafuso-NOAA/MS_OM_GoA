@@ -14,12 +14,13 @@ github_dir = paste0(c('/Users/zackoyafuso/Documents/',
                     'GitHub/MS_OM_GoA/Optimum_Allocation/', 
                     'model_', modelno, '/')
 
-output_dir = paste0(c('/Users/zackoyafuso/', 
-                      'C:/Users/Zack Oyafuso/')[which_machine],
-                    'Google Drive/MS_Optimizations/figure_plot/')
+paper_dir = paste0(c('/Users/zackoyafuso/', 
+                     'C:/Users/Zack Oyafuso/')[which_machine],
+                   'Google Drive/MS_Optimizations/figure_plot/')
+PP_dir = paste0(c('/Users/zackoyafuso/', 
+                  'C:/Users/Zack Oyafuso/')[which_machine],
+                'Google Drive/MS_Optimizations/powerpoint_plot/')
 
-load(paste0(github_dir, 'Survey_Simulation_Results.RData'))
-load(paste0(github_dir, 'Simple_RS_Simulation_Results.RData'))
 load(paste0(github_dir, 'Stratified_RS_Simulation_Results.RData'))
 load(paste0(github_dir, 'optimization_results.RData'))
 
@@ -36,10 +37,12 @@ plot_set = data.frame(spp = sci_names,
                                     0.66, 0.60, 0.60, 
                                     0.50, 0.80, 0.60))
 
-for(spp in 1:15){
-  if(spp%%3 == 1){
-    png(filename = paste0(output_dir, 'Sim_Metrics_',spp, '-', spp+2, '.png'),
-        width = 12, height = 4.5, units = 'in', res = 500)
+for(spp in c(1,3,14, 4,10,12)){
+  if(spp %in% c(1,4)){
+    png(filename = paste0(PP_dir, 'Sim_Metrics_',
+                          c('1' = 'NoChange', '4' = 'RRMSEChange')[paste(spp)],
+                          '.png'),
+        width = 9, height = 3.75, units = 'in', res = 500)
     par(mfcol = c(2,3), mar = c(1,4,2,0), oma = c(2,2,1,1))
   }
   
@@ -52,17 +55,21 @@ for(spp in 1:15){
     plot(1, type = 'n', xlim = c(2,22), 
          ylim = c(0, plot_set[spp, paste0(imetric, '_ymax')] ), 
          ann = F, axes = F)
+    legend('bottom', legend = paste('n =', c(820, 550, 280)), 
+           fill = c('white', 'blue', 'red'), ncol = 3, bty = 'n')
     box()
     
     if(imetric == 'true') mtext(side = 3, sci_names[spp], font = 3)
-    if(spp%%3 == 1) mtext(side = 2, 
+    if(spp%in%c(1,4)) mtext(side = 2, 
                           ifelse(imetric == 'true',
                                  'True CV\nAcross Years',
                                  'RRMSE of\nCV Across Years'), 
                           line = 3)
     
+    axis(side = 1, at = c(4,8,12,16,20), labels = NA)
     axis(side = 1, at = c(4,8,12,16,20), 
-                                labels = paste(c(5,10,20,40,60), 'strata'))
+                                labels = paste(c(5,10,20,40,60), '\nstrata'),
+         line = 0.5, tick=F)
     axis(side = 2, las = 1)
     
     #Simulated Survey Strata
@@ -133,6 +140,6 @@ for(spp in 1:15){
              axes = F, at = 20)
   }
   
-  if(spp%%3 == 0){ dev.off() }
+  if(spp%in% c(12,14)) dev.off() 
 }
 
