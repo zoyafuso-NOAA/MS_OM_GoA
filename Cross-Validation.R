@@ -10,7 +10,7 @@ library(VAST)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[3]
 
 setwd(paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
                     'C:/Users/zack.oyafuso/Desktop/',
@@ -26,13 +26,8 @@ VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/')
 
-VAST_modelno = data.frame(factorn = c(2,3,5),
-                     modelno = paste0(6, c('f', 'd', 'h')),
-                     stringsAsFactors = F)
-irow=1
 
-VAST_model = VAST_modelno$modelno[irow]
-factorno = VAST_modelno$factorn[irow]
+factorno = 5
 
 if(!dir.exists(paste0('Factor_', factorno)))
   dir.create(paste0('Factor_', factorno))
@@ -41,23 +36,28 @@ if(!dir.exists(paste0('Factor_', factorno)))
 ## Load Model Information, Fitted Parameters
 ###############################
 #Load Model SEttings
-load(paste0(VAST_dir, 'VAST_output', VAST_model, "/Model_Settings.RData"))
-
 load(paste0(VAST_dir, 'VAST_output6j/Spatial_Settings_CrVa.RData'))
 settings = make_settings( n_x=n_x, 
                           Region='Gulf_of_Alaska', 
                           purpose="index",
                           strata.limits=strata.limits, 
                           bias.correct=FALSE,
-                          FieldConfig = FieldConfig,
-                          RhoConfig = RhoConfig,
-                          OverdispersionConfig = OverdispersionConfig, 
-                          ObsModel = ObsModel,
-                          Options = Options,
+                          FieldConfig =  c("Omega1"=factorno, 
+                                           "Epsilon1"=factorno, 
+                                           "Omega2"=factorno, 
+                                           "Epsilon2"=factorno) ,
+                          RhoConfig = c("Beta1"=0, "Beta2"=0, 
+                                        "Epsilon1"=0, "Epsilon2"=0),
+                          OverdispersionConfig = c("Eta1"=0, "Eta2"=0), 
+                          ObsModel = c(2,0) ,
+                          Options = c("SD_site_density"=0, 
+                                      "SD_site_logdensity"=0, 
+                                      "Project_factors" = 0),
                           use_anisotropy = T)
 
 # Fit the model and a first time and record MLE
 fit = fit_model( "settings"=settings,
+                 "working_dir" = paste0('Factor_', factorno),
                  "Lat_i"=Data_Geostat[,'Lat'],
                  "Lon_i"=Data_Geostat[,'Lon'],
                  "t_i"=Data_Geostat[,'Year'],

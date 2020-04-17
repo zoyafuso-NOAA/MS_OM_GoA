@@ -6,7 +6,7 @@ rm(list = ls())
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[3]
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
