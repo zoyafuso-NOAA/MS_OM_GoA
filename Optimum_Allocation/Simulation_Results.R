@@ -138,6 +138,9 @@ for(spp in c(1,3,14, 4,10,12)){
     row_idx = which_strata[which.min(abs(settings[which_strata,'n']-550) )]
     boxplot( STRS_result[,spp,row_idx], add = T, width = 1, col = 'blue',
              axes = F, at = 20)
+    row_idx = which_strata[which.min(abs(settings[which_strata,'n']-280) )]
+    boxplot( STRS_result[,spp,row_idx], add = T, width = 1, col = 'red',
+             axes = F, at = 21)
   }
   
   if(spp%in% c(12,14)) dev.off() 

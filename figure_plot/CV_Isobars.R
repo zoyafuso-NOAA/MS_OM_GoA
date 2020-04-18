@@ -33,7 +33,7 @@ for(figure_type in c('paper_dir', 'PP_dir')){
    
    par(mar = c(5,5,1,1), mfrow = c(1,1))
    plot(n ~ nstrata, data = settings, type = 'n', las = 1, 
-        xlim = c(5,max(settings$nstrata) + 10), axes = F, ann = F )
+        xlim = c(5,max(settings$nstrata) + 15), axes = F, ann = F )
    axis(side = 1, at = c(seq(5,25,5), seq(30,60,10)))
    axis(side = 2, las =1 )
    mtext(side = 1, 'Number of Strata', line = 3); mtext(side = 2, 'Total Sample Size', line = 3)
@@ -51,6 +51,7 @@ for(figure_type in c('paper_dir', 'PP_dir')){
            pos = 4, cex = 0.75)
    }
 
-   text(x = 65, y = c(300, 570, 820), c('1 Boat', '2 Boats', '3 Boats'), col = 'grey')
+   text(x = 72.5, y = c(300, 570, 820), 
+        c('1 Boat', '2 Boats', '3 Boats'), col = 'grey')
    dev.off()
 }
