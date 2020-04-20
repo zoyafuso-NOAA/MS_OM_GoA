@@ -2,6 +2,7 @@
 ## Cross Validation
 ## Number of Species Factors, 2-5
 ########################################
+rm(list = ls())
 
 # Load packages
 library(TMB)
@@ -10,12 +11,20 @@ library(VAST)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[3]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
 
 setwd(paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
-                    'C:/Users/zack.oyafuso/Desktop/',
-                    'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-                  'VAST_Runs/VAST_output6j', '/'))
+               'C:/Users/zack.oyafuso/Desktop/',
+               'C:/Users/zack.oyafuso/Desktop/')[which_machine],
+             'VAST_Runs/VAST_output7', '/'))
+
+model_settings = data.frame(factorno = 2:6,
+                            modelno = paste0(7, letters[1:5]),
+                            stringsAsFactors = F)
+
+irow = 1
+factorno = model_settings$factorno[irow]
+modelno = model_settings$modelno[irow]
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
@@ -24,19 +33,29 @@ github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
 VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
                     'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-                  'VAST_Runs/')
+                  'VAST_Runs/VAST_output7/')
 
 
-factorno = 5
+if(!dir.exists(paste0('VAST_output', modelno, '/'))){
+  dir.create(paste0('VAST_output', modelno, '/'))
+}
 
-if(!dir.exists(paste0('Factor_', factorno)))
-  dir.create(paste0('Factor_', factorno))
 
 ###############################
-## Load Model Information, Fitted Parameters
+## Spatial settings: The following settings define the spatial resolution 
+## for the model, and whether to use a grid or mesh approximation
+## Stratification for results
 ###############################
-#Load Model SEttings
-load(paste0(VAST_dir, 'VAST_output6j/Spatial_Settings_CrVa.RData'))
+Method = c("Grid", "Mesh", "Spherical_mesh")[2]
+n_x = 350   # Specify number of stations (a.k.a. "knots")
+strata.limits <- data.frame(
+  'STRATA' = c("All_areas"),#, "west_of_140W"),
+  'west_border' = c(-Inf),#, -Inf),
+  'east_border' = c(Inf)#, -140)
+)
+
+load(paste0(VAST_dir, 'Spatial_Settings_CrVa.RData'))
+
 settings = make_settings( n_x=n_x, 
                           Region='Gulf_of_Alaska', 
                           purpose="index",
@@ -57,17 +76,31 @@ settings = make_settings( n_x=n_x,
 
 # Fit the model and a first time and record MLE
 fit = fit_model( "settings"=settings,
-                 "working_dir" = paste0(VAST_dir, '/Factor_', factorno),
+                 "working_dir" = paste0(VAST_dir, 'VAST_output', modelno, '/'),
                  "Lat_i"=Data_Geostat[,'Lat'],
                  "Lon_i"=Data_Geostat[,'Lon'],
                  "t_i"=Data_Geostat[,'Year'],
                  "c_i"=as.numeric(Data_Geostat[,'spp'])-1,
                  "b_i"=Data_Geostat[,'Catch_KG'],
                  "a_i"=Data_Geostat[,'AreaSwept_km2'],
-                 "v_i"=Data_Geostat[,'Vessel'] )
+                 "v_i"=Data_Geostat[,'Vessel'],
+                 "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                 "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
+                                                          'LOG_DEPTH',
+                                                          'LOG_DEPTH2',
+                                                          'Catch_KG')], 
+                                          Year = NA))
 ParHat = fit$ParHat
-save(list = 'fit', file = paste0(VAST_dir, '/Factor_', factorno, '/fit.RData'))
+save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
+###################################
+## Simulate Data
+###################################
+
+
+###################################
+## 10-fold Cross Validation
+###################################
 # Generate partitions in data
 prednll_f = rep(NA, n_fold )
 
