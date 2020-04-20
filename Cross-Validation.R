@@ -4,9 +4,14 @@
 ########################################
 rm(list = ls())
 
+library(devtools)
+install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-development/',
+              force = T)
+
 # Load packages
 library(TMB)
 library(VAST)
+library(FishStatsUtils)
 
 ###################################
 ## Set up directories
@@ -58,7 +63,7 @@ load(paste0(VAST_dir, 'Spatial_Settings_CrVa.RData'))
 
 settings = make_settings( n_x=n_x, 
                           Region='Gulf_of_Alaska', 
-                          purpose="index",
+                          purpose="index2",
                           strata.limits=strata.limits, 
                           bias.correct=FALSE,
                           FieldConfig =  c("Omega1"=factorno, 
@@ -89,14 +94,21 @@ fit = fit_model( "settings"=settings,
                                                           'LOG_DEPTH',
                                                           'LOG_DEPTH2',
                                                           'Catch_KG')], 
-                                          Year = NA))
+                                          Year = NA),
+                 "max_cells" = Inf)
 ParHat = fit$ParHat
 save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
 ###################################
 ## Simulate Data
 ###################################
-
+sim_1 = sim_2 = sim_3 = list()
+Niter = 1
+for(i in 1:Niter){
+  sim_1[[i]] <- simulate_data(fit, type = 1) 
+  sim_2[[i]] <- simulate_data(fit, type = 2)   
+  sim_3[[i]] <- simulate_data(fit, type = 3)   
+}
 
 ###################################
 ## 10-fold Cross Validation
