@@ -57,7 +57,7 @@ settings = make_settings( n_x=n_x,
 
 # Fit the model and a first time and record MLE
 fit = fit_model( "settings"=settings,
-                 "working_dir" = paste0('Factor_', factorno),
+                 "working_dir" = paste0(VAST_dir, '/Factor_', factorno),
                  "Lat_i"=Data_Geostat[,'Lat'],
                  "Lon_i"=Data_Geostat[,'Lon'],
                  "t_i"=Data_Geostat[,'Year'],
