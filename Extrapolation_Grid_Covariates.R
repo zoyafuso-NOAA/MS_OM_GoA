@@ -2,21 +2,19 @@
 ## Assign bathymetry value to each extrapolation grid
 ## Gulf of Alaska
 #################################
-
-# setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
-setwd( 'C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/')
+rm(list = ls())
 
 ##################################
 ## Import Libraries
 #################################
 library(marmap); library(sp); library(RANN); library(raster);
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
 
 ##################################
 ## Load Extrapolation Grid used in VAST
 #################################
-modelno = '6j'
+modelno = '8'
 
 setwd( c('',
          'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/',

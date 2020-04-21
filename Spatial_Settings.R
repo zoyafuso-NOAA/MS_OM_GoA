@@ -7,13 +7,15 @@ library(VAST)
 setwd( 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 # setwd( 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')
 
-modelno = '6j' #6j is going to be same as 6g but resorted
+modelno = '8' #6j is going to be same as 6g but resorted
 if(!dir.exists(paste0(getwd(), '/VAST_output', modelno, '/'))) {
   dir.create(paste0(getwd(), '/VAST_output', modelno, '/'))
 }
 
 ## Import Data
-data = read.csv(file = 'data/data/GOA_multspp.csv')
+if(modelno != '8'){
+  data = read.csv(file = 'data/data/GOA_multspp.csv')
+} else( data = read.csv(file = 'data/data/GOA_multspp_bathy.csv'))
 
 # Prepare the Data-frame for catch-rate data
 Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
@@ -73,7 +75,9 @@ Data_Geostat = cbind( Data_Geostat,
                       "knot_i"=Spatial_List$knot_i )
 
 #plot data points and knots
-plot(Spatial_List$latlon_i[,2:1])
+par(mar = c(0,0,0,0))
+plot(Spatial_List$latlon_i[,2:1], pch = 16, asp = 1, cex = 0.5)
 points(Spatial_List$latlon_x[,2:1], col = 'red', pch = 16, cex = 1)
 
 save.image(paste0(getwd(), '/VAST_output', modelno, '/Spatial_Settings.RData') )
+
