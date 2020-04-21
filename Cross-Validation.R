@@ -4,14 +4,11 @@
 ########################################
 rm(list = ls())
 
+# Load packages
+library(VAST)
 library(devtools)
 install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-development/',
               force = T)
-
-# Load packages
-library(TMB)
-library(VAST)
-library(FishStatsUtils)
 
 ###################################
 ## Set up directories
@@ -27,7 +24,7 @@ model_settings = data.frame(factorno = 2:6,
                             modelno = paste0(7, letters[1:5]),
                             stringsAsFactors = F)
 
-irow = 1
+irow = 2
 factorno = model_settings$factorno[irow]
 modelno = model_settings$modelno[irow]
 
@@ -97,18 +94,11 @@ fit = fit_model( "settings"=settings,
                                           Year = NA),
                  "max_cells" = Inf)
 ParHat = fit$ParHat
-save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
-###################################
-## Simulate Data
-###################################
-sim_1 = sim_2 = sim_3 = list()
-Niter = 1
-for(i in 1:Niter){
-  sim_1[[i]] <- simulate_data(fit, type = 1) 
-  sim_2[[i]] <- simulate_data(fit, type = 2)   
-  sim_3[[i]] <- simulate_data(fit, type = 3)   
-}
+###############################
+## Save Fit
+###############################
+save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
 ###################################
 ## 10-fold Cross Validation
@@ -122,6 +112,7 @@ for( fI in 1:n_fold ){
   
   # Refit, starting at MLE, without calculating standard errors (to save time)
   fit_new = fit_model( "settings"=settings, 
+                       "working_dir"=paste0(VAST_dir,'VAST_output',modelno,'/'),
                        "Lat_i"=Data_Geostat[,'Lat'],
                        "Lon_i"=Data_Geostat[,'Lon'], 
                        "t_i"=Data_Geostat[,'Year'],
@@ -131,16 +122,24 @@ for( fI in 1:n_fold ){
                        "v_i"=Data_Geostat[,'Vessel'],
                        "PredTF_i"=PredTF_i, 
                        "Parameters"=ParHat, 
-                       "getsd"=FALSE )
+                       "getsd"=FALSE,
+                       "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                       "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
+                                                                'LOG_DEPTH',
+                                                                'LOG_DEPTH2',
+                                                                'Catch_KG')], 
+                                                Year = NA),
+                       "max_cells" = Inf)
   
   
   #Finally, we bundle and save output
   
   # Save fit to out-of-bag data
- prednll_f[fI] = fit_new$Report$pred_jnll
- save(list = 'prednll_f', 
-      file = paste0(VAST_dir, '/Factor_', factorno, '/CrVa_Run.RData'))
+  prednll_f[fI] = fit_new$Report$pred_jnll
+  save(list = 'prednll_f', 
+       file = paste0(VAST_dir, 'VAST_output', modelno, '/CrVa_Run.RData'))
 }
 
 # Check fit to all out=of-bag data and use as metric of out-of-bag performance
 sum( prednll_f )
+
