@@ -8,7 +8,9 @@ library(VAST)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[1]
+
+modelno = '8'
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
@@ -17,7 +19,7 @@ github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
 VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
                     'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-                  'VAST_Runs/VAST_output7/')
+                  'VAST_Runs/VAST_output', modelno, '/')
 
 ## Import Data
 data = read.csv(file = paste0(github_dir, 'data/data/GOA_multspp.csv') )
@@ -38,7 +40,7 @@ rm(data)
 spp_df = read.csv(paste0(github_dir, "spp_df.csv"), check.names=F, header = T, 
                   row.names = 'modelno')
 
-which_spp = unlist(spp_df['6j',])
+which_spp = unlist(spp_df[modelno,])
 
 Data_Geostat = subset(Data_Geostat, spp %in% names(which_spp)[which_spp])
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
