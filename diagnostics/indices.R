@@ -1,26 +1,48 @@
+####################################
+## VAST vs DBE Index of Abundance
+####################################
+
 rm(list = ls())
 
-GOA_DBE = readRDS(file = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/GOA_biomass_indices_wnames.rds")
+####################################
+## Set up directories
+####################################
+modelno_main = '7'
+modelno = '7a'
 
-setwd("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/")
-modelno = '6g'
+VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 
+                  modelno_main, "/VAST_output", modelno, "/")
+diag_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/diagnostics/",
+                  "VAST_model", modelno_main, "/VAST_output", modelno, "/")
+github_dir = paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/')
 
-load(file = paste0('VAST_output', modelno, '/', 'VAST_MS_GoA_Run.RData'))
-load(file = paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
+sci_names = levels(
+  read.csv(paste0(github_dir, '/data/data/GOA_multspp.csv'))$SPECIES_NAME) 
+ns = length(sci_names)
 
-Year_Set = seq(min(Data_Geostat[,'Year']),max(Data_Geostat[,'Year']))
-Years2Include = which( Year_Set %in% sort(unique(Data_Geostat[,'Year'])))
+####################################
+## Import DBE Indices
+####################################
+GOA_DBE = readRDS(file = paste0("C:/Users/Zack Oyafuso/Documents/GitHub/",
+                                "MS_OM_GoA/diagnostics/",
+                                "GOA_biomass_indices_wnames.rds") )
 
-Index_Ests = Save$Report$Index_cyl[,Years2Include,1]
-Index_SDs = matrix(data = Save$Opt$SD$sd[attributes(Save$Opt$SD$value)$names == "Index_cyl"], nrow = length(Save$Spp))[,Years2Include]
+load(file = paste0(VAST_dir, 'fit.RData'))
+# load(file = paste0(VAST_dir, 'VAST_output', modelno, '/', 'Spatial_Settings.RData'))
+
+Year_Set = seq(min(fit$data_frame[,'t_i']),max(fit$data_frame[,'t_i']))
+Years2Include = which( Year_Set %in% sort(unique(fit$data_frame[,'t_i'])))
+
+Index_Ests = fit$Report$Index_cyl[,Years2Include,1]
+Index_SDs = matrix(data = fit$parameter_estimates$SD$sd[attributes(fit$parameter_estimates$SD$value)$names == "Index_cyl"], nrow = 15 )[,Years2Include]
 
 
-{tiff(paste0('diagnostics/VAST_model', modelno, '/indices_comparison_DBE.tiff'),
-     width = 12, height = 6, units = 'in', res = 500, compression = 'lzw')
+{png(paste0(diag_dir, 'indices_comparison_DBE.png'), width = 12, height = 6, 
+     units = 'in', res = 500)
 par(mfrow = c(3,5), mar = c(3,3,2,1))
-for(spp in (1:length(Save$Spp))[-12] ){
+for(spp in (1:ns)[-12] ){
   
-  temp_DBE = subset(GOA_DBE, SPECIES_NAME == Save$Spp[spp] & YEAR %in% Year_Set[Years2Include])
+  temp_DBE = subset(GOA_DBE, SPECIES_NAME == sci_names[spp] & YEAR %in% Year_Set[Years2Include])
   
   temp_DBE = temp_DBE[order(temp_DBE$YEAR),]
   
@@ -30,8 +52,9 @@ for(spp in (1:length(Save$Spp))[-12] ){
   upper = (Index_Ests + Index_SDs)/1e6
   lower = (Index_Ests - Index_SDs)/1e6
   
-  plot(x = Year_Set[Years2Include], Index_Ests[spp,]/1e6, type = 'n', ylab = 'Index', xlab = "Year",las = 1, ylim = c(0, max(c(upper[spp,], upper_DBE) )),
-       main = )
+  plot(x = Year_Set[Years2Include], Index_Ests[spp,]/1e6, type = 'n', 
+       ylab = 'Index', xlab = "Year", las = 1, 
+       ylim = c(0, max(c(upper[spp,], upper_DBE) )) )
   
   polygon(x = c(Year_Set[Years2Include],
                 rev(Year_Set[Years2Include])),
@@ -54,6 +77,8 @@ for(spp in (1:length(Save$Spp))[-12] ){
   mtext(side = 3, unique(temp_DBE$COMMON_NAME), font = 1)
   
 }
-plot(1, type = 'n', axes = F, ann = F); legend('center', legend = c('DBE', 'VAST'), col = c('red', 'black'), pch = 16, lty=1, cex = 3)
+plot(1, type = 'n', axes = F, ann = F)
+legend('center', legend = c('DBE', 'VAST'), 
+       col = c('red', 'black'), pch = 16, lty=1, cex = 3)
 dev.off()
 }
