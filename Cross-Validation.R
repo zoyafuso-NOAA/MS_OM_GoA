@@ -6,9 +6,9 @@ rm(list = ls())
 
 # Load packages
 library(VAST)
-library(devtools)
-install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-development/',
-              force = T)
+# library(devtools)
+# install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-2.6.0/',
+#               force = T)
 
 ###################################
 ## Set up directories
@@ -92,13 +92,17 @@ fit = fit_model( "settings"=settings,
                                                           'LOG_DEPTH2',
                                                           'Catch_KG')], 
                                           Year = NA),
-                 "max_cells" = Inf)
+                 "max_cells" = Inf,
+                 "getJointPrecision"=TRUE,
+                 "newtonsteps" = 1
+)
 ParHat = fit$ParHat
 
 ###############################
 ## Save Fit
 ###############################
 save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
+
 
 ###################################
 ## 10-fold Cross Validation
@@ -129,7 +133,8 @@ for( fI in 1:n_fold ){
                                                                 'LOG_DEPTH2',
                                                                 'Catch_KG')], 
                                                 Year = NA),
-                       "max_cells" = Inf)
+                       "max_cells" = Inf,
+                       "newtonsteps" = 1)
   
   
   #Finally, we bundle and save output
