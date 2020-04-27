@@ -7,7 +7,7 @@ rm(list = ls())
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[1]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
 VAST_model = "6g"
 github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
                       'C:/Users/Zack Oyafuso/Documents',
@@ -128,7 +128,7 @@ for(irow in 1:nrow(settings)) {
          stratano =  res_df[sample_vec,irow]
          sample_df = subset(frame_raw, year == iyear)[sample_vec,]
          
-         #Calculate Stratum Mean and Variance
+         #Calculate Stratum Mean Density and Variance
          stmt = paste0('aggregate(cbind(',
                        paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
                        ") ~ stratano, data = sample_df, FUN = mean)")
@@ -140,10 +140,10 @@ for(irow in 1:nrow(settings)) {
          
          #How many samples are allocated in each strata
          #How many sampling units are in each strata
-         temp_strata_allocation = strata_allocation[temp_strata]
-         temp_stratapop = stratapop[temp_strata]
+         temp_strata_allocation = strata_allocation[temp_strata] #n_h
+         temp_stratapop = stratapop[temp_strata] #N_h
          
-         #Calculate Total Mean and Variance, calculate CV
+         #Calculate Total Abundance and Variance, calculate CV
          SRS_var = colSums(sweep(x = sample_var, MARGIN = 1, 
                                  STATS = (temp_stratapop/N)^2*(1 - temp_strata_allocation/temp_stratapop)/temp_strata_allocation,
                                  FUN = '*'))

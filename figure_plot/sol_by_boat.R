@@ -1,14 +1,14 @@
 #################################
-
+## What do the stratifications look like?
 #############################
 rm(list = ls())
 
-library(sp); library(raster)
+library(sp); library(raster); library(RColorBrewer)
 
 ############################
 ## Set up directories
 #############################
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[1]
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
 modelno = '6g'
 github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
                       'C:/Users/Zack Oyafuso/Documents/')[which_machine],
@@ -33,7 +33,11 @@ stratas = c(5,10,15)
 
 yrange = diff(range(Extrapolation_depths[,c('N_km')]))
 
-{png(file = paste0(PP_dir, 'sol_by_boat.png'),
+plot_random_sample = T
+
+{png(file = paste0(PP_dir, 'sol_by_boat',
+                   ifelse(plot_random_sample == T, '_withsamples', ''),
+                   '.png'),
     width = 240, height = 90, units = 'mm', res = 1000)
 par(mfrow = c(1,3), mar = c(0,0,3,0))
 for(istrata in stratas){
@@ -44,6 +48,7 @@ for(istrata in stratas){
  )
  mtext(side = 3, paste(istrata, 'Strata'))
  offset = 0
+ 
  for(isample in samples){
   sub_settings = subset(settings, nstrata == istrata)
   
@@ -65,7 +70,6 @@ for(istrata in stratas){
   
   #Organize sample set and total number of samples
   sample_vec = sort(sample_vec)
-  
   sample_pts = Extrapolation_depths[sample_vec, c('E_km', 'N_km')]
   sample_pts[,'N_km'] = sample_pts[,'N_km'] + offset
   
@@ -74,7 +78,7 @@ for(istrata in stratas){
   goa_ras = raster(goa, resolution = 5)
   goa_ras =rasterize(x = goa, y = goa_ras, field = 'stratum')
   
-  goa_ras = raster::shift(goa_ras, y = offset)
+  goa_ras = raster::shift(goa_ras, dy = offset)
   offset = offset - yrange*.75
   
   image(goa_ras, asp = 1, axes = F, add = T,
@@ -85,7 +89,9 @@ for(istrata in stratas){
        y = goa_ras@extent[3]+yrange*0.60,
        paste0('n = ', isample, '\n'),
        cex = 1.5)
-  points(sample_pts, pch = 16, cex = 0.25)
+  
+  if(plot_random_sample) points(sample_pts, pch = 16, cex = 0.2)
+  offset = offset + 1
  }
  
 }
