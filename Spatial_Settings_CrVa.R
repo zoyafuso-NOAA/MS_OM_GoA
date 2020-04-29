@@ -50,31 +50,32 @@ Data_Geostat$spp = droplevels(Data_Geostat$spp)
 ################################
 # Generate partitions in data
 n_fold = 10
+years = paste0(unique(Data_Geostat$Year))
+NTime = length(unique(Data_Geostat$Year))
+ns = length(unique(Data_Geostat$spp))
 
 #Sort Data_Geostat
 Data_Geostat = Data_Geostat[order(Data_Geostat$Year, Data_Geostat$spp),]
-Data_Geostat$id = 1:nrow(Data_Geostat)
+Data_Geostat$latlon = paste0(Data_Geostat$Lat, Data_Geostat$Lon)
 
 set.seed(2342)
 foldno = lapply(X = split.data.frame(Data_Geostat, f = Data_Geostat$Year),
                 FUN = function(test) {
-                  row.idx = matrix(data = test$id, ncol = 15)
+                  unique_loc = unique(test$latlon)
                   fold_no = sample(x = 1:n_fold, 
-                                   size = nrow(row.idx), 
+                                   size = length(unique_loc), 
                                    replace = T)
-                  return(split(row.idx, fold_no))
+                  return(split(unique_loc, fold_no))
                 })
 
-test = lapply(X = foldno,
-              FUN = function(test){
-                lapply(test, FUN = function(x) Data_Geostat$id[x])
-              })
 
-for(iyear in names(test)){
-  for(ifold in paste(1:10)){
-    Data_Geostat[test[[iyear]][[ifold]],'fold'] = as.integer(ifold)
+
+for(iyear in years){
+  for(ifold in paste(1:n_fold)){
+    Data_Geostat[Data_Geostat$latlon %in% foldno[[iyear]][[ifold]] ,
+                 'fold'] = as.integer(ifold) 
   }
 }
 
-save(list = c('Data_Geostat', 'n_fold'),
+save(list = c('Data_Geostat'),
      file = paste0(VAST_dir,'/Spatial_Settings_CrVa.RData') )

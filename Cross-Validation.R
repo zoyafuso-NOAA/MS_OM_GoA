@@ -6,6 +6,7 @@ rm(list = ls())
 
 # Load packages
 library(VAST)
+library(TMBhelper)
 # library(devtools)
 # install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-2.6.0/',
 #               force = T)
@@ -13,7 +14,7 @@ library(VAST)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[1]
 
 setwd(paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
                'C:/Users/zack.oyafuso/Desktop/',
@@ -125,8 +126,8 @@ for( fI in 1:n_fold ){
                        "a_i"=Data_Geostat[,'AreaSwept_km2'], 
                        "v_i"=Data_Geostat[,'Vessel'],
                        "PredTF_i"=PredTF_i, 
-                       "Parameters"=ParHat, 
-                       "getsd"=FALSE,
+                       # "Parameters"=ParHat, 
+                       "getsd"=TRUE,
                        "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
                        "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
                                                                 'LOG_DEPTH',
