@@ -10,7 +10,7 @@ library(VAST)
 ###################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[1]
 
-modelno = '8'
+modelno = '7'
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',

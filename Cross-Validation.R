@@ -25,7 +25,7 @@ model_settings = data.frame(factorno = 2:6,
                             modelno = paste0(7, letters[1:5]),
                             stringsAsFactors = F)
 
-irow = 2
+irow = 1
 factorno = model_settings$factorno[irow]
 modelno = model_settings$modelno[irow]
 
@@ -108,6 +108,12 @@ save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData')
 ###################################
 ## 10-fold Cross Validation
 ###################################
+n_fold = 10
+for(fI in 1:n_fold){ 
+  if(!dir.exists(paste0(VAST_dir,'VAST_output', modelno,'/CV_', fI))){
+    dir.create(paste0(VAST_dir,'VAST_output', modelno,'/CV_', fI))}
+  } 
+
 # Generate partitions in data
 prednll_f = rep(NA, n_fold )
 
@@ -117,7 +123,8 @@ for( fI in 1:n_fold ){
   
   # Refit, starting at MLE, without calculating standard errors (to save time)
   fit_new = fit_model( "settings"=settings, 
-                       "working_dir"=paste0(VAST_dir,'VAST_output',modelno,'/'),
+                       "working_dir"=paste0(VAST_dir,'VAST_output',
+                                            modelno,'/CV_', fI),
                        "Lat_i"=Data_Geostat[,'Lat'],
                        "Lon_i"=Data_Geostat[,'Lon'], 
                        "t_i"=Data_Geostat[,'Year'],
@@ -126,8 +133,8 @@ for( fI in 1:n_fold ){
                        "a_i"=Data_Geostat[,'AreaSwept_km2'], 
                        "v_i"=Data_Geostat[,'Vessel'],
                        "PredTF_i"=PredTF_i, 
-                       # "Parameters"=ParHat, 
-                       "getsd"=TRUE,
+                       "Parameters"=ParHat,
+                       "getsd"=F,
                        "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
                        "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
                                                                 'LOG_DEPTH',
