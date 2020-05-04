@@ -69,6 +69,11 @@ yrange = range(Extrapolation_List$Data_Extrap[,'N_km'])
 xrange_diff = diff(xrange)
 yrange_diff = diff(yrange)
 
+##################################
+## If continuting from where you left on...
+#################################
+load(paste0(diag_dir, '/diagnostics.RData'))
+
 ######################
 ## Plot data
 ## It is always good practice to conduct exploratory analysis of data.  Here, I
@@ -224,19 +229,22 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
 ## Plot mean Density for each Species
 ############################################
 {
-  png(paste0(PP_dir, 'mean_annual_density.png'), units = 'in', 
+  png(paste0(PP_dir, 'mean_annual_density.png'), units = 'in',
       height = 4, width = 12, res = 500)
-  par(mar = c(0,0,0,0), mfcol = c(1,5))
+  par(mar = c(0,0,0,0))
+  
+  layout(mat = matrix(c(1,2,3,4,5, 16,
+                        6,7,8,9,10,16,
+                        11,12,13,14,15,16), byrow = T, nrow = 3), 
+         widths = c(rep(1,5),0.4) )
   for(ispp in 1:ns){
     
-    if((ispp %% 3) == 1){
-      plot(1, type = 'n', axes = F, ann = F,
-           xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
-           ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')])-1.75*yrange_diff,
-                    max(Extrapolation_List$Data_Extrap[,c('N_km')]))
-      )
-      offset = 0
-    }
+    plot(1, type = 'n', axes = F, ann = F,
+         xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
+         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')]),
+                  max(Extrapolation_List$Data_Extrap[,c('N_km')]))
+    )
+    
     
     vals  = rowSums(Report$D_gcy[,ispp,Years2Include])
     goa = SpatialPointsDataFrame(
@@ -246,35 +254,31 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
     goa_ras = raster(goa, resolution = 5)
     goa_ras = rasterize(x = goa, y = goa_ras, field = 'var')
     
-    goa_ras = raster::shift(goa_ras, dy = -yrange*0.125*offset)
-    temp_yrange = extent(goa_ras)[3:4]
     
-    val_cuts = c(0,1,quantile(vals[vals > 1], 
-                              probs = seq(0,1,0.2))[-1] )
-    values(goa_ras) = cut(x = values(goa_ras), 
+    val_cuts = c(0,1, quantile(vals[vals > 1], probs = seq(0,1,0.1)))
+    values(goa_ras) = cut(x = values(goa_ras),
                           breaks = val_cuts)
     
-    offset = offset + 1
-    
-    colors = c('white', 'yellow', 'gold', 'orange', 'red', 'brown')
+    colors = c('white', 'white', brewer.pal(n = 9, 'Oranges'), 'black')
     
     image(goa_ras, asp = 1, axes = F, ann = F, add = T, col = colors, asp = 1)
     
     text(x = xrange[1] + xrange_diff*0.71,
-         y = temp_yrange[1] + yrange_diff*0.65,
+         y = yrange[1] + yrange_diff*0.25,
          gsub(sci_names[ispp], pattern = ' ', replacement = '\n'), 
-         cex = 0.8, font = 3)
-    
-    val_cuts = round(val_cuts[-1])
-    legend(x = xrange[1] + xrange_diff*0.55,
-           y = temp_yrange[1] + yrange_diff*0.55, 
-           fill = colors, bty = 'n',
-           ncol = 1, cex = 0.75,
-           legend = c('<1', paste0('1-', val_cuts[2]), 
-                      paste0(val_cuts[2:(length(val_cuts)-1)], '-',
-                             val_cuts[3:length(val_cuts)])) )
+         cex = 1.25, font = 3)
+    box()
   }
-  dev.off()}
+  plot(1, type = 'n', axes = F, ann = F, xlim = c(0,1), ylim = c(0,10))
+  plotrix::color.legend(xl = 0.05,
+                        xr = 0.35,
+                        yb = 1,
+                        yt = 9,
+                        legend = paste0(seq(0,100,10), ' %' ),
+                        rect.col = colors,
+                        gradient = 'y', align = 'rb')
+  dev.off()
+  }
 
 
 ############################################
@@ -282,7 +286,13 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
 ############################################
 
 {png(paste0(diag_dir, 'density.png'), units = 'in', height = 7, width = 12, res = 500)
-  par(mar = c(0,0,1,0), mfrow = c(2,8))
+  par(mar = c(0,1,0,0))
+  
+  layout(mat = matrix(c(1,2,3,4,5, 16,
+                        6,7,8,9,10,16,
+                        11,12,13,14,15,16), byrow = T, nrow = 3), 
+         widths = c(rep(1,5),0.25) )
+  
   for(ispp in 1:ns){
     
     vals  = Report$D_gcy[,ispp,]

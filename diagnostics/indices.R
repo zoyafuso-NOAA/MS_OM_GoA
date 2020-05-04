@@ -8,7 +8,7 @@ rm(list = ls())
 ## Set up directories
 ####################################
 modelno_main = '7'
-modelno = '7c'
+modelno = '7a'
 
 VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 
                   modelno_main, "/VAST_output", modelno, "/")
@@ -39,7 +39,7 @@ Index_SDs = matrix(data = fit$parameter_estimates$SD$sd[attributes(fit$parameter
 
 {png(paste0(diag_dir, 'indices_comparison_DBE.png'), width = 12, height = 6, 
      units = 'in', res = 500)
-par(mfrow = c(3,5), mar = c(3,3,2,1))
+par(mfrow = c(3,5), mar = c(3,3,2,1), oma = c(0,2.5,0,0))
 for(spp in (1:ns)[-12] ){
   
   temp_DBE = subset(GOA_DBE, SPECIES_NAME == sci_names[spp] & YEAR %in% Year_Set[Years2Include])
@@ -80,5 +80,7 @@ for(spp in (1:ns)[-12] ){
 plot(1, type = 'n', axes = F, ann = F)
 legend('center', legend = c('DBE', 'VAST'), 
        col = c('red', 'black'), pch = 16, lty=1, cex = 3)
+mtext(side = 2, outer = T, text = 'Abundance Index (million metric tons)',
+      line = 1)
 dev.off()
 }
