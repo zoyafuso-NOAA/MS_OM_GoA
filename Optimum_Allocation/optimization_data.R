@@ -15,14 +15,14 @@ library(parallel); library(pbapply); library(formattable)
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[1]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
 
 SamplingStrata_dir = paste0(c('', 
                               'C:/Users/Zack Oyafuso',
                               'C:/Users/zack.oyafuso',
                               'C:/Users/zack.oyafuso')[which_machine],
                             '/Downloads/SamplingStrata-master/R')
-github_dir = paste0(c(, 
+github_dir = paste0(c('', 
                       'C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
@@ -34,14 +34,13 @@ VAST_dir = paste0(c('',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/VAST_output', VAST_model)
 
-output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
-                     'Optimum_Allocation/model_', VAST_model),
-              paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model),
-              paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model),
-              paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model))[which_machine]
+optimization_type = c('_spatial', '')[1]
+output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
+                     'C:/Users/Zack Oyafuso/Documents/',
+                     'C:/Users/zack.oyafuso/Work/', 
+                     'C:/Users/zack.oyafuso/Work/' )[which_machine], 
+                   "GitHub/MS_OM_GoA/Optimum_Allocation/model_", VAST_model,
+                   optimization_type)
 
 #########################
 ## Load functions from SamplingStrata packages into global environment
@@ -69,6 +68,9 @@ NTime = length(Years2Include)
 ##########################
 df = df_raw = NULL
 
+##########################
+## Mean density across years
+#########################
 df = cbind(
   data.frame(Domain = 1,
              x = 1:Save$TmbData$n_g,
@@ -85,6 +87,9 @@ frame <- buildFrameDF(df = df,
                       Y = gsub(x = Save$Spp, pattern = ' ', replacement = '_'),
                       domainvalue = "Domain")
 
+############################
+## Density for each observed year and cell
+############################
 for(iT in 1:NTime){
   df_raw = rbind(df_raw, cbind(
     data.frame(Domain = 1,
