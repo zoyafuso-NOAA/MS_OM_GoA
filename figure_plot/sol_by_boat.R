@@ -8,12 +8,16 @@ library(sp); library(raster); library(RColorBrewer)
 ############################
 ## Set up directories
 #############################
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[2]
-modelno = '6g'
-github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
-                      'C:/Users/Zack Oyafuso/Documents/')[which_machine],
-                    'GitHub/MS_OM_GoA/Optimum_Allocation/', 
-                    'model_', modelno, '/')
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
+optimization_type = c('_spatial', '_spatiotemporal')[1]
+VAST_model = '6g'
+
+output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
+                     'C:/Users/Zack Oyafuso/Documents/',
+                     'C:/Users/zack.oyafuso/Work/', 
+                     'C:/Users/zack.oyafuso/Work/' )[which_machine], 
+                   "GitHub/MS_OM_GoA/Optimum_Allocation/model_", VAST_model,
+                   optimization_type)
 
 paper_dir = paste0(c('/Users/zackoyafuso/', 
                      'C:/Users/Zack Oyafuso/')[which_machine],
@@ -22,10 +26,10 @@ PP_dir = paste0(c('/Users/zackoyafuso/',
                   'C:/Users/Zack Oyafuso/')[which_machine],
                 'Google Drive/MS_Optimizations/powerpoint_plot/')
 
-load(paste0(dirname(dirname(github_dir)), '/Extrapolation_depths.RData' ))
-load(paste0(github_dir, 'Stratified_RS_Simulation_Results.RData'))
-load(paste0(github_dir, 'optimization_results.RData'))
-load(paste0(github_dir, 'optimization_data_model_', modelno, '.RData'))
+load(paste0(dirname(dirname(output_wd)), '/Extrapolation_depths.RData' ))
+load(paste0(output_wd, '/Stratified_RS_Simulation_Results.RData'))
+load(paste0(output_wd, '/optimization_results.RData'))
+load(paste0(output_wd, '/optimization_data_model_', VAST_model, '.RData'))
 
 settings$id = 1:nrow(settings)
 samples = c(820, 550, 280)
@@ -33,12 +37,13 @@ stratas = c(5,10,15)
 
 yrange = diff(range(Extrapolation_depths[,c('N_km')]))
 
-plot_random_sample = T
+plot_random_sample = F
 
-{png(file = paste0(PP_dir, 'sol_by_boat',
-                   ifelse(plot_random_sample == T, '_withsamples', ''),
-                   '.png'),
-    width = 240, height = 90, units = 'mm', res = 1000)
+{
+  # png(file = paste0(PP_dir, 'sol_by_boat',
+  #                  ifelse(plot_random_sample == T, '_withsamples', ''),
+  #                  '.png'),
+  #   width = 240, height = 90, units = 'mm', res = 1000)
 par(mfrow = c(1,3), mar = c(0,0,3,0))
 for(istrata in stratas){
  plot(1, type = 'n', axes = F, ann = F,
@@ -96,7 +101,8 @@ for(istrata in stratas){
  
 }
 
-dev.off()}
+# dev.off()
+}
 
 # frame$X2 = round(frame$X2)
 # temp_df = strata_list[[isol]]
