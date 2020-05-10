@@ -9,11 +9,7 @@ rm(list = ls())
 ###############################
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
 VAST_model = "6g"
-github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
-                      'C:/Users/Zack Oyafuso/Documents',
-                      'C:/Users/zack.oyafuso/Work',
-                      'C:/Users/zack.oyafuso/Work')[which_machine],
-                    '/GitHub/MS_OM_GoA/Optimum_Allocation/model_', VAST_model)
+optimization_type = c('_spatial', '_spatiotemporal')[1]
 
 VAST_dir = paste0(c('/Users/zackoyafuso/Google Drive/', 
                     'C:/Users/Zack Oyafuso/Google Drive/', 
@@ -21,21 +17,19 @@ VAST_dir = paste0(c('/Users/zackoyafuso/Google Drive/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/VAST_output', VAST_model)
 
-output_wd = c(paste0('/Users/zackoyafuso/Documents/GitHub/MS_OM_GoA/',
-                     'Optimum_Allocation/model_', VAST_model),
-              paste0("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model),
-              paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model),
-              paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/",
-                     "Optimum_Allocation/model_", VAST_model))[which_machine]
 
+output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
+                     'C:/Users/Zack Oyafuso/Documents/',
+                     'C:/Users/zack.oyafuso/Work/', 
+                     'C:/Users/zack.oyafuso/Work/' )[which_machine], 
+                   "GitHub/MS_OM_GoA/Optimum_Allocation/model_", VAST_model,
+                   optimization_type)
 
 #########################
 ## Load data
 #########################
-load(paste0(github_dir, '/optimization_data_model_', VAST_model, '.RData'))
-load(paste0(github_dir, '/optimization_results.RData'))
+load(paste0(output_wd, '/optimization_data_model_', VAST_model, '.RData'))
+load(paste0(output_wd, '/optimization_results.RData'))
 
 #Constants
 ids = as.numeric(rownames(res_df))
@@ -143,9 +137,12 @@ for(irow in 1:nrow(settings)) {
          temp_strata_allocation = strata_allocation[temp_strata] #n_h
          temp_stratapop = stratapop[temp_strata] #N_h
          
+         Wh = temp_stratapop/N
+         wh = temp_strata_allocation/temp_stratapop
+         
          #Calculate Total Abundance and Variance, calculate CV
          SRS_var = colSums(sweep(x = sample_var, MARGIN = 1, 
-                                 STATS = (temp_stratapop/N)^2*(1 - temp_strata_allocation/temp_stratapop)/temp_strata_allocation,
+                                 STATS = (Wh)^2*(1-wh)/temp_strata_allocation,
                                  FUN = '*'))
          
          SRS_mean = colSums(sweep(x = sample_mean, MARGIN = 1, 
@@ -173,19 +170,15 @@ true_cv_array = cv_cv_array = rrmse_cv_array =
 for(iyear in 1:NTime){
    for(irow in 1:nrow(settings) ){
       for(spp in sci_names){
-         true_cv_array[paste0('Year_', iyear), spp, 
-                       irow] = 
-            sd(sim_mean[paste0('Year_', iyear), spp, 
-                        irow,]) / true_mean[iyear,spp]
          
-         cv_cv_array[paste0('Year_', iyear), spp, 
-                     irow] = 
-            sd(sim_cv[paste0('Year_', iyear), spp, irow, ] ) / 
-            mean(sim_cv[paste0('Year_', iyear), spp, irow, ] )
+         iter_est = sim_mean[paste0('Year_', iyear), spp, irow, ]
+         iter_cv = sim_cv[paste0('Year_', iyear), spp, irow, ]
+         true_cv = sd(iter_est) / true_mean[iyear, spp]
          
+         true_cv_array[paste0('Year_', iyear), spp,  irow] = true_cv
+            
          rrmse_cv_array[paste0('Year_', iyear), spp, irow] = 
-            (sum((sim_cv[paste0('Year_', iyear), spp, irow,] - 
-                     true_cv_array[paste0('Year_', iyear), spp, irow])^2) / Niters)^0.5 / mean(sim_cv[paste0('Year_', iyear), spp, irow ,])
+            sqrt(mean((iter_cv-true_cv)^2)) / mean(iter_cv)
       }
    }
 }
@@ -198,7 +191,7 @@ for(ivar in  c('cv_cv_array', 'rrmse_cv_array', 'true_cv_array',
    assign(x=paste0('STRS_', ivar), value = get(ivar))
 }
 
-save(file = paste0(github_dir, '/Stratified_RS_Simulation_Results.RData'),
+save(file = paste0(output_wd, '/Stratified_RS_Simulation_Results.RData'),
      list = c(paste0('STRS_', c('cv_cv_array', 'rrmse_cv_array', 
                                 'true_cv_array', 'sim_mean', 'sim_cv')),
               'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N',

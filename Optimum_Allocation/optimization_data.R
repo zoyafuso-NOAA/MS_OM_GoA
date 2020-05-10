@@ -16,6 +16,8 @@ library(parallel); library(pbapply); library(formattable)
 ## Set up directories
 ###############################
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
+optimization_type = c('_spatial', '')[1]
+VAST_model = "6g"
 
 SamplingStrata_dir = paste0(c('', 
                               'C:/Users/Zack Oyafuso',
@@ -27,14 +29,14 @@ github_dir = paste0(c('',
                       'C:/Users/zack.oyafuso/Work',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/Optimum_Allocation/')
-VAST_model = "6g"
+
 VAST_dir = paste0(c('', 
                     'C:/Users/Zack Oyafuso/Google Drive/', 
                     'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/VAST_output', VAST_model)
 
-optimization_type = c('_spatial', '')[1]
+
 output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
                      'C:/Users/Zack Oyafuso/Documents/',
                      'C:/Users/zack.oyafuso/Work/', 

@@ -7,12 +7,16 @@ rm(list = ls())
 ############################
 ## Set up directories
 #############################
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2)[1]
-modelno = '6g'
-github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
-                      'C:/Users/Zack Oyafuso/Documents/')[which_machine],
-                    'GitHub/MS_OM_GoA/Optimum_Allocation/', 
-                    'model_', modelno, '/')
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
+optimization_type = c('_spatial', '_spatiotemporal')[2]
+VAST_model = '6g'
+
+output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
+                     'C:/Users/Zack Oyafuso/Documents/',
+                     'C:/Users/zack.oyafuso/Work/', 
+                     'C:/Users/zack.oyafuso/Work/' )[which_machine], 
+                   "GitHub/MS_OM_GoA/Optimum_Allocation/model_", VAST_model,
+                   optimization_type)
 
 paper_dir = paste0(c('/Users/zackoyafuso/', 
                      'C:/Users/Zack Oyafuso/')[which_machine],
@@ -21,8 +25,8 @@ PP_dir = paste0(c('/Users/zackoyafuso/',
                   'C:/Users/Zack Oyafuso/')[which_machine],
                 'Google Drive/MS_Optimizations/powerpoint_plot/')
 
-load(paste0(github_dir, 'Stratified_RS_Simulation_Results.RData'))
-load(paste0(github_dir, 'optimization_results.RData'))
+load(paste0(output_wd, '/Stratified_RS_Simulation_Results.RData'))
+load(paste0(output_wd, '/optimization_results.RData'))
 
 
 plot_set = data.frame(spp = sci_names,
@@ -36,15 +40,16 @@ plot_set = data.frame(spp = sci_names,
                                     0.45, 0.50, 0.30, 
                                     0.66, 0.60, 0.60, 
                                     0.50, 0.80, 0.60))
-
-for(spp in c(1,3,14, 4,10,12)){
-  if(spp %in% c(1,4)){
-    png(filename = paste0(PP_dir, 'Sim_Metrics_',
-                          c('1' = 'NoChange', '4' = 'RRMSEChange')[paste(spp)],
-                          '.png'),
-        width = 9, height = 3.75, units = 'in', res = 500)
-    par(mfcol = c(2,3), mar = c(1,4,2,0), oma = c(2,2,1,1))
-  }
+par(mfcol = c(2,3), mar = c(1,4,2,0), oma = c(2,2,1,1))
+# for(spp in c(1,3,14, 4,10,12)){
+for(spp in 1:ns){
+  # if(spp %in% c(1,4)){
+  #   png(filename = paste0(PP_dir, 'Sim_Metrics_',
+  #                         c('1' = 'NoChange', '4' = 'RRMSEChange')[paste(spp)],
+  #                         '.png'),
+  #       width = 9, height = 3.75, units = 'in', res = 500)
+  #   par(mfcol = c(2,3), mar = c(1,4,2,0), oma = c(2,2,1,1))
+  # }
   
   for(imetric in c('true', 'rrmse')){
     #survey_result = get(paste0('survey_', imetric, '_cv_array'))
@@ -61,14 +66,14 @@ for(spp in c(1,3,14, 4,10,12)){
     
     if(imetric == 'true') mtext(side = 3, sci_names[spp], font = 3)
     if(spp%in%c(1,4)) mtext(side = 2, 
-                          ifelse(imetric == 'true',
-                                 'True CV\nAcross Years',
-                                 'RRMSE of\nCV Across Years'), 
-                          line = 3)
+                            ifelse(imetric == 'true',
+                                   'True CV\nAcross Years',
+                                   'RRMSE of\nCV Across Years'), 
+                            line = 3)
     
     axis(side = 1, at = c(4,8,12,16,20), labels = NA)
     axis(side = 1, at = c(4,8,12,16,20), 
-                                labels = paste(c(5,10,20,40,60), '\nstrata'),
+         labels = paste(c(5,10,20,40,60), '\nstrata'),
          line = 0.5, tick=F)
     axis(side = 2, las = 1)
     
@@ -143,6 +148,6 @@ for(spp in c(1,3,14, 4,10,12)){
              axes = F, at = 21)
   }
   
-  if(spp%in% c(12,14)) dev.off() 
+  # if(spp%in% c(12,14)) dev.off() 
 }
 
