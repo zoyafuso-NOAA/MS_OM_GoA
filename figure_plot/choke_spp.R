@@ -7,7 +7,7 @@ rm(list = ls())
 ## Set up directories
 #############################
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
-optimization_type = c('_spatial', '_spatiotemporal')[2]
+optimization_type = c('_spatial', '_spatiotemporal')[1]
 VAST_model = '6g'
 
 output_wd = paste0(c('/Users/zackoyafuso/Documents/', 

@@ -45,7 +45,7 @@ if(optimization_type == '_spatial') library(SamplingStrata)
 ## Load Data
 ###########################
 load(paste0(output_wd, '/optimization_data_model_', 
-            VAST_model, '.RData'))
+            modelno, '.RData'))
 if(optimization_type == '_spatial') rm(frame_raw)
 
 ############################
@@ -62,14 +62,14 @@ settings = data.frame()
 res_df = data.frame(id = 1:nrow(frame))
 strata_list = list()
 
-par(mfrow = c(4,2), mar = c(0,0,0,0))
+par(mfrow = c(4,3), mar = c(0,0,0,0))
 for(istrata in nstrata){
   
   iseed = istrata
   current_n = 10000
-  current_CV = 0.1
+  current_CV = 0.08
   
-  while(current_n >= 280){
+  while(current_n > 280){
     set.seed(iseed)
     
     #Create CV dataframe
@@ -83,8 +83,8 @@ for(istrata in nstrata){
     solution <- optimStrata(method = "continuous",
                             errors = cv, 
                             framesamp = frame,
-                            iter = 100,
-                            pops = 30,
+                            iter = 200,
+                            pops = 50,
                             elitism_rate = 0.1,
                             mut_chance = 1 / (istrata + 1),
                             nStrata = istrata,
@@ -118,7 +118,7 @@ for(istrata in nstrata){
                 ' sample size'))
     
     #Update the next CV level and iseed
-    current_CV = current_CV + 0.005
+    current_CV = current_CV + 0.01
     iseed = istrata*1000 + 1
     
     #Plot Solution
