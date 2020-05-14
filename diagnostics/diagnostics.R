@@ -17,7 +17,10 @@ library(plotrix)
 ## Set up directories
 #################################
 modelno_main = '8'
+
 modelno = '8c'
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[3]
+
 
 PP_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/MS_Optimizations/powerpoint_plot/")
 VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 

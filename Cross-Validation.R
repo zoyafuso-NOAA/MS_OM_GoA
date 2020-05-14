@@ -14,15 +14,10 @@ library(TMBhelper)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[1]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-setwd(paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
-               'C:/Users/zack.oyafuso/Desktop/',
-               'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-             'VAST_Runs/VAST_output7', '/'))
-
-model_settings = data.frame(factorno = 2:6,
-                            modelno = paste0(7, letters[1:5]),
+model_settings = data.frame(factorno = 2:4,
+                            modelno = paste0(8, letters[1:3]),
                             stringsAsFactors = F)
 
 irow = 1
@@ -30,19 +25,14 @@ factorno = model_settings$factorno[irow]
 modelno = model_settings$modelno[irow]
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
-                      'C:/Users/zack.oyafuso/Work',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/')
 VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
-                    'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-                  'VAST_Runs/VAST_output7/')
+                  'VAST_Runs/VAST_output', modelno, '/')
 
 
-if(!dir.exists(paste0('VAST_output', modelno, '/'))){
-  dir.create(paste0('VAST_output', modelno, '/'))
-}
-
+if(!dir.exists(VAST_dir)) dir.create(VAST_dir)
 
 ###############################
 ## Spatial settings: The following settings define the spatial resolution 
@@ -57,7 +47,7 @@ strata.limits <- data.frame(
   'east_border' = c(Inf)#, -140)
 )
 
-load(paste0(VAST_dir, 'Spatial_Settings_CrVa.RData'))
+load(paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData'))
 
 settings = make_settings( n_x=n_x, 
                           Region='Gulf_of_Alaska', 
@@ -78,44 +68,45 @@ settings = make_settings( n_x=n_x,
                           use_anisotropy = T)
 
 # Fit the model and a first time and record MLE
-fit = fit_model( "settings"=settings,
-                 "working_dir" = paste0(VAST_dir, 'VAST_output', modelno, '/'),
-                 "Lat_i"=Data_Geostat[,'Lat'],
-                 "Lon_i"=Data_Geostat[,'Lon'],
-                 "t_i"=Data_Geostat[,'Year'],
-                 "c_i"=as.numeric(Data_Geostat[,'spp'])-1,
-                 "b_i"=Data_Geostat[,'Catch_KG'],
-                 "a_i"=Data_Geostat[,'AreaSwept_km2'],
-                 "v_i"=Data_Geostat[,'Vessel'],
-                 "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                 "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
-                                                          'LOG_DEPTH',
-                                                          'LOG_DEPTH2',
-                                                          'Catch_KG')], 
-                                          Year = NA),
-                 "max_cells" = Inf,
-                 "getJointPrecision"=TRUE,
-                 "newtonsteps" = 1
-)
-ParHat = fit$ParHat
+# fit = fit_model( "settings"=settings,
+#                  "working_dir" = paste0(VAST_dir, 'VAST_output', modelno, '/'),
+#                  "Lat_i"=Data_Geostat[,'Lat'],
+#                  "Lon_i"=Data_Geostat[,'Lon'],
+#                  "t_i"=Data_Geostat[,'Year'],
+#                  "c_i"=as.numeric(Data_Geostat[,'spp'])-1,
+#                  "b_i"=Data_Geostat[,'Catch_KG'],
+#                  "a_i"=Data_Geostat[,'AreaSwept_km2'],
+#                  "v_i"=Data_Geostat[,'Vessel'],
+#                  # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+#                  # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
+#                  #                                          'LOG_DEPTH',
+#                  #                                          'LOG_DEPTH2',
+#                  #                                          'Catch_KG')], 
+#                  # Year = NA),
+#                  "max_cells" = Inf,
+#                  "getJointPrecision"=TRUE,
+#                  "newtonsteps" = 1
+# )
+# ParHat = fit$ParHat
 
 ###############################
 ## Save Fit
 ###############################
-save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
+# save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
+load(paste0(VAST_dir, 'fit.RData'))
+ParHat = fit$ParHat
 
 ###################################
 ## 10-fold Cross Validation
 ###################################
-n_fold = 10
+n_fold = 5
 for(fI in 1:n_fold){ 
-  if(!dir.exists(paste0(VAST_dir,'VAST_output', modelno,'/CV_', fI))){
-    dir.create(paste0(VAST_dir,'VAST_output', modelno,'/CV_', fI))}
-  } 
+  iprednll_f = repf(!dir.exists(paste0(VAST_dir, 'CV_', fI))){
+    dir.create(paste0(VAST_dir, 'CV_', fI))
+  }
+} 
 
-# Generate partitions in data
-prednll_f = rep(NA, n_fold )
 
 # Loop through partitions, refitting each time with a different PredTF_i
 for( fI in 1:n_fold ){
@@ -123,8 +114,7 @@ for( fI in 1:n_fold ){
   
   # Refit, starting at MLE, without calculating standard errors (to save time)
   fit_new = fit_model( "settings"=settings, 
-                       "working_dir"=paste0(VAST_dir,'VAST_output',
-                                            modelno,'/CV_', fI),
+                       "working_dir"=paste0(VAST_dir,'CV_', fI),
                        "Lat_i"=Data_Geostat[,'Lat'],
                        "Lon_i"=Data_Geostat[,'Lon'], 
                        "t_i"=Data_Geostat[,'Year'],
@@ -133,26 +123,22 @@ for( fI in 1:n_fold ){
                        "a_i"=Data_Geostat[,'AreaSwept_km2'], 
                        "v_i"=Data_Geostat[,'Vessel'],
                        "PredTF_i"=PredTF_i, 
-                       # "Parameters"=ParHat,
+                       "Parameters"=ParHat,
                        "getsd"=F,
-                       "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                       "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
-                                                                'LOG_DEPTH',
-                                                                'LOG_DEPTH2',
-                                                                'Catch_KG')], 
-                                                Year = NA),
+                       "silent" = T,
+                       # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                       # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
+                       #                                          'LOG_DEPTH',
+                       #                                          'LOG_DEPTH2',
+                       #                                          'Catch_KG')], 
+                       #                          Year = NA),
                        "max_cells" = Inf,
                        "newtonsteps" = 1)
   
   
   #Finally, we bundle and save output
   
-  # Save fit to out-of-bag data
-  prednll_f[fI] = fit_new$Report$pred_jnll
-  save(list = 'prednll_f', 
-       file = paste0(VAST_dir, 'VAST_output', modelno, '/CrVa_Run.RData'))
+  # Save fit 
+  save(list = 'fit_new',  file = paste0(VAST_dir,'CV_', fI, '/fit.RData'))
 }
-
-# Check fit to all out=of-bag data and use as metric of out-of-bag performance
-sum( prednll_f )
 
