@@ -8,18 +8,16 @@ library(VAST)
 ###################################
 ## Set up directories
 ###################################
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2, 'VM' = 3)[2]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
 modelno = '7'
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
-                      'C:/Users/zack.oyafuso/Work',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/')
 VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/', 
-                    'C:/Users/zack.oyafuso/Desktop/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
-                  'VAST_Runs/VAST_output', modelno, '/')
+                  'VAST_Runs/')
 
 ## Import Data
 data = read.csv(file = paste0(github_dir, 'data/data/GOA_multspp.csv') )
@@ -46,10 +44,10 @@ Data_Geostat = subset(Data_Geostat, spp %in% names(which_spp)[which_spp])
 Data_Geostat$spp = droplevels(Data_Geostat$spp)
 
 ################################
-## Assign 10 fold partitions of the data
+## Assign 5 fold partitions of the data
 ################################
 # Generate partitions in data
-n_fold = 10
+n_fold = 5
 years = paste0(unique(Data_Geostat$Year))
 NTime = length(unique(Data_Geostat$Year))
 ns = length(unique(Data_Geostat$spp))
@@ -68,8 +66,6 @@ foldno = lapply(X = split.data.frame(Data_Geostat, f = Data_Geostat$Year),
                   return(split(unique_loc, fold_no))
                 })
 
-
-
 for(iyear in years){
   for(ifold in paste(1:n_fold)){
     Data_Geostat[Data_Geostat$latlon %in% foldno[[iyear]][[ifold]] ,
@@ -77,5 +73,6 @@ for(iyear in years){
   }
 }
 
+#Save Object
 save(list = c('Data_Geostat'),
-     file = paste0(VAST_dir,'/Spatial_Settings_CrVa.RData') )
+     file = paste0(VAST_dir,'Spatial_Settings_CrVa.RData') )
