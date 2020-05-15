@@ -26,7 +26,7 @@ load(paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData'))
 ################################
 ##
 ################################
-n_fold = 3
+n_fold = 5
 RRMSE = vector(length = n_fold)
 SqErs = list()
 
@@ -64,9 +64,3 @@ for(ifold in seq(n_fold)){
 }
 
 mean(RRMSE)
-
-ifold = 1
-hist(SqErs[[ifold]])
-
-
-
