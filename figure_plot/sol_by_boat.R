@@ -9,7 +9,7 @@ library(sp); library(raster); library(RColorBrewer)
 ## Set up directories
 #############################
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
-optimization_type = c('_spatial', '_spatiotemporal')[1]
+optimization_type = c('_spatial', '_spatiotemporal')[2]
 VAST_model = '6g'
 
 output_wd = paste0(c('/Users/zackoyafuso/Documents/', 
@@ -40,10 +40,11 @@ yrange = diff(range(Extrapolation_depths[,c('N_km')]))
 plot_random_sample = F
 
 {
-  # png(file = paste0(PP_dir, 'sol_by_boat',
-  #                  ifelse(plot_random_sample == T, '_withsamples', ''),
-  #                  '.png'),
-  #   width = 240, height = 90, units = 'mm', res = 1000)
+  png(file = paste0(PP_dir, 'sol_by_boat',
+                   ifelse(plot_random_sample == T, '_withsamples', ''),
+                   '_',optimization_type,
+                   '.png'),
+    width = 240, height = 90, units = 'mm', res = 1000)
 par(mfrow = c(1,3), mar = c(0,0,3,0))
 for(istrata in stratas){
  plot(1, type = 'n', axes = F, ann = F,
@@ -101,7 +102,7 @@ for(istrata in stratas){
  
 }
 
-# dev.off()
+dev.off()
 }
 
 # frame$X2 = round(frame$X2)

@@ -17,8 +17,10 @@ library(plotrix)
 ## Set up directories
 #################################
 modelno_main = '8'
-modelno = '8a'
+
+modelno = '8c'
 which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[3]
+
 
 PP_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/MS_Optimizations/powerpoint_plot/")
 VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 
@@ -26,6 +28,7 @@ VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output",
 diag_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/diagnostics/",
                   "VAST_model", modelno_main, "/VAST_output", modelno, "/")
 fun_dir=paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
+
 if(! dir.exists(diag_dir) ) dir.create(diag_dir)
 
 
@@ -73,7 +76,7 @@ yrange_diff = diff(yrange)
 ##################################
 ## If continuting from where you left on...
 #################################
-load(paste0(diag_dir, '/diagnostics.RData'))
+# load(paste0(diag_dir, '/diagnostics.RData'))
 
 ######################
 ## Plot data
@@ -181,56 +184,56 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
 ############################################
 ## Plot Covariates
 ############################################
-{
-  png(filename = paste0(diag_dir, 'covariates.png'),
-      units = 'in', height = 6, width = 6, res = 500)
-  
-  par(mfrow = c(1,1), mar = c(0,0,0,0))
-  plot(1, type = 'n', xlim = xrange, ylim = yrange + c(-1*yrange_diff, 0),
-       axes = F, ann = F)
-  
-  offset = 0
-  for(covar in 1:2){
-    data = as.data.frame(TmbData$X_gtp[,1,covar])
-    names(data) = c('depth', 'depth2')[covar]
-    
-    goa = SpatialPointsDataFrame(
-      coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
-      data = data 
-    )
-    goa_ras = raster(goa, resolution = 5)
-    goa_ras = rasterize(x = goa, y = goa_ras, field =  c('depth', 'depth2')[covar])
-    
-    goa_ras = raster::shift(goa_ras, dy = -yrange*0.1*offset)
-    temp_yrange = extent(goa_ras)[3:4]
-    
-    image(goa_ras, asp = 1, add = T, axes = F, legend = F,
-          col = list(brewer.pal(n = 10, name = 'Spectral'),
-                     brewer.pal(n=9,name = 'Blues'))[[covar]])
-    
-    plotrix::color.legend(xl = xrange[1] + xrange_diff*0.01,
-                          xr = xrange[1] + xrange_diff*0.35,
-                          yb = temp_yrange[1] + yrange_diff*0.5,
-                          yt = temp_yrange[1] + yrange_diff*0.55,
-                          legend = -5:3, cex = 0.75,
-                          rect.col = list(brewer.pal(n = 9,name = 'Spectral'),
-                                          brewer.pal(n = 9, name = 'Blues'))[[covar]],
-                          gradient = 'x')#, align = 'rb')
-    text(x = xrange[1] + xrange_diff*0.725,
-         y = temp_yrange[1] + yrange_diff*0.5,
-         c('Centered Log-Depth', 'Square of the\nCentered Log-Depth')[covar], 
-         font = 3, cex = 1.25)
-    offset = offset + 1
-  }
-  
-  dev.off()
-}
+# {
+#   png(filename = paste0(diag_dir, 'covariates.png'),
+#       units = 'in', height = 6, width = 6, res = 500)
+#   
+#   par(mfrow = c(1,1), mar = c(0,0,0,0))
+#   plot(1, type = 'n', xlim = xrange, ylim = yrange + c(-1*yrange_diff, 0),
+#        axes = F, ann = F)
+#   
+#   offset = 0
+#   for(covar in 1:2){
+#     data = as.data.frame(TmbData$X_gtp[,1,covar])
+#     names(data) = c('depth', 'depth2')[covar]
+#     
+#     goa = SpatialPointsDataFrame(
+#       coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
+#       data = data 
+#     )
+#     goa_ras = raster(goa, resolution = 5)
+#     goa_ras = rasterize(x = goa, y = goa_ras, field =  c('depth', 'depth2')[covar])
+#     
+#     goa_ras = raster::shift(goa_ras, dy = -yrange*0.1*offset)
+#     temp_yrange = extent(goa_ras)[3:4]
+#     
+#     image(goa_ras, asp = 1, add = T, axes = F, legend = F,
+#           col = list(brewer.pal(n = 10, name = 'Spectral'),
+#                      brewer.pal(n=9,name = 'Blues'))[[covar]])
+#     
+#     plotrix::color.legend(xl = xrange[1] + xrange_diff*0.01,
+#                           xr = xrange[1] + xrange_diff*0.35,
+#                           yb = temp_yrange[1] + yrange_diff*0.5,
+#                           yt = temp_yrange[1] + yrange_diff*0.55,
+#                           legend = -5:3, cex = 0.75,
+#                           rect.col = list(brewer.pal(n = 9,name = 'Spectral'),
+#                                           brewer.pal(n = 9, name = 'Blues'))[[covar]],
+#                           gradient = 'x')#, align = 'rb')
+#     text(x = xrange[1] + xrange_diff*0.725,
+#          y = temp_yrange[1] + yrange_diff*0.5,
+#          c('Centered Log-Depth', 'Square of the\nCentered Log-Depth')[covar], 
+#          font = 3, cex = 1.25)
+#     offset = offset + 1
+#   }
+#   
+#   dev.off()
+# }
 
 ############################################
 ## Plot mean Density for each Species
 ############################################
 {
-  png(paste0(PP_dir, 'mean_annual_density.png'), units = 'in',
+  png(paste0(PP_dir, 'mean_annual_density_', modelno, '.png'), units = 'in',
       height = 4, width = 12, res = 500)
   par(mar = c(0,0,0,0))
   

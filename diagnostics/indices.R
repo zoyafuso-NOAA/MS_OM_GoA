@@ -7,8 +7,8 @@ rm(list = ls())
 ####################################
 ## Set up directories
 ####################################
-modelno_main = '7'
-modelno = '7a'
+modelno_main = '8'
+modelno = '8c'
 
 VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 
                   modelno_main, "/VAST_output", modelno, "/")
