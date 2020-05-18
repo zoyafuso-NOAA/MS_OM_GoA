@@ -16,13 +16,15 @@ library(TMBhelper)
 ###################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-model_settings = data.frame(factorno = 2:4,
-                            modelno = paste0(8, letters[1:3]),
-                            stringsAsFactors = F)
-
-irow = 1
-factorno = model_settings$factorno[irow]
-modelno = model_settings$modelno[irow]
+# model_settings = data.frame(factorno = 2:4,
+#                             modelno = paste0(8, letters[1:3]),
+#                             stringsAsFactors = F)
+# 
+# irow = 2
+factorno = 3
+modelno = '6g'
+# factorno = model_settings$factorno[irow]
+# modelno = model_settings$modelno[irow]
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
@@ -94,19 +96,29 @@ settings = make_settings( n_x=n_x,
 ###############################
 # save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
-load(paste0(VAST_dir, 'fit.RData'))
-ParHat = fit$ParHat
+load(paste0(VAST_dir, 'VAST_MS_GoA_Run.RData'))
+ParHat = Save$ParHat
+  
+# load(paste0(VAST_dir, 'fit.RData'))
+# ParHat = fit$ParHat
 
 ###################################
 ## 10-fold Cross Validation
 ###################################
 n_fold = 5
 for(fI in 1:n_fold){ 
-  iprednll_f = repf(!dir.exists(paste0(VAST_dir, 'CV_', fI))){
+  if(!dir.exists(paste0(VAST_dir, 'CV_', fI))){
     dir.create(paste0(VAST_dir, 'CV_', fI))
   }
 } 
 
+#Add "true" and not interpolated covariate data for model 6X
+load( paste0(github_dir, 'Extrapolation_depths.RData'))
+X_gtp = array(dim = c(Save$TmbData$n_g,Save$TmbData$n_t, Save$TmbData$n_p) )
+for(i in 1:Save$TmbData$n_t) {
+  X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
+  #X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH')])
+}
 
 # Loop through partitions, refitting each time with a different PredTF_i
 for( fI in 1:n_fold ){
@@ -126,14 +138,15 @@ for( fI in 1:n_fold ){
                        "Parameters"=ParHat,
                        "getsd"=F,
                        "silent" = T,
-                       # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                       # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
-                       #                                          'LOG_DEPTH',
-                       #                                          'LOG_DEPTH2',
-                       #                                          'Catch_KG')], 
-                       #                          Year = NA),
+                       "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                       "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon',
+                                                                'LOG_DEPTH',
+                                                                'LOG_DEPTH2',
+                                                                'Catch_KG')],
+                                                Year = NA),
                        "max_cells" = Inf,
-                       "newtonsteps" = 1)
+                       "newtonsteps" = 1,
+                       'X_gtp' = X_gtp)
   
   
   #Finally, we bundle and save output

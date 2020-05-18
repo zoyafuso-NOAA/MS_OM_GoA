@@ -8,7 +8,7 @@ library(VAST); library(RANN)
 ## Set up directories
 ################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
-modelno = '8a'
+modelno = '6g'
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/')
@@ -22,7 +22,6 @@ VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/',
 ################################
 load(paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData'))
 
-
 ################################
 ##
 ################################
@@ -30,7 +29,7 @@ n_fold = 5
 RRMSE = vector(length = n_fold)
 SqErs = list()
 
-for(ifold in seq(n_fold)){
+for(ifold in 1:5){
   load( paste0(VAST_dir, 'CV_', ifold, '/fit.RData') )
   
   #Extract the indices for year and species
