@@ -11,11 +11,14 @@ library(sp); library(RColorBrewer); library(raster)
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[2]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
 optimization_type = c('_spatial', '_spatiotemporal')[2]
 modelno = "6g"
 
-SamplingStrata_dir = 'C:/Users/Zack Oyafuso/Downloads/SamplingStrata-master/R'
+SamplingStrata_dir = paste0(c('/Users/zackoyafuso/',
+                              'C:/Users/Zack Oyafuso/',
+                              'C:/Users/zack.oyafuso/')[which_machine],
+                            'Downloads/SamplingStrata-master/R')
 
 github_dir = paste0(c('/Users/zack.oyafuso/Documents', 
                       'C:/Users/Zack Oyafuso/Documents',
@@ -61,14 +64,9 @@ stratas = c(5,10,15,20,25,30,40,50,60)
 ns = 15
 
 ############################
-## Settings for optimizer
+## Optimizer
 ############################
-
-settings = data.frame()
-res_df = data.frame(id = 1:nrow(frame))
-strata_list = list()
-
-par(mfrow = c(5,5), mar = c(2,2,0,0))
+par(mfrow = c(5,6), mar = c(2,2,0,0))
 
 for(isample in 1:3){
   #Create CV dataframe
@@ -78,41 +76,31 @@ for(isample in 1:3){
   cv[['DOM']] = 1
   cv[['domainvalue']] = 1
   cv <- as.data.frame(cv)
-  for(istrata in stratas){   
+  
+  for(istrata in 1:length(stratas)){   
+    
+    #Set wd for output files
+    temp_dir = paste0(output_wd, '/Survey_Comparison/Str_', 
+                      stratas[istrata], 'Boat_', isample, '/')
+    if(!dir.exists(temp_dir)) dir.create(temp_dir)
+    setwd(temp_dir)
     
     #Run optimization
     solution <- optimStrata(method = "continuous",
                             errors = cv, 
                             framesamp = frame,
-                            iter = ifelse(istrata <= 20, 100, 150),
+                            iter = 200,#ifelse(stratas[istrata] <= 20, 100, 150),
                             pops = 30,
                             elitism_rate = 0.1,
-                            mut_chance = 1 / (istrata + 1),
-                            nStrata = istrata,
+                            mut_chance = 1 / (stratas[istrata] + 1),
+                            nStrata = stratas[istrata],
                             showPlot = T,
-                            parallel = F)
+                            parallel = F,
+                            writeFiles = T)
     
     sum_stats = summaryStrata(solution$framenew,
                               solution$aggr_strata,
                               progress=FALSE) 
-    
-    #Update settings, res_df, and strata_list
-    settings = rbind(settings,
-                     data.frame(
-                       # iseed = iseed,
-                                nstrata = istrata,
-                                isample = c(280,550,820)[isample], 
-                                n = sum(sum_stats$Allocation)))
-    
-    strata_list = c(strata_list, list(sum_stats))
-    res_df = cbind(res_df, solution$indices$X1)
-    
-    #Output the results of the optimzation to the console
-    plot(1, type = 'n', xlim=c(0,5), ylim = c(0,5), axes = F, ann = F);
-    box()
-    text(x = 2.5, y = 2.5, 
-         paste0("Just Saved:\n", istrata, ' strata,\n',
-                c(280,550,820)[isample], ' samples\n' ))
     
     #Plot Solution
     goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
@@ -125,7 +113,7 @@ for(isample in 1:3){
     plot(goa_ras, col = terrain.colors(10)[-10], axes = F)
     
     #Save Output
-    save(list = c('res_df', 'strata_list', 'settings'),
-         file = paste0(output_wd, '/optimization_survey_comp.RData')) 
+    result_list = list(solution, sum_stats)
+    save(list = 'result_list', file = 'result_list.RData')
   }
 }
