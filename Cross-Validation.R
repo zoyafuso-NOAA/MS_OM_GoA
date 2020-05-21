@@ -16,15 +16,15 @@ library(TMBhelper)
 ###################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-# model_settings = data.frame(factorno = 2:4,
-#                             modelno = paste0(8, letters[1:3]),
-#                             stringsAsFactors = F)
-# 
-# irow = 2
-factorno = 3
-modelno = '6g'
-# factorno = model_settings$factorno[irow]
-# modelno = model_settings$modelno[irow]
+model_settings = data.frame(factorno = 2:4,
+                            modelno = paste0(7, letters[1:3]),
+                            stringsAsFactors = F)
+
+irow = 2
+# factorno = 3
+# modelno = '6g'
+factorno = model_settings$factorno[irow]
+modelno = model_settings$modelno[irow]
 
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
@@ -96,11 +96,11 @@ settings = make_settings( n_x=n_x,
 ###############################
 # save(list = 'fit', file = paste0(VAST_dir, 'VAST_output', modelno, '/fit.RData'))
 
-load(paste0(VAST_dir, 'VAST_MS_GoA_Run.RData'))
-ParHat = Save$ParHat
+# load(paste0(VAST_dir, 'VAST_MS_GoA_Run.RData'))
+# ParHat = Save$ParHat
   
-# load(paste0(VAST_dir, 'fit.RData'))
-# ParHat = fit$ParHat
+load(paste0(VAST_dir, 'fit.RData'))
+ParHat = fit$ParHat
 
 ###################################
 ## 10-fold Cross Validation
@@ -145,8 +145,8 @@ for( fI in 1:n_fold ){
                                                                 'Catch_KG')],
                                                 Year = NA),
                        "max_cells" = Inf,
-                       "newtonsteps" = 1,
-                       'X_gtp' = X_gtp)
+                       "newtonsteps" = 1)#,
+                       # 'X_gtp' = X_gtp)
   
   
   #Finally, we bundle and save output

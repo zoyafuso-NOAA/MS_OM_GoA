@@ -1,14 +1,14 @@
 ################################
 ## Cross Validation Metrics
 ################################
-
+rm(list = ls())
 library(VAST); library(RANN)
 
 ################################
 ## Set up directories
 ################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
-modelno = '6g'
+modelno = '7b'
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/')
@@ -25,11 +25,12 @@ load(paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData'))
 ################################
 ##
 ################################
-n_fold = 5
-RRMSE = vector(length = n_fold)
+n_fold = 1
+RRMSE = convergence = vector(length = n_fold)
 SqErs = list()
 
-for(ifold in 1:5){
+
+for(ifold in 5){
   load( paste0(VAST_dir, 'CV_', ifold, '/fit.RData') )
   
   #Extract the indices for year and species
@@ -57,9 +58,14 @@ for(ifold in 1:5){
   new_obs_density = with(subset(Data_Geostat,fold == ifold),
                          Catch_KG/AreaSwept_km2 )
   
+  convergence[ifold] = fit_new$parameter_estimates$max_gradient < 1e-4
+  
   #Calculate relative root mean square error
   RRMSE[ifold] = sqrt(mean((new_density-new_obs_density)^2)) / mean(new_density)
   SqErs[[ifold]] = (new_density-new_obs_density)^2
 }
 
-mean(RRMSE)
+RRMSE
+convergence
+mean(RRMSE[convergence])
+mean(RRMSE[RRMSE != 0])
