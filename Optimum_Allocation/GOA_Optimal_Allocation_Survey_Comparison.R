@@ -66,9 +66,9 @@ ns = 15
 ############################
 ## Optimizer
 ############################
-par(mfrow = c(5,6), mar = c(2,2,0,0))
+par(mfrow = c(6,6), mar = c(2,2,0,0))
 
-for(isample in 1:3){
+for(isample in 3){
   #Create CV dataframe
   cv = list()
   for(spp in 1:ns) 
