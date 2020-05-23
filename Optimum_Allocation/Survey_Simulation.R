@@ -36,7 +36,7 @@ D_gcy = Save$Report$Index_gcyl[,,,1]
 ## Constants
 ##################################
 ns = 15
-Niter = 100
+Niter = 1000
 N = nrow(GOA_grid)
 sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", 
               "Gadus macrocephalus", "Glyptocephalus zachirus" , 
