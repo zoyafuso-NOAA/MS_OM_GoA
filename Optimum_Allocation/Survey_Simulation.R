@@ -135,7 +135,7 @@ colnames(true_mean) = sci_names
 ## Simulation Metrics
 #################################
 #True CV, Cv of Cv, Rrmse of Cv
-true_cv_array = cv_cv_array = rrmse_cv_array = 
+true_cv_array = rrmse_cv_array = rrmse_est_array = 
   array(dim = c(NTime, ns, 3), 
         dimnames = list(paste0('Year_', 1:NTime), sci_names, NULL ))
 
@@ -146,12 +146,14 @@ for(isamp in 1:3){
       iter_est = sim_mean[paste0('Year_', iyear), spp, , isamp]
       iter_cv = sim_cv[paste0('Year_', iyear), spp, , isamp ]
       true_cv = sd(iter_est) / true_mean[iyear, spp]
-      
+      temp_true_cv = true_mean[iyear,spp]
       true_cv_array[paste0('Year_', iyear), spp, isamp ] = true_cv
-      
-      rrmse_cv_array[paste0('Year_', iyear), spp, isamp] = 
+
+      rrmse_cv_array[paste0('Year_', iyear), spp, isamp] =
         sqrt(mean((iter_cv-true_cv)^2)) / mean(iter_cv)
       
+      rrmse_est_array[iyear,spp,isamp] = 
+        sqrt(mean(((iter_est - temp_true_cv )^2)))/temp_true_cv
     }
   }
 }
@@ -160,14 +162,14 @@ for(isamp in 1:3){
 ##################################
 ## Save
 ##################################
-for(ivar in  c('cv_cv_array', 'rrmse_cv_array', 'true_cv_array', 
+for(ivar in  c('rrmse_cv_array', 'true_cv_array', 'rrmse_est_array',
                'sim_mean', 'sim_cv')){
   assign(x=paste0('Survey_', ivar), value = get(ivar))
 }
 
 save(file = paste0(github_dir, 'Optimum_Allocation/model_', modelno, 
                    '_spatiotemporal/Survey_Simulation_Results.RData'),
-     list = c(paste0('Survey_', c('cv_cv_array', 'rrmse_cv_array', 
+     list = c(paste0('Survey_', c('rrmse_cv_array', 'rrmse_est_array',
                                   'true_cv_array', 'sim_mean', 'sim_cv'))))
 
 ##################################
