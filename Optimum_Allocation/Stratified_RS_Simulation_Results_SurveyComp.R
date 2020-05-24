@@ -36,7 +36,7 @@ ids = 1:nrow(frame)
 N = length(ids)
 strata = c(5,10,15,20,25,30,40,50,60)
 Nstrata = length(strata)
-Niters = 1000
+Niters = 100
 sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", 
               "Gadus macrocephalus", "Glyptocephalus zachirus" , 
               "Hippoglossoides elassodon", "Hippoglossus stenolepis", 
@@ -175,7 +175,7 @@ for(isample in 1:3){
 ## Simulation Metrics
 #################################
 #True CV, Cv of Cv, Rrmse of Cv
-true_cv_array = cv_cv_array = rrmse_cv_array = 
+true_cv_array = rrmse_est_array = rrmse_cv_array = 
   array(dim = c(NTime, ns, Nstrata, 3), 
         dimnames = list(paste0('Year_', 1:NTime), sci_names, NULL, NULL ))
 
@@ -188,10 +188,13 @@ for(iyear in 1:NTime){
         iter_cv = sim_cv[paste0('Year_', iyear), spp, istrata,isample, ]
         true_cv = sd(iter_est) / true_mean[iyear, spp]
         
-        true_cv_array[paste0('Year_', iyear), spp,  istrata,isample] = true_cv
+        true_cv_array[paste0('Year_', iyear), spp, istrata,isample] = true_cv
         
         rrmse_cv_array[paste0('Year_', iyear), spp, istrata,isample] = 
           sqrt(mean((iter_cv-true_cv)^2)) / mean(iter_cv)
+        
+        rrmse_est_array[paste0('Year_', iyear), spp, istrata,isample]  = 
+          sqrt(mean((iter_est - true_mean[iyear,spp])^2)) / true_mean[iyear,spp]
       }
     }
   }
@@ -200,12 +203,11 @@ for(iyear in 1:NTime){
 #######################
 ## Save results
 #######################
-for(ivar in c('rrmse_cv_array', 'true_cv_array', 
-               'sim_mean', 'sim_cv')){
+for(ivar in c('rrmse_cv_array', 'rrmse_est_array', 'true_cv_array', 'sim_mean', 'sim_cv')){
   assign(x=paste0('STRS_', ivar), value = get(ivar))
 }
 
 save(file = paste0(output_wd, '/Stratified_RS_Simulation_Results_SurveyComp.RData'),
-     list = c(paste0('STRS_', c('rrmse_cv_array', 'true_cv_array', 'sim_mean', 
-                                'sim_cv')),
+     list = c(paste0('STRS_', c('rrmse_cv_array', 'rrmse_est_array', 
+                                'true_cv_array', 'sim_mean', 'sim_cv')),
               'true_mean', 'sci_names', 'NTime', 'ns', 'Niters', 'N'))
