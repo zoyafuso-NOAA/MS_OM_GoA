@@ -36,7 +36,7 @@ ids = 1:nrow(frame)
 N = length(ids)
 strata = c(5,10,15,20,25,30,40,50,60)
 Nstrata = length(strata)
-Niters = 100
+Niters = 1000
 sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", 
               "Gadus macrocephalus", "Glyptocephalus zachirus" , 
               "Hippoglossoides elassodon", "Hippoglossus stenolepis", 
@@ -203,7 +203,8 @@ for(iyear in 1:NTime){
 #######################
 ## Save results
 #######################
-for(ivar in c('rrmse_cv_array', 'rrmse_est_array', 'true_cv_array', 'sim_mean', 'sim_cv')){
+for(ivar in c('rrmse_cv_array', 'rrmse_est_array', 
+              'true_cv_array', 'sim_mean', 'sim_cv')){
   assign(x=paste0('STRS_', ivar), value = get(ivar))
 }
 
