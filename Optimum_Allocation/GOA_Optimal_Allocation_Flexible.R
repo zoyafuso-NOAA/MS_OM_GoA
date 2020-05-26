@@ -74,7 +74,7 @@ istrata = 2
 for(istrata in 1:length(stratas)){  
   
   Run = 1
-  CV_constraints = rep(.4, ns)
+  CV_constraints = rep(.3, ns)
   current_n = 0
   
   #Create CV dataframe
@@ -97,7 +97,7 @@ for(istrata in 1:length(stratas)){
     solution <- optimStrata(method = "continuous",
                             errors = cv, 
                             framesamp = frame,
-                            iter = 100,#ifelse(stratas[istrata] <= 20, 100, 150),
+                            iter = 200,#ifelse(stratas[istrata] <= 20, 100, 150),
                             pops = 30,
                             elitism_rate = 0.1,
                             mut_chance = 1 / (stratas[istrata] + 1),
