@@ -79,12 +79,13 @@ for(ispp in 1:ns){
  RRMSE_order = c(temp_rrmse, RRMSE_order)
 }
 
-{par(mfrow = c(1,4), mar = c(0,0,3,0))
+{par(mfrow = c(1,4), mar = c(3,0,3,0))
  for(isample in 1:3){
   plot(1, type = 'n', xlim = c(-1,1), ylim = c(0, 15*1.5), axes = F, ann = F)
   abline(v = 0, lty = 'dashed'); box()
   mtext(side = 3, paste(isample, 'Boat'), line = 1, cex = 1.5)
   offset = 0
+  axis(side = 1, at = 0, 'True Mean Density', cex.axis = 1.5)
   
   for(ispp in order(RRMSE_order, decreasing = T)){
    temp_density = density((Survey_sim_mean[1,ispp,,isample] - true_mean[1,ispp])/true_mean[1,ispp] )
@@ -110,11 +111,12 @@ for(ispp in 1:ns){
  temp_rrmse = sqrt(mean((Survey_sim_cv[1,ispp,,isample] - Survey_true_cv_array[1,ispp,isample])^2)) /Survey_true_cv_array[1,ispp,isample]
  RRMSE_order = c(temp_rrmse, RRMSE_order)
 }
-{par(mfrow = c(1,4), mar = c(0,0,3,0))
+{par(mfrow = c(1,4), mar = c(3,0,3,0))
  for(isample in 1:3){
   plot(1, type = 'n', xlim = c(-1,1), ylim = c(0, 15*1.5), axes = F, ann = F)
   abline(v = 0, lty = 'dashed'); box()
   mtext(side = 3, paste(isample, 'Boat'), line = 1, cex = 1.5)
+  axis(side = 1, at = 0, 'True CV', cex.axis = 1.5)
   offset = 0
   
   for(ispp in order(RRMSE_order, decreasing = T)){
@@ -135,3 +137,4 @@ for(ispp in 1:ns){
  legend('top', legend = c('Survey', 'Optimization'), 
         col = c('black', 'red'), lwd = 2, lty = 1, cex = 1.5)
 }
+
