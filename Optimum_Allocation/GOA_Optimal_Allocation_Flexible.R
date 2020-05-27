@@ -63,15 +63,15 @@ if(!dir.exists(paste0(output_wd, '/Flexible_Optimization/'))) {
 
 stratas = c(5,10,15,20,25,30,40,50,60)
 ns = 15
-creep_rate = 0.1
+creep_rate = 0.05
+threshold = 0.20
 
 ############################
 ## Optimizer
 ############################
 par(mfrow = c(6,6), mar = c(2,2,0,0))
-istrata = 2
 
-for(istrata in 1:length(stratas)){  
+for(istrata in 1){  
   
   Run = 1
   CV_constraints = rep(.3, ns)
@@ -88,8 +88,8 @@ for(istrata in 1:length(stratas)){
   while(current_n <= 820){
     
     #Set wd for output files
-    temp_dir = paste0(output_wd, '/Flexible_Optimization/Str_', 
-                      stratas[istrata], 'Run_', Run)
+    temp_dir = paste0(output_wd, '/Flexible_Optimization/', 'Thres', 
+                      threshold*100, 'Str', stratas[istrata], 'Run', Run)
     if(!dir.exists(temp_dir)) dir.create(temp_dir)
     setwd(temp_dir)
     
@@ -109,9 +109,7 @@ for(istrata in 1:length(stratas)){
     sum_stats = summaryStrata(solution$framenew,
                               solution$aggr_strata,
                               progress=FALSE) 
-    
-
-    
+  
     #Plot Solution
     goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
                                  data = cbind(solution$framenew[,paste0('Y',1:ns)],
@@ -131,7 +129,9 @@ for(istrata in 1:length(stratas)){
     
     Run = Run + 1
     CV_constraints = CV_constraints * (1 - creep_rate) 
-    CV_constraints = ifelse(CV_constraints < 0.05, 0.05, CV_constraints)
+    CV_constraints = ifelse(CV_constraints < threshold, 
+                            threshold, 
+                            CV_constraints)
     
     #Create CV dataframe
     cv = list()
