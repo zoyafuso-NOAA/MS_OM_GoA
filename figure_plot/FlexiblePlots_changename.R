@@ -43,7 +43,9 @@ for(istrata in c(1,9)){
  
  nruns = length(runs)
  for(irun in 1:nruns){
-  load( paste0(runs[irun], '/result_list.RData') )
+  load(paste0(output_wd, 'Thres10Str', stratas[istrata], 'Run', 
+              irun, '/result_list.RData')
+  )
   samplesizes[[temp_strata]]$n = c(samplesizes[[temp_strata]]$n, result_list$n) 
   spp_cv[[temp_strata]]$cv = rbind(spp_cv[[temp_strata]]$cv, result_list[[3]])
  }
@@ -51,21 +53,16 @@ for(istrata in c(1,9)){
 
 istrata = 'Str_60'
 nruns = length(samplesizes[[istrata]]$n)
-spp_order = order(spp_cv[[istrata]]$cv[1,])
+spp_order = order(spp_cv[[istrata]]$cv[nruns,])
 run_order = order(samplesizes[[istrata]]$n)
 par(mar = c(5,5,1,1))
 
-plot(as.vector(spp_cv[istrata]$Str_60$cv), pch = 16, ylim = c(0,0.3), type = 'b')
-temp = as.vector(spp_cv[istrata]$Str_60$cv)
-temp = ifelse(temp < 0.10, 0.10, temp * 0.95)
-temp = ifelse(temp < 0.10, 0.10, temp)
-points(temp, col = 'red', pch = 16)
-
 matplot( t(spp_cv[[istrata]]$cv[,spp_order]), 
-         type = 'b', lty = 1, pch = paste(1:nruns ),
-         las = 1, xlab = 'Species', ylim = c(0,0.3),
-         ylab = 'Expected Spatiotemporal CV')
-abline(h = 0.2, col = 'darkgrey', lty = 'dashed')
+         type = 'l', lty = 1, las = 1, xlab = 'Species', ylim = c(0,0.3),
+         ylab = 'Expected Spatiotemporal CV', col = 'black')
+abline(h = 0.1, col = 'darkgrey', lty = 'dashed')
+text(x = 1:ns, y = t(spp_cv[[istrata]]$cv[,spp_order]), 
+     rep(paste(1:nruns),each = ns ) )
          
 plot(samplesizes[[istrata]]$n[run_order], pch = paste(1:nruns), type = 'b', cex = 2,
      xlab = 'Run Number', ylab = 'Total Sample Size', las = 1, ylim = c(0,850))
