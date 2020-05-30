@@ -29,13 +29,14 @@ output_wd = paste0(c('/Users/zackoyafuso/Documents/',
 ## Load data
 #########################
 load(paste0(output_wd, '/optimization_data_model_', VAST_model, '.RData'))
+load(paste0(output_wd, '/optimization_results.RData'))
 
 #Constants
 ids = as.numeric(rownames(frame))
 N = length(ids)
 stratas = c(5,10,15,20,25,30,40,50,60)
 Nstrata = length(stratas)
-Niters = 1000
+Niters = 100
 sci_names = c("Atheresthes stomias", "Gadus chalcogrammus", 
               "Gadus macrocephalus", "Glyptocephalus zachirus" , 
               "Hippoglossoides elassodon", "Hippoglossus stenolepis", 
@@ -63,53 +64,31 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, Nstrata, 3, Niters),
                                           NULL))
 
 ##########################
-## Which Runs to use for each strata and sample size
-##########################
-samplesizes = list()
-
-for(istrata in 1:Nstrata){
-   temp_strata = paste0('Str_', stratas[istrata])
-   runs = grep(x = dir(paste0(output_wd, '/Flexible_Optimization'),
-                       full.names = T), 
-               pattern = paste0('Thres20Str', stratas[istrata]),
-               value = T)
-   
-   nruns = length(runs)
-   
-   if(nruns != 0){
-      for(irun in 1:nruns){
-         load( paste0(runs[irun], '/result_list.RData') )
-         samplesizes[[temp_strata]] = c(samplesizes[[temp_strata]], 
-                                        result_list$n) 
-      }
-   } 
-   else(samplesizes[[temp_strata]] = NA)
-   
-}
-
-
-##########################
 ## Simulating each optimization
 ##########################
-for(istrata in c(1,9)){
-   for(isample in 1) {
+settings$id = 1:nrow(settings)
+
+for(istrata in 1:Nstrata){
+   for(isample in 1:3) {
       
-      temp_run = which.min(abs(samplesizes[[istrata]]-c(280,550,820)[isample]))
+      #Load optimization data
+      sub_settings = subset(settings, nstrata == stratas[istrata])
       
-      temp_dir = paste0(output_wd, '/Flexible_Optimization/Thres20Str', 
-                  stratas[istrata], 'Run', temp_run) 
-      load(paste0(temp_dir, '/result_list.RData'))
-      strata_list = result_list[[2]]
+      temp_run = sub_settings$id[which.min(abs(sub_settings$n-
+                                                  c(280,550,820)[isample]))]
       
-      strata_allocation = strata_list$Allocation
-      stratapop = strata_list$Population
-      stratanos = result_list[[1]]$indices$X1
+      strata_allocation = strata_list[[temp_run]]$Allocation
+      stratapop = strata_list[[temp_run]]$Population
+      stratanos = res_df[,1+temp_run]
+      
+      #Remove strata with only 1 sample allocated
+      str_idx = strata_allocation > 1
       
       for(iyear in 1:NTime){
          for(iter in 1:Niters){
             #Sample based on the stratification allocations
             sample_vec = c()
-            for(i in 1:nrow(strata_list) ){
+            for(i in which(str_idx == T) ){
                available_cells = which(stratanos == i)
                sample_cells = sample(x = available_cells, 
                                      size = strata_allocation[i], 
@@ -125,22 +104,23 @@ for(istrata in c(1,9)){
             
             #Calculate Stratum Mean Density and Variance
             stmt = paste0('aggregate(cbind(',
-                          paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
+                          paste0('Y', 1:(ns-1), sep=',', collapse=''),'Y',ns, 
                           ") ~ stratano_samp, data = sample_df, FUN = mean)")
             sample_mean = eval(parse(text = stmt))[,-1]
             stmt = paste0('aggregate(cbind(',
-                          paste0('Y', 1:(ns-1), sep = ',', collapse = ''), 'Y',ns, 
+                          paste0('Y', 1:(ns-1), sep=',', collapse=''), 'Y',ns, 
                           ") ~ stratano_samp, data = sample_df, FUN = var)")
             sample_var = eval(parse(text = stmt))[,-1]
             
             #How many samples are allocated in each strata
             #How many sampling units are in each strata
-            Wh = stratapop/N
-            wh = strata_allocation/stratapop
+            Wh = (stratapop/N)[str_idx]
+            wh = (strata_allocation/stratapop)[str_idx]
             
             #Calculate Total Abundance and Variance, calculate CV
             SRS_var = colSums(sweep(x = sample_var, MARGIN = 1, 
-                                    STATS = (Wh)^2*(1-wh)/strata_allocation,
+                                    STATS = (Wh)^2*(1-wh)/
+                                       strata_allocation[str_idx],
                                     FUN = '*'))
             
             SRS_mean = colSums(sweep(x = sample_mean, MARGIN = 1, 
@@ -153,10 +133,14 @@ for(istrata in c(1,9)){
             sim_mean[paste0('Year_',iyear),,istrata,isample,iter] = SRS_mean
             sim_cv[paste0('Year_',iyear),,istrata,isample,iter] = strata_cv
             
+            if(iter%%100 == 0){
+               print(paste0('Finished with: Iteration ', iter, ', ', 
+                            stratas[istrata], ' Strata and ', isample, ' Boat'))
+            }
+
          }
       }
-      print(paste0('Finished with: ', stratas[istrata], ' Strata and ', 
-                   isample, ' Boat'))
+
    }
 }
 
