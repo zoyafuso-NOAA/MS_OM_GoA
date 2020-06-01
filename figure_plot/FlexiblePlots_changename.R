@@ -8,7 +8,7 @@ library(sp); library(RColorBrewer); library(raster)
 ###############################
 ## Set up directories
 ###############################
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[1]
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
 optimization_type = c('_spatial', '_spatiotemporal')[2]
 modelno = "6g"
 
@@ -29,6 +29,14 @@ output_wd = paste0(c('/Users/zackoyafuso/Documents/',
                      'C:/Users/zack.oyafuso/Work/' )[which_machine], 
                    "GitHub/MS_OM_GoA/Optimum_Allocation/model_", modelno,
                    optimization_type, '/Flexible_Optimization/')
+
+###########################
+## Load Data
+###########################
+load(paste0(github_dir, "model_", modelno,
+            optimization_type,'/optimization_data_model_', 
+            modelno, '.RData'))
+if(optimization_type == '_spatial') rm(frame_raw)
 
 stratas = c(5,10,15,20,25,30,40,50,60)
 NStrata = length(stratas)
@@ -51,7 +59,7 @@ for(istrata in c(1:3, 9)){
  }
 }
 
-istrata = 'Str_15'
+istrata = 'Str_10'
 nruns = length(samplesizes[[istrata]]$n)
 spp_order = order(spp_cv[[istrata]]$cv[nruns,])
 run_order = order(samplesizes[[istrata]]$n)
@@ -74,4 +82,19 @@ mtext(side = 3, istrata, outer = T, line = -2)
 sort( sapply(spp_cv[[istrata]]$cv[nruns,spp_order], 
              FUN = function(x) max(0.95*x, 0.1)) )
 
+
+#Plot Solution
+par(mfrow = c(1,1), mar = c(0,0,0,0))
+istrata = 1
+temp_n = samplesizes[[istrata]]$n
+idx = which.min(abs(temp_n - 280))
+
+load(paste0(output_wd, 'Thres10Str', stratas[istrata], 'Run', 
+            idx, '/result_list.RData'))
+
+goa = SpatialPointsDataFrame(coords = Extrapolation_depths[,c('E_km', 'N_km')],
+                             data = data.frame(Str_no = result_list[[1]]$indices$X1) )
+goa_ras = raster(goa, resolution = 5)
+goa_ras =rasterize(x = goa, y = goa_ras, field = 'Str_no')
+plot(goa_ras, col = brewer.pal(n = 10, name = 'Paired'), axes = F)
 
