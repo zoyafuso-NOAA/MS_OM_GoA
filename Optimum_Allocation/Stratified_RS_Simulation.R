@@ -68,7 +68,7 @@ sim_mean = sim_cv = array(dim = c(NTime, ns, Nstrata, 3, Niters),
 ##########################
 settings$id = 1:nrow(settings)
 
-for(istrata in 1:Nstrata){
+for(istrata in 1){
    for(isample in 1:3) {
       
       #Load optimization data

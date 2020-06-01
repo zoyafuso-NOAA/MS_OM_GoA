@@ -35,7 +35,7 @@ NStrata = length(stratas)
 ns = 15
 spp_cv = samplesizes = list()
 
-for(istrata in c(1,9)){
+for(istrata in c(1:3, 9)){
  temp_strata = paste0('Str_', stratas[istrata])
  runs = grep(x = dir(output_wd, full.names = T), 
              pattern = paste0('Thres10Str', stratas[istrata]),
@@ -51,20 +51,27 @@ for(istrata in c(1,9)){
  }
 }
 
-istrata = 'Str_60'
+istrata = 'Str_15'
 nruns = length(samplesizes[[istrata]]$n)
 spp_order = order(spp_cv[[istrata]]$cv[nruns,])
 run_order = order(samplesizes[[istrata]]$n)
-par(mar = c(5,5,1,1))
+par(mar = c(5,5,2,1), mfrow = c(1,2))
 
 matplot( t(spp_cv[[istrata]]$cv[,spp_order]), 
          type = 'l', lty = 1, las = 1, xlab = 'Species', ylim = c(0,0.3),
-         ylab = 'Expected Spatiotemporal CV', col = 'black')
+         ylab = 'Expected Spatiotemporal CV',
+         col = 'black')
 abline(h = 0.1, col = 'darkgrey', lty = 'dashed')
 text(x = 1:ns, y = t(spp_cv[[istrata]]$cv[,spp_order]), 
-     rep(paste(1:nruns),each = ns ) )
+     rep(paste(1:nruns),each = ns ))
          
-plot(samplesizes[[istrata]]$n[run_order], pch = paste(1:nruns), type = 'b', cex = 2,
+plot(samplesizes[[istrata]]$n[run_order], type = 'l', cex = 2,
      xlab = 'Run Number', ylab = 'Total Sample Size', las = 1, ylim = c(0,850))
 abline(h = c(280, 550, 820), col = 'darkgrey', lty = 'dashed')
+text(1:nruns, samplesizes[[istrata]]$n[run_order], paste(1:nruns))
+mtext(side = 3, istrata, outer = T, line = -2)
+
+sort( sapply(spp_cv[[istrata]]$cv[nruns,spp_order], 
+             FUN = function(x) max(0.95*x, 0.1)) )
+
 
