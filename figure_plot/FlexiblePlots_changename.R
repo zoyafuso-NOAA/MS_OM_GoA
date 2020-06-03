@@ -77,7 +77,7 @@ plot(samplesizes[[istrata]]$n[run_order], type = 'l', cex = 2,
      xlab = 'Run Number', ylab = 'Total Sample Size', las = 1, ylim = c(0,850))
 abline(h = c(280, 550, 820), col = 'darkgrey', lty = 'dashed')
 text(1:nruns, samplesizes[[istrata]]$n[run_order], paste(1:nruns))
-mtext(side = 3, istrata, outer = T, line = -2)
+#mtext(side = 3, istrata, outer = T, line = -2)
 
 sort( sapply(spp_cv[[istrata]]$cv[nruns,spp_order], 
              FUN = function(x) max(0.95*x, 0.1)) )
