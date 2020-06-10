@@ -5,12 +5,12 @@
 library(VAST); library(RANN)
 
 #Load Dataset
-setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output6i/")
+setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output6g/")
 
 CV_df = data.frame(ifold = 1:5)
 RRMSE = matrix(nrow = 5, ncol = 15)
 
-for(ifold in 1:4){
+for(ifold in 1:5){
   load(paste0("CV_", ifold, '/fit.RData'))
   
   # #Final Gradient
@@ -58,9 +58,8 @@ for(ifold in 1:4){
     RRMSE[ifold, i] = with(split_df[[i]], 
                              sqrt(mean((obs_density-pred_density)^2))/mean_pred_density[i] )
   }
-  
-  
-  
+   print(paste0('Done with fold ', ifold))
 }
 
+CV_df
 colMeans(RRMSE, na.rm = T)
