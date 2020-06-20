@@ -5,12 +5,12 @@
 library(VAST); library(RANN)
 
 #Load Dataset
-setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output8c/")
+setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output6i/")
 
 CV_df = data.frame(ifold = 1:5)
 RRMSE = array(dim = c(5, ncol = 15, 11))
 
-for(ifold in 1:4){
+for(ifold in 1:5){
   load(paste0("CV_", ifold, '/fit.RData'))
   
   # #Final Gradient
