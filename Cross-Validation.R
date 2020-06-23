@@ -7,22 +7,17 @@ rm(list = ls())
 # Load packages
 library(VAST)
 library(TMBhelper)
-# library(devtools)
-# install_local('C:/Users/zack.oyafuso/Downloads/FishStatsUtils-2.6.0/',
-#               force = T)
 
 ###################################
 ## Set up directories
 ###################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-model_settings = data.frame(factorno = 2:4,
-                            modelno = paste0(7, letters[1:3]),
+model_settings = data.frame(factorno = 2,
+                            modelno = paste0(9, letters[1:2]),
                             stringsAsFactors = F)
 
-irow = 2
-# factorno = 3
-# modelno = '6g'
+irow = 1
 factorno = model_settings$factorno[irow]
 modelno = model_settings$modelno[irow]
 
@@ -70,26 +65,26 @@ settings = make_settings( n_x=n_x,
                           use_anisotropy = T)
 
 # Fit the model and a first time and record MLE
-# fit = fit_model( "settings"=settings,
-#                  "working_dir" = paste0(VAST_dir, 'VAST_output', modelno, '/'),
-#                  "Lat_i"=Data_Geostat[,'Lat'],
-#                  "Lon_i"=Data_Geostat[,'Lon'],
-#                  "t_i"=Data_Geostat[,'Year'],
-#                  "c_i"=as.numeric(Data_Geostat[,'spp'])-1,
-#                  "b_i"=Data_Geostat[,'Catch_KG'],
-#                  "a_i"=Data_Geostat[,'AreaSwept_km2'],
-#                  "v_i"=Data_Geostat[,'Vessel'],
-#                  # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-#                  # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon', 
-#                  #                                          'LOG_DEPTH',
-#                  #                                          'LOG_DEPTH2',
-#                  #                                          'Catch_KG')], 
-#                  # Year = NA),
-#                  "max_cells" = Inf,
-#                  "getJointPrecision"=TRUE,
-#                  "newtonsteps" = 1
-# )
-# ParHat = fit$ParHat
+fit = fit_model( "settings"=settings,
+                 "working_dir" = paste0(VAST_dir, 'VAST_output', modelno, '/'),
+                 "Lat_i"=Data_Geostat[,'Lat'],
+                 "Lon_i"=Data_Geostat[,'Lon'],
+                 "t_i"=Data_Geostat[,'Year'],
+                 "c_i"=as.numeric(Data_Geostat[,'spp'])-1,
+                 "b_i"=Data_Geostat[,'Catch_KG'],
+                 "a_i"=Data_Geostat[,'AreaSwept_km2'],
+                 "v_i"=Data_Geostat[,'Vessel'],
+                 # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                 # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon',
+                 #                                          'LOG_DEPTH',
+                 #                                          'LOG_DEPTH2',
+                 #                                          'Catch_KG')],
+                 # Year = NA),
+                 "max_cells" = Inf,
+                 "getJointPrecision"=TRUE,
+                 "newtonsteps" = 1
+)
+ParHat = fit$ParHat
 
 ###############################
 ## Save Fit

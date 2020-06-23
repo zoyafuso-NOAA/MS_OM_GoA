@@ -10,8 +10,6 @@ library(VAST)
 ###################################
 which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-modelno = '7'
-
 github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
                       'C:/Users/zack.oyafuso/Work')[which_machine],
                     '/GitHub/MS_OM_GoA/')
@@ -19,10 +17,17 @@ VAST_dir = paste0(c('C:/Users/Zack Oyafuso/Google Drive/',
                     'C:/Users/zack.oyafuso/Desktop/')[which_machine],
                   'VAST_Runs/')
 
+############################
 ## Import Data
-data = read.csv(file = paste0(github_dir, 'data/data/GOA_multspp.csv') )
+############################
+data = read.csv(file = paste0(github_dir, 'data/GOA_multspp.csv') )
+spp_df = read.csv(paste0(github_dir, "data/spp_df.csv"), 
+                  check.names=F, header = T, row.names = 'modelno')
+modelno = '9a'
 
+############################
 # Prepare the Data-frame for catch-rate data
+############################
 Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
                            "Year"=data$YEAR,
                            "Catch_KG"=data$WEIGHT,
@@ -32,12 +37,10 @@ Data_Geostat = data.frame( "spp"=data$SPECIES_NAME,
                            "Lon"=data$LONGITUDE,
                            "LOG_DEPTH" = data$DEPTH, #centered log_depth
                            "LOG_DEPTH2" = data$DEPTH^2 )
-rm(data)
 
-#Drop factor levels of unused Species
-spp_df = read.csv(paste0(github_dir, "spp_df.csv"), check.names=F, header = T, 
-                  row.names = 'modelno')
-
+###########################################
+## Subset Species and drop factor levels of unused Species
+###########################################
 which_spp = unlist(spp_df[modelno,])
 
 Data_Geostat = subset(Data_Geostat, spp %in% names(which_spp)[which_spp])
@@ -54,8 +57,14 @@ ns = length(unique(Data_Geostat$spp))
 
 #Sort Data_Geostat
 Data_Geostat = Data_Geostat[order(Data_Geostat$Year, Data_Geostat$spp),]
-Data_Geostat$latlon = paste0(Data_Geostat$Lat, Data_Geostat$Lon)
 
+#Create unique stationID from the latlon. To make sure the ids are unique,
+#we use the table function
+Data_Geostat$latlon = paste0(Data_Geostat$Lat, Data_Geostat$Lon)
+table(table(Data_Geostat$latlon))
+
+#split Data_Geostat by year, then on each year-split, randomly assign 
+#fold numbers to the each unique station
 set.seed(2342)
 foldno = lapply(X = split.data.frame(Data_Geostat, f = Data_Geostat$Year),
                 FUN = function(test) {
@@ -66,6 +75,7 @@ foldno = lapply(X = split.data.frame(Data_Geostat, f = Data_Geostat$Year),
                   return(split(unique_loc, fold_no))
                 })
 
+#Attach fold number to the Data_Geostat
 for(iyear in years){
   for(ifold in paste(1:n_fold)){
     Data_Geostat[Data_Geostat$latlon %in% foldno[[iyear]][[ifold]] ,
@@ -73,6 +83,8 @@ for(iyear in years){
   }
 }
 
-#Save Object
+##############################
+## Save Object
+##############################
 save(list = c('Data_Geostat'),
      file = paste0(VAST_dir,'Spatial_Settings_CrVa.RData') )
