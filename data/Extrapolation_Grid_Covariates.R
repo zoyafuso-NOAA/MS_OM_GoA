@@ -1,69 +1,70 @@
-##################################
-## Assign bathymetry value to each extrapolation grid
-## Gulf of Alaska
-#################################
-rm(list = ls())
+###############################################################################
+## Project:     VAST covariates across exptraolation grid
+## Author:      Zack Oyafuso (zack.oyafuso@noaa.gov)
+## Description: Assign bathymetry value to each grid in the Gulf of Alaska 
+##              extrapolation grid.
+###############################################################################
 
-##################################
-## Import Libraries
-#################################
+##################################################
+####   Import Libraries
+##################################################
 library(marmap); library(sp); library(RANN); library(raster);
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
+##################################################
+####   Set up directories
+##################################################
+rm(list = ls())
 
-##################################
-## Set up directories
-#################################
+which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2, 'Zack_GI_PC' = 3)[2]
 github_dir = paste0(c('/Users/zackoyafuso/Documents/',
-                    'C:/Users/Zack Oyafuso/Documents/',
-                    'C:/Users/zack.oyafuso/Work/')[which_machine],
+                      'C:/Users/Zack Oyafuso/Documents/',
+                      'C:/Users/zack.oyafuso/Work/')[which_machine],
                     'Github/MS_OM_GoA/')
 
-# load(paste0('VAST_output', modelno, '/', 'Spatial_Settings.RData'))
+##################################################
+####   Import observed depths
+##################################################
 observed_depths = read.csv(paste0(github_dir, 
                                   'data/GOA_multspp.csv'))$BOTTOM_DEPTH 
 
-##################################
-## Extract fine-scale bathymetry map 
-## Convert latlon to UTM zone 5
-#################################
-xmin <- -170
-xmax <- -132
-ymin <- 52
-ymax <- 60.5
-bathymap <- getNOAA.bathy(lon1 = xmin, lon2 = xmax,
-                          lat1 = ymin, lat2 = ymax,
-                          resolution = 1)
-bathymap <- fortify.bathy(bathymap)
+##################################################
+####   Extract fine-scale bathymetry map from the marmap package
+####   Convert latlon to UTM zone 5 (Gulf of Alaska)
+####   Convert UTM to km
+##################################################
+bathymap <- marmap::getNOAA.bathy(lon1 = -170, lon2 = -132,
+                                  lat1 = 52, lat2 = 60.5,
+                                  resolution = 1)
+bathymap <- marmap::fortify.bathy(bathymap)
 
 bathymap_coord = sp::SpatialPoints(coords = bathymap[,c('x', 'y')],
                                    proj4string = CRS('+proj=longlat') )
 cord.UTM <- sp::spTransform(bathymap_coord, CRS("+proj=utm +zone=5N"))
 bathymap[,c('E_km', 'N_km')] = cord.UTM@coords / 1000
 
-#####################
-## Asssign bathymetry values of extrapolation cells to the nearest
-## value in the bathymetry map
-#####################
-
+##################################################
+####   Asssign bathymetry values of extrapolation cells to the nearest value 
+####   (using a nearest neighbor calcualtion) on the queried bathymetry map 
+##################################################
 bathy_idx = RANN::nn2(query=Extrapolation_List$Data_Extrap[,c('E_km','N_km')],
                       data = bathymap[,c('E_km', 'N_km')],
                       k = 1)$nn.idx
 
 Extrapolation_List$Data_Extrap$depth = -bathymap$z[bathy_idx[,1]]
 
-#####################
-## Plot locations where depths are negative (land?) 
-#####################
+##################################################
+#### Plot locations where depths are negative (land?)   
+##################################################
 plot(Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], pch = '.')
-with(Extrapolation_List$Data_Extrap[Extrapolation_List$Data_Extrap$depth <=0,],
+with(Extrapolation_List$Data_Extrap[Extrapolation_List$Data_Extrap$depth<=0,],
      points(N_km ~ E_km, 
             pch = 16, col = 'red'))
 
-#####################
-## Assign negative bathymetry values (presumably land) to the shallowest
-## bathymetry observed in the dataset
-#####################
+##################################################
+####   Assign negative bathymetry values (presumably land) to the shallowest
+####   bathymetry observed in the dataset. 
+####   Note: minimum observed depth is 4m
+##################################################
 too_shallow_idx = Extrapolation_List$Data_Extrap$depth <= min(observed_depths)
 Extrapolation_List$Data_Extrap$depth[too_shallow_idx] = min(observed_depths)
 
@@ -81,7 +82,7 @@ while(neg_depths != 0){
 #############################
 Extrapolation_List$Data_Extrap$DEPTH = scale(
   log(Extrapolation_List$Data_Extrap$depth)
-  )
+)
 Extrapolation_List$Data_Extrap$DEPTH2 = Extrapolation_List$Data_Extrap$DEPTH^2
 
 #############################

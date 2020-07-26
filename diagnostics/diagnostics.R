@@ -1,40 +1,47 @@
-##################################
-## Diagnostic plots
-##################################
+###############################################################################
+## Project:       VAST diagnostics plots
+## Author:        Zack Oyafuso (zack.oyafuso@noaa.gov)
+## Description:   Calculate various diagnostic plots
+##                Data and knot locations
+##                Encounter probability
+##                QQ plots
+##                Pearson Residuals 
+##                Mean density andyear-specific density, 
+##                Spatial (omega) and spatiotemporal (epsilon) effects, 
+##                Index of abundance
+##                Covariance
+##                Factors loadings
+##                Anisotropy
+###############################################################################
 
-rm(list = ls())
-
-#################################
-## Import Libraries
-#################################
+##################################################
+####  Import Libraries
+##################################################
 library(VAST)
 library(raster)
 library(sp)
+library(rgdal)
 library(RColorBrewer)
 library(plotrix)
+library(rnaturalearth)
 
-#################################
-## Set up directories
-#################################
-modelno_main = '8'
-
-modelno = '8c'
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3, 'VM' = 4)[3]
-
-
-PP_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/MS_Optimizations/powerpoint_plot/")
-VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/VAST_output", 
-                  modelno_main, "/VAST_output", modelno, "/")
-diag_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/diagnostics/",
-                  "VAST_model", modelno_main, "/VAST_output", modelno, "/")
-fun_dir=paste0('C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/diagnostics/')
+##################################################
+#### Set up directories     
+##################################################
+rm(list = ls())
+modelno = '10b'
+main_dir = 'C:/Users/Zack Oyafuso/'
+PP_dir = paste0(main_dir, "Google Drive/MS_Optimizations/powerpoint_plot/")
+VAST_dir = paste0(main_dir, "Google Drive/VAST_Runs/VAST_output", modelno, "/")
+diag_dir = paste0(main_dir, "Google Drive/VAST_Runs/diagnostics/",
+                  "VAST_model", modelno, "/")
+fun_dir=paste0(main_dir, 'Documents/GitHub/MS_OM_GoA/diagnostics/')
 
 if(! dir.exists(diag_dir) ) dir.create(diag_dir)
 
-
-#################################
-## Load Data and modified functions
-#################################
+##################################################
+####  Load VAST fit and import customized plot functions 
+##################################################
 load(paste0(VAST_dir, '/fit.RData'))
 load( paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData') )
 
@@ -43,9 +50,10 @@ for(ifile in c("plot_factors.R", "plot_residuals.R","summarize_covariance.R")){
   rm(ifile)
 }
 
-##################################
-## Extract objects from fitted object
-##################################
+##################################################
+#### Extract objects from fitted object   
+#### Set up constants
+##################################################
 Data_Geostat = fit$data_frame
 names(Data_Geostat)[c(1:2,5:7)] = c('Lat', 'Lon', 'Catch_KG','Year', "spp")
 
@@ -63,9 +71,25 @@ MapDetails_List = make_map_info( "Region"='Gulf_of_Alaska',
                                  "spatial_list"=Spatial_List, 
                                  "Extrapolation_List"=Extrapolation_List )
 
-sci_names = levels(
-  read.csv(paste0(dirname(fun_dir), 
-                  '/data/data/GOA_multspp.csv'))$SPECIES_NAME) 
+sci_names = c("Atheresthes stomias", 
+              "Gadus chalcogrammus", 
+              "Gadus macrocephalus", 
+              
+              "Glyptocephalus zachirus" , 
+              "Hippoglossoides elassodon", 
+              "Hippoglossus stenolepis", 
+              
+              "Lepidopsetta bilineata", 
+              "Lepidopsetta polyxystra",
+              "Sebastes brevispinis", 
+              
+              "Microstomus pacificus", 
+              "Sebastes alutus", 
+              "Sebastes B_R", 
+              
+              "Sebastes polyspinis", 
+              "Sebastes variabilis", 
+              "Sebastolobus alascanus" )
 ns = length(sci_names)
 
 xrange = range(Extrapolation_List$Data_Extrap[,'E_km'])
@@ -73,12 +97,26 @@ yrange = range(Extrapolation_List$Data_Extrap[,'N_km'])
 xrange_diff = diff(xrange)
 yrange_diff = diff(yrange)
 
-##################################
-## If continuting from where you left on...
-#################################
-# load(paste0(diag_dir, '/diagnostics.RData'))
+AK = readOGR(paste0(dirname(fun_dir), '/data/shapefiles/AKland.shp')) 
+AK = sp::spTransform(AK, 
+                      CRS = paste0("+proj=utm +zone=5 +lat_1=55 +lat_2=65",
+                                   ' +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0',
+                                   ' +ellps=GRS80 +datum=NAD83 +units=km',
+                                   ' +no_defs'))
 
-######################
+CA = readOGR(paste0(dirname(fun_dir), '/data/shapefiles/canada_dcw.shp')) 
+CA = sp::spTransform(CA, 
+                     CRS = paste0("+proj=utm +zone=5 +lat_1=55 +lat_2=65",
+                                  ' +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0',
+                                  ' +ellps=GRS80 +datum=NAD83 +units=km',
+                                  ' +no_defs'))
+
+############################################
+## If continuting from where you left on...
+############################################
+load(paste0(diag_dir, '/diagnostics.RData'))
+
+############################################
 ## Plot data
 ## It is always good practice to conduct exploratory analysis of data.  Here, I
 ## visualize the spatial distribution of data.  Spatio-temporal models involve 
@@ -123,13 +161,13 @@ Enc_prob = plot_encounter_diagnostic( Report=Report,
 ## Q-Q plot.  A good Q-Q plot will have residuals along the one-to-one line.  
 ############################################
 
-Q = plot_quantile_diagnostic( TmbData=TmbData, 
-                              Report=Report, 
-                              FileName_PP="Posterior_Predictive",
-                              FileName_Phist="Posterior_Predictive-Histogram", 
-                              FileName_QQ="Q-Q_plot", 
-                              FileName_Qhist="Q-Q_hist", 
-                              DateFile=diag_dir ) 
+# Q = plot_quantile_diagnostic( TmbData=TmbData, 
+#                               Report=Report, 
+#                               FileName_PP="Posterior_Predictive",
+#                               FileName_Phist="Posterior_Predictive-Histogram", 
+#                               FileName_QQ="Q-Q_plot", 
+#                               FileName_Qhist="Q-Q_hist", 
+#                               DateFile=diag_dir ) 
 
 ############################################
 ## Diagnostics for positive-catch-rate component
@@ -182,97 +220,59 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
                         cex=1.8)
 
 ############################################
-## Plot Covariates
-############################################
-# {
-#   png(filename = paste0(diag_dir, 'covariates.png'),
-#       units = 'in', height = 6, width = 6, res = 500)
-#   
-#   par(mfrow = c(1,1), mar = c(0,0,0,0))
-#   plot(1, type = 'n', xlim = xrange, ylim = yrange + c(-1*yrange_diff, 0),
-#        axes = F, ann = F)
-#   
-#   offset = 0
-#   for(covar in 1:2){
-#     data = as.data.frame(TmbData$X_gtp[,1,covar])
-#     names(data) = c('depth', 'depth2')[covar]
-#     
-#     goa = SpatialPointsDataFrame(
-#       coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
-#       data = data 
-#     )
-#     goa_ras = raster(goa, resolution = 5)
-#     goa_ras = rasterize(x = goa, y = goa_ras, field =  c('depth', 'depth2')[covar])
-#     
-#     goa_ras = raster::shift(goa_ras, dy = -yrange*0.1*offset)
-#     temp_yrange = extent(goa_ras)[3:4]
-#     
-#     image(goa_ras, asp = 1, add = T, axes = F, legend = F,
-#           col = list(brewer.pal(n = 10, name = 'Spectral'),
-#                      brewer.pal(n=9,name = 'Blues'))[[covar]])
-#     
-#     plotrix::color.legend(xl = xrange[1] + xrange_diff*0.01,
-#                           xr = xrange[1] + xrange_diff*0.35,
-#                           yb = temp_yrange[1] + yrange_diff*0.5,
-#                           yt = temp_yrange[1] + yrange_diff*0.55,
-#                           legend = -5:3, cex = 0.75,
-#                           rect.col = list(brewer.pal(n = 9,name = 'Spectral'),
-#                                           brewer.pal(n = 9, name = 'Blues'))[[covar]],
-#                           gradient = 'x')#, align = 'rb')
-#     text(x = xrange[1] + xrange_diff*0.725,
-#          y = temp_yrange[1] + yrange_diff*0.5,
-#          c('Centered Log-Depth', 'Square of the\nCentered Log-Depth')[covar], 
-#          font = 3, cex = 1.25)
-#     offset = offset + 1
-#   }
-#   
-#   dev.off()
-# }
-
-############################################
 ## Plot mean Density for each Species
 ############################################
 {
-  png(paste0(PP_dir, 'mean_annual_density_', modelno, '.png'), units = 'in',
-      height = 4, width = 12, res = 500)
-  par(mar = c(0,0,0,0))
+  #Density colors
+  colors = c('white', brewer.pal(n = 9, 'Oranges'), 'black')
   
-  layout(mat = matrix(c(1,2,3,4,5, 16,
-                        6,7,8,9,10,16,
-                        11,12,13,14,15,16), byrow = T, nrow = 3), 
-         widths = c(rep(1,5),0.4) )
+  png(filename = paste0(PP_dir, 'mean_annual_density_', modelno, '.png'), 
+      units = 'in', height = 6, width = 9, res = 500)
+  
+  ## Set up plot panel layots
+  par(mar = c(0,0,0,0))
+  layout(mat = matrix(c(1,2,3,16,
+                        4,5,6,16,
+                        7,8,9,16,
+                        10,11,12,16,
+                        13,14,15,16), byrow = T, nrow = 5), 
+         widths = c(rep(1,3),0.4) )
+  
   for(ispp in 1:ns){
     
-    plot(1, type = 'n', axes = F, ann = F,
-         xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
-         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')]),
-                  max(Extrapolation_List$Data_Extrap[,c('N_km')]))
-    )
+    ##Empty plot
+    plot(1, type = 'n', axes = F, ann = F, xlim = xrange, ylim = yrange )
     
-    
-    vals  = rowSums(Report$D_gcy[,ispp,Years2Include])
+    #Extract mean density across years for each sepcies
+    mean_dens_years  = rowMeans(Report$D_gcy[,ispp,Years2Include])
     goa = SpatialPointsDataFrame(
       coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
-      data = data.frame(var = vals) 
-    )
+      data = data.frame(var = mean_dens_years))
     goa_ras = raster(goa, resolution = 5)
     goa_ras = rasterize(x = goa, y = goa_ras, field = 'var')
     
-    
-    val_cuts = c(0,1, quantile(vals[vals > 1], probs = seq(0,1,0.1)))
+    #Tabularize density values by deciles
+    val_cuts = c(0,1, quantile(mean_dens_years, probs = seq(0,1,0.1)))
     values(goa_ras) = cut(x = values(goa_ras),
                           breaks = val_cuts)
     
-    colors = c('white', 'white', brewer.pal(n = 9, 'Oranges'), 'black')
-    
+    #Plot density
     image(goa_ras, asp = 1, axes = F, ann = F, add = T, col = colors, asp = 1)
     
+    #Species Label
     text(x = xrange[1] + xrange_diff*0.71,
          y = yrange[1] + yrange_diff*0.25,
          gsub(sci_names[ispp], pattern = ' ', replacement = '\n'), 
          cex = 1.25, font = 3)
+
+    #Add land
+    plot(AK, add = T, col = 'tan', border = F)
+    plot(CA, add = T, col = 'tan', border = F)
+    
     box()
   }
+  
+  #Plot legend
   plot(1, type = 'n', axes = F, ann = F, xlim = c(0,1), ylim = c(0,10))
   plotrix::color.legend(xl = 0.05,
                         xr = 0.35,
@@ -282,72 +282,68 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
                         rect.col = colors,
                         gradient = 'y', align = 'rb')
   dev.off()
-  }
+}
 
 
 ############################################
 ## Plot Density across years for each Species
 ############################################
+if(!dir.exists(paste0(diag_dir,'Density/'))) 
+  dir.create(paste0(diag_dir,'Density/'))
 
-{png(paste0(diag_dir, 'density.png'), units = 'in', height = 7, width = 12, res = 500)
-  par(mar = c(0,1,0,0))
-  
-  layout(mat = matrix(c(1,2,3,4,5, 16,
-                        6,7,8,9,10,16,
-                        11,12,13,14,15,16), byrow = T, nrow = 3), 
-         widths = c(rep(1,5),0.25) )
-  
+{
   for(ispp in 1:ns){
+    png(paste0(diag_dir, 'Density/density_', 
+               gsub(sci_names[ispp], pattern = ' ', replacement = '_'), 
+               '.png'), 
+        units = 'in', height = 5, width = 7, res = 500)
     
-    vals  = Report$D_gcy[,ispp,]
-    val_cuts = c(0,quantile(vals[vals > 1], probs = seq(0,1,0.2) ))
+    #Plot layout
+    par(mar = c(0,0,0,0), oma = rep(0.5,4), mfrow = c(4,3))
     
-    temp_yrange = diff(range(Extrapolation_List$Data_Extrap[,c('N_km')]))
-    plot(1, type = 'n', axes = F, ann = F,
-         xlim = range(Extrapolation_List$Data_Extrap[,c('E_km')]),
-         ylim = c(min(Extrapolation_List$Data_Extrap[,c('N_km')])-5.55*temp_yrange,
-                  max(Extrapolation_List$Data_Extrap[,c('N_km')]))
-    )
-    
-    offset = 0
     for(iyear in Years2Include){
-      data = as.data.frame(Report$D_gcy[,ispp,iyear])
-      names(data) = 'density'
       
-      goa = SpatialPointsDataFrame(coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
-                                   data = data )
+      #Extract density values for a species in a year, 
+      vals  = Report$D_gcy[,ispp,iyear]
+      val_cuts = c(0,quantile(vals[vals > 1], probs = seq(0,1,length=9) ))
+      
+      #plot density
+      goa = SpatialPointsDataFrame(
+        coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
+        data = data.frame(density = vals) )
       goa_ras = raster(goa, resolution = 5)
       goa_ras = rasterize(x = goa, y = goa_ras, field = 'density')
       
       values(goa_ras) = cut(x = values(goa_ras), breaks = val_cuts)
       
-      #offset
-      goa_ras = raster::shift(x = goa_ras, dy = -temp_yrange/1.85*offset)
-      offset = offset + 1
-      
-      colors = c('white', 'yellow', 'gold', 'orange', 'red', 'brown')
-      
-      image(goa_ras, asp = 1, axes = F, ann = F, add = T, 
+      colors = c('white', brewer.pal(n = 7, name = 'Oranges'), 'black')
+      image(goa_ras, asp = 1, axes = F, ann = F, add = F, 
             col = colors)
       
+      #Year label
       text(x = goa_ras@extent[1] + 0.7*diff(goa_ras@extent[1:2]),
            y = goa_ras@extent[3]+ 0.7*diff(goa_ras@extent[3:4]),
-           Year_Set[iyear], cex = 0.75)
+           Year_Set[iyear], cex = 1)
       
+      #Add value legend
+      val_cuts = round(val_cuts[-1])
+      legend('bottom', fill = colors, bty = 'n',
+             ncol = 3, cex = 0.65,
+             legend = c('<1', paste0('1-', val_cuts[2]), 
+                        paste0(val_cuts[2:(length(val_cuts)-1)], '-',
+                               val_cuts[3:length(val_cuts)])) )
+      
+      #Add land
+      plot(AK, add = T, col = 'tan', border = F)
+      plot(CA, add = T, col = 'tan', border = F)
+      
+      box()  
     }
-    
-    mtext(side = 3, gsub(sci_names[ispp], pattern = ' ', replacement = '\n'), 
-          line = -1, cex = 0.6, font = 3)
-    
-    val_cuts = round(val_cuts[-1])
-    legend('bottom', fill = colors, bty = 'n',
-           ncol = 3, cex = 0.5,
-           legend = c('<1', paste0('1-', val_cuts[2]), 
-                      paste0(val_cuts[2:(length(val_cuts)-1)], '-',
-                             val_cuts[3:length(val_cuts)])) )
+    plot(1, type = 'n', axes = F, ann = F)
+    text(1,1, sci_names[ispp], cex = 1.5, font = 3)
+    dev.off()
   }  
-  
-  dev.off()}
+}
 
 ############################################
 ## Plot Omega of the 1st and second components
@@ -356,8 +352,8 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
   png(filename = paste0(diag_dir, 'omega.png'),
       units = 'in', height = 6, width = 12, res = 500)
   
+  #Plot layout
   par(mar = c(0,0,0,0), oma = c(0,0,2,0))
-  
   layout(mat = matrix(c(1,2,3,4,5, 16,
                         6,7,8,9,10,16,
                         11,12,13,14,15,16), byrow = T, nrow = 3), 
@@ -365,14 +361,19 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
   
   for(ispp in 1:ns){
     offset = 0
-    plot(1, type = 'n', xlim = xrange, ylim = yrange + c(-0.5*yrange_diff, 0),
-         axes = F)
-    for(omegatype in 1:2){
+    
+    #Empty plot
+    plot(1, type = 'n', axes = F,
+         xlim = xrange, ylim = yrange + c(-0.5*yrange_diff, 0))
+    for(omegatype in 1:2){ #Two types for the 0/1 and pos components
+      
+      #Extract spatial component
       scaled_var = list(Report$Omega1_gc[,ispp],
                         Report$Omega2_gc[,ispp])[[omegatype]]
       
+      #Scale to standard normal
       scaled_var = (scaled_var - mean(scaled_var)) / sd(scaled_var)
-      
+    
       goa = SpatialPointsDataFrame(
         coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
         data = data.frame(var = scaled_var) )
@@ -382,13 +383,13 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
       
       goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.075)
       
-      colors = colorRampPalette(rev(brewer.pal(n = 10, name = 'Spectral')))(1000)
-      
+      #Plot spatial effect
+      colors = rev(brewer.pal(n = 11, name = 'Spectral'))
       image(goa_ras, add = T, col = colors, asp = 1)
       
       temp_yrange = extent(goa_ras)[3:4]
-      
       if(omegatype == 2) {
+        #Plot Species label
         text(x = xrange[1] + xrange_diff*0.725,
              y = temp_yrange[1] + yrange_diff*0.3,
              gsub(x = sci_names[ispp], pattern = ' ', replacement = '\n'), 
@@ -400,15 +401,17 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
     }
   }
   
+  #Plot legend
   plot(1, type = 'n', axes = F, ann = F, xlim = c(0,1), ylim = c(0,10))
   plotrix::color.legend(xl = 0.1,
                         xr = 0.5,
                         yb = 1,
                         yt = 9,
                         legend = -3:3,
-                        rect.col = colors,
+                        rect.col = colorRampPalette(colors)(1000) ,
                         gradient = 'y', align = 'rb')
   
+  #Title
   mtext(side = 3, outer = T, 
         "Spatial Effect in Occurrence (Top) and Positive Response (Bottom)", 
         line = 0, font = 2)
@@ -420,61 +423,72 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
 ## Plot Epsilon for the first, middle and last year
 ## for each of the 1st and second components
 ############################################
+if(!dir.exists(paste0(diag_dir,'Epsilon/'))) 
+  dir.create(paste0(diag_dir,'Epsilon/'))
 
-{png(filename = paste0(diag_dir, 'epsilon.png'),
-     units = 'in', height = 6, width = 8, res = 500)
-  layout(mat = matrix(c(1:10,  31,
-                        11:20, 31,
-                        21:30, 31), byrow = T, nrow = 3), 
-         widths = c(rep(1,10),0.3) )
-  par(mar = c(1,0,1,0))
-  for(ispp in 1:ns){
-    for(epstype in 1:2){
-      plot(1, type = 'n', xlim = xrange, ylim = yrange + c(-5.5*yrange_diff, 0),
-           axes = F)
-      offset = 0
-      for(iyear in Years2Include){
-        scaled_var = list(Report$Epsilon1_gct[,ispp,iyear],
-                          Report$Epsilon2_gct[,ispp,iyear])[[epstype]]
-        
-        scaled_var = (scaled_var - mean(scaled_var)) / sd(scaled_var)
-        
-        goa = SpatialPointsDataFrame(
-          coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
-          data = data.frame(var = scaled_var) )
-        
-        goa_ras = raster(goa, resolution = 5)
-        goa_ras = rasterize(x = goa, y = goa_ras, field = 'var')
-        
-        goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.075)
-        
-        colors = colorRampPalette(rev(brewer.pal(n = 10, name = 'Spectral')))(1000)
-        
-        image(goa_ras, add = T, col = colors, asp = 1)
-        
-        temp_yrange = extent(goa_ras)[3:4]
-        
-        text(x = xrange[1] + xrange_diff*0.725,
-             y = temp_yrange[1] + yrange_diff*0.7,
-             Year_Set[iyear], cex = 0.4)
-        
-        offset=offset + 1
-      }
+for(ispp in 1:ns){
+  png(paste0(diag_dir, 'Epsilon/epsilon_',
+             gsub(sci_names[ispp], pattern = ' ', replacement = '_'),
+             '.png'),
+      units = 'in', height = 5, width = 6, res = 500)
+  
+  #Plot layout
+  par(mar = c(0,0,0,0), oma = c(0.5, 0.5, 3, 0.5), mfrow = c(4,3))
+  for(iyear in Years2Include){
+    
+    #Empty plot
+    plot(1, type = 'n',  axes = F,
+         xlim = xrange, ylim = yrange + c(-1*yrange_diff, 0))
+    
+    #Year label
+    legend('topleft', legend = Year_Set[iyear], bty = 'n')
+    box()
+    offset = 0
+    
+    for(epstype in 1:2){ #Two types for the 0/1 and positive components
       
-      mtext(side = 1, line = 0, cex = 0.4,
-            text = c('Spatiotemporal Effect\non Occurrence',
-                     'Spatiotemporal Effect\non Positive Response')[epstype])
+      #Extract spatiotemporal component
+      scaled_var = list(Report$Epsilon1_gct[,ispp,iyear],
+                        Report$Epsilon2_gct[,ispp,iyear])[[epstype]]
+      
+      #Scale to standard normal
+      scaled_var = (scaled_var - mean(scaled_var)) / sd(scaled_var)
+      
+      goa = SpatialPointsDataFrame(
+        coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')],
+        data = data.frame(var = scaled_var) )
+      
+      goa_ras = raster(goa, resolution = 5)
+      goa_ras = rasterize(x = goa, y = goa_ras, field = 'var')
+      
+      goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.12)
+      
+      #Plot spatiotemporal effect
+      colors = rev(brewer.pal(n = 11, name = 'Spectral'))
+      image(goa_ras, add = T, col = colors, asp = 1)
+      
+      temp_yrange = extent(goa_ras)[3:4]
+      offset=offset + 1
     }
-    text(x = xrange[1], y = yrange[2] + yrange_diff*0.15, sci_names[ispp], 
-         font = 3, xpd = NA)
   }
   
+  #Plot legend
   plot(1, type = 'n', axes = F, ann = F, xlim = c(0,1), ylim = c(0,10))
-  plotrix::color.legend(xl = 0.05, xr = 0.4, yb = 1, yt = 9, align = 'rb',
-                        legend = -3:3, rect.col = colors, gradient = 'y')
+  plotrix::color.legend(xl = 0.05, xr = 0.95, yb = 3.5, yt = 5.5, align = 'rb',
+                        legend = -3:3, gradient = 'x', cex = 0.75, 
+                        rect.col = colorRampPalette(colors)(1000))
   
-  dev.off()}
-
+  #Species label
+  mtext(side = 3, sci_names[ispp], line = -3, font = 3, cex = 1)
+  
+  #Title
+  mtext(side = 3, outer = T, 
+        paste0("Spatiotemporal Effect in Occurrence (Top)", 
+               " and Positive Response (Bottom)"), line = 1)
+  
+  
+  dev.off()
+}
 
 ############################################
 ## Index of abundance
@@ -543,6 +557,6 @@ plot_anisotropy( FileName=paste0(diag_dir,"Aniso.png"),
 ############################################
 ## Save output
 ############################################
-save(list = c('Q', 'PResid', 'Cov_List'),
-     file = paste0(diag_dir, 'diagnostics.RData'))
+# save(list = c('Q', 'PResid', 'Cov_List'),
+#      file = paste0(diag_dir, 'diagnostics.RData'))
 
