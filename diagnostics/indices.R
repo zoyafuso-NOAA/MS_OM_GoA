@@ -9,7 +9,7 @@
 ##################################################
 rm(list = ls())
 
-modelno = '10d'
+modelno = '10b'
 VAST_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/", 
                   "VAST_output", modelno, "/")
 diag_dir = paste0("C:/Users/Zack Oyafuso/Google Drive/VAST_Runs/diagnostics/",
@@ -40,14 +40,15 @@ Index_Ests = fit$Report$Index_cyl[,Years2Include,1]
 Index_SDs = matrix(data = fit$parameter_estimates$SD$sd[attributes(fit$parameter_estimates$SD$value)$names == "Index_cyl"], nrow = 15 )[,Years2Include]
 
 sci_names = names(spp_df)[unlist(spp_df[modelno,])] 
-sci_names = sort(sci_names)[c(1:8, 12, 9:11, 13:15)]
-ns = length(sci_names)
+sci_names = sort(sci_names)
+spp_to_include = which(!(sci_names %in% 'Sebastes B_R') == T)
+ns = length(spp_to_include)
 
 {
   png(paste0(diag_dir, 'indices_comparison_DBE.png'), width = 12, height = 6, 
       units = 'in', res = 500)
   par(mfrow = c(3,5), mar = c(3,3,2,1), oma = c(0,2.5,0,0))
-  for(spp in (1:ns) ){
+  for(spp in spp_to_include) {
     
     #Design based Estimator and SD Interval
     temp_DBE = subset(GOA_DBE, SPECIES_NAME == sci_names[spp] &

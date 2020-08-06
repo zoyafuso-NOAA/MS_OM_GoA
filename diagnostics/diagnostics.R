@@ -29,11 +29,13 @@ library(rnaturalearth)
 #### Set up directories     
 ##################################################
 rm(list = ls())
-modelno = '10b'
+modelno = '8b'
+
 main_dir = 'C:/Users/Zack Oyafuso/'
 PP_dir = paste0(main_dir, "Google Drive/MS_Optimizations/powerpoint_plot/")
-VAST_dir = paste0(main_dir, "Google Drive/VAST_Runs/VAST_output", modelno, "/")
-diag_dir = paste0(main_dir, "Google Drive/VAST_Runs/diagnostics/",
+VAST_dir = paste0(main_dir, "Google Drive/GOA_VAST_Runs/VAST_output", 
+                  modelno, "/")
+diag_dir = paste0(main_dir, "Google Drive/GOA_VAST_Runs/diagnostics/",
                   "VAST_model", modelno, "/")
 fun_dir=paste0(main_dir, 'Documents/GitHub/MS_OM_GoA/diagnostics/')
 
@@ -44,6 +46,8 @@ if(! dir.exists(diag_dir) ) dir.create(diag_dir)
 ##################################################
 load(paste0(VAST_dir, '/fit.RData'))
 load( paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData') )
+spp_df = read.csv(paste0(dirname(fun_dir), '/data/spp_df.csv'),
+                  check.names=F, header = T, row.names = 'modelno')
 
 for(ifile in c("plot_factors.R", "plot_residuals.R","summarize_covariance.R")){
   source( paste0(fun_dir, ifile) )
@@ -71,25 +75,7 @@ MapDetails_List = make_map_info( "Region"='Gulf_of_Alaska',
                                  "spatial_list"=Spatial_List, 
                                  "Extrapolation_List"=Extrapolation_List )
 
-sci_names = c("Atheresthes stomias", 
-              "Gadus chalcogrammus", 
-              "Gadus macrocephalus", 
-              
-              "Glyptocephalus zachirus" , 
-              "Hippoglossoides elassodon", 
-              "Hippoglossus stenolepis", 
-              
-              "Lepidopsetta bilineata", 
-              "Lepidopsetta polyxystra",
-              "Sebastes brevispinis", 
-              
-              "Microstomus pacificus", 
-              "Sebastes alutus", 
-              "Sebastes B_R", 
-              
-              "Sebastes polyspinis", 
-              "Sebastes variabilis", 
-              "Sebastolobus alascanus" )
+sci_names = sort(names(spp_df)[ which(spp_df[modelno,]==T) ])
 ns = length(sci_names)
 
 xrange = range(Extrapolation_List$Data_Extrap[,'E_km'])
@@ -114,7 +100,7 @@ CA = sp::spTransform(CA,
 ############################################
 ## If continuting from where you left on...
 ############################################
-load(paste0(diag_dir, '/diagnostics.RData'))
+# load(paste0(diag_dir, '/diagnostics.RData'))
 
 ############################################
 ## Plot data
@@ -161,13 +147,13 @@ Enc_prob = plot_encounter_diagnostic( Report=Report,
 ## Q-Q plot.  A good Q-Q plot will have residuals along the one-to-one line.  
 ############################################
 
-# Q = plot_quantile_diagnostic( TmbData=TmbData, 
-#                               Report=Report, 
-#                               FileName_PP="Posterior_Predictive",
-#                               FileName_Phist="Posterior_Predictive-Histogram", 
-#                               FileName_QQ="Q-Q_plot", 
-#                               FileName_Qhist="Q-Q_hist", 
-#                               DateFile=diag_dir ) 
+Q = plot_quantile_diagnostic( TmbData=TmbData,
+                              Report=Report,
+                              FileName_PP="Posterior_Predictive",
+                              FileName_Phist="Posterior_Predictive-Histogram",
+                              FileName_QQ="Q-Q_plot",
+                              FileName_Qhist="Q-Q_hist",
+                              DateFile=diag_dir )
 
 ############################################
 ## Diagnostics for positive-catch-rate component
@@ -218,6 +204,9 @@ PResid = plot_residuals(Lat_i=Data_Geostat[,'Lat'],
                         mar=c(0,0,2,0), 
                         oma=c(3.5,3.5,0,0), 
                         cex=1.8)
+
+save(list = c('Q', 'PResid'),
+     file = paste0(diag_dir, 'diagnostics.RData'))
 
 ############################################
 ## Plot mean Density for each Species
@@ -557,6 +546,6 @@ plot_anisotropy( FileName=paste0(diag_dir,"Aniso.png"),
 ############################################
 ## Save output
 ############################################
-# save(list = c('Q', 'PResid', 'Cov_List'),
-#      file = paste0(diag_dir, 'diagnostics.RData'))
+save(list = c('Q', 'PResid', 'Cov_List'),
+     file = paste0(diag_dir, 'diagnostics.RData'))
 
