@@ -8,6 +8,7 @@
 ##               Sebastes variabilis
 ##               Sebastes aleutus
 ##               Sebastes polyspinis
+##               Run 5-fold Cross Validation for Each Model
 ###############################################################################
 
 ##################################################
@@ -21,17 +22,15 @@ library(VAST)
 ####   Set up directories
 ##################################################
 rm(list = ls())
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[1]
 
-github_dir = paste0(c('C:/Users/Zack Oyafuso/Documents',
-                      'C:/Users/zack.oyafuso/Work')[which_machine],
-                    '/GitHub/MS_OM_GoA/')
+github_dir = 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/'
+VAST_dir = 'C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/'
 
 which_spp = c('Sebastes polyspinis', 
               'Sebastes variabilis',
               'Sebastes alutus')[3]
 
-result_dir = paste0(github_dir, 'ForMadison/', which_spp, '/')
+result_dir = paste0(VAST_dir, which_spp, '/')
 if(!dir.exists(result_dir)) dir.create(result_dir)  
 
 ##################################################
