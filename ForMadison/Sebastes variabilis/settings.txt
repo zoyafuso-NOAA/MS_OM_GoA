@@ -1,0 +1,63 @@
+$Version
+[1] "VAST_v8_2_0"
+
+$n_x
+[1] 350
+
+$Region
+[1] "Gulf_of_Alaska"
+
+$strata.limits
+     STRATA west_border east_border
+1 All_areas        -Inf         Inf
+
+$zone
+[1] NA
+
+$FieldConfig
+  Omega1 Epsilon1   Omega2 Epsilon2 
+       1        1        1        1 
+
+$RhoConfig
+   Beta1    Beta2 Epsilon1 Epsilon2 
+       0        0        0        0 
+
+$VamConfig
+Method   Rank Timing 
+     0      0      0 
+
+$OverdispersionConfig
+Eta1 Eta2 
+   0    0 
+
+$ObsModel
+[1] 2 0
+
+$vars_to_correct
+[1] "Index_cyl"
+
+$Options
+   SD_site_density SD_site_logdensity    Project_factors 
+                 0                  0                  0 
+
+$grid_size_km
+[1] 25
+
+$max_cells
+[1] 3500
+
+$knot_method
+[1] "grid"
+
+$Method
+[1] "Mesh"
+
+$use_anisotropy
+[1] TRUE
+
+$fine_scale
+[1] TRUE
+
+$bias.correct
+[1] FALSE
+
