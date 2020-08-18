@@ -5,7 +5,8 @@ rm(list = ls())
 library(VAST); library(RANN)
 
 #Load Dataset
-setwd("C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output10d/")
+# setwd("C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output10d/")
+setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output10c/")
 
 CV_df = data.frame(ifold = 1:5)
 RRMSE = array(dim = c(5, ncol = 15, 11))
