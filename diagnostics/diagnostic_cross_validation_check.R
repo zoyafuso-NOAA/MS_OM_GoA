@@ -1,11 +1,11 @@
 ######################################
 ## Diagnostics
 ######################################
-
+rm(list = ls())
 library(VAST); library(RANN)
 
 #Load Dataset
-setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output6i/")
+setwd("C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output10d/")
 
 CV_df = data.frame(ifold = 1:5)
 RRMSE = array(dim = c(5, ncol = 15, 11))
@@ -50,7 +50,7 @@ for(ifold in 1:5){
   }
   
   #RRMSE
-  mean_pred_density = aggregate(pred_density ~ spp + year, data = withheld_df, 
+  mean_pred_density = aggregate(obs_density ~ spp + year, data = withheld_df, 
                                 FUN = mean)
   
   
@@ -60,7 +60,7 @@ for(ifold in 1:5){
       temp_RMSE = sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
       temp_mean_pred_density = mean_pred_density[mean_pred_density$spp == i &
                                                    mean_pred_density$year == unique(withheld_df$year)[itime],
-                                                 'pred_density']
+                                                 'obs_density']
       RRMSE[ifold, i, itime] = temp_RMSE / temp_mean_pred_density
     }
     
