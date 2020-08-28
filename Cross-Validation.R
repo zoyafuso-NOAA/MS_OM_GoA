@@ -20,10 +20,10 @@ library(TMBhelper)
 ####   Set up directories
 ##################################################
 rm(list = ls())
-which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[1]
+which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[2]
 
-model_settings = data.frame(factorno = 2,
-                            modelno = paste0(9, letters[1:2]),
+model_settings = data.frame(factorno = 2:3,
+                            modelno = paste0(6, c('f', 'g')),
                             stringsAsFactors = F)
 
 irow = 1 #Specify which model 
@@ -146,7 +146,7 @@ n_t = diff(range(Data_Geostat$Year)) + 1 #Number of total years
 n_p = 2 #two density covariates
 
 X_gtp = array(dim = c(n_g, n_t, n_p) )
-for(i in 1:Save$TmbData$n_t) {
+for(i in 1:n_t) {
   X_gtp[,i,] = as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
 }
 
@@ -166,16 +166,16 @@ fit = fit_model( "settings"=settings,
                  "b_i"=Data_Geostat[,'Catch_KG'],
                  "a_i"=Data_Geostat[,'AreaSwept_km2'],
                  "v_i"=Data_Geostat[,'Vessel'],
-                 # "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                 # "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon',
-                 #                                          'LOG_DEPTH',
-                 #                                          'LOG_DEPTH2',
-                 #                                          'Catch_KG')],
-                 # Year = NA),
+                 "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                 "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon',
+                                                          'LOG_DEPTH',
+                                                          'LOG_DEPTH2',
+                                                          'Catch_KG')],
+                 Year = NA),
                  "max_cells" = Inf,
                  "getJointPrecision"=TRUE,
-                 "newtonsteps" = 1#,
-                 # 'X_gtp' = X_gtp
+                 "newtonsteps" = 1,
+                 'X_gtp' = X_gtp
 )
 ParHat = fit$ParHat
 
