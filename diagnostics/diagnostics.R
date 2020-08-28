@@ -24,12 +24,13 @@ library(rgdal)
 library(RColorBrewer)
 library(plotrix)
 library(rnaturalearth)
+library(rgeos)
 
 ##################################################
 #### Set up directories     
 ##################################################
 rm(list = ls())
-modelno = '8b'
+modelno = '6g'
 
 main_dir = 'C:/Users/Zack Oyafuso/'
 PP_dir = paste0(main_dir, "Google Drive/MS_Optimizations/powerpoint_plot/")
@@ -44,6 +45,7 @@ if(! dir.exists(diag_dir) ) dir.create(diag_dir)
 ##################################################
 ####  Load VAST fit and import customized plot functions 
 ##################################################
+
 load(paste0(VAST_dir, '/fit.RData'))
 load( paste0(dirname(VAST_dir), '/Spatial_Settings_CrVa.RData') )
 spp_df = read.csv(paste0(dirname(fun_dir), '/data/spp_df.csv'),
@@ -83,12 +85,15 @@ yrange = range(Extrapolation_List$Data_Extrap[,'N_km'])
 xrange_diff = diff(xrange)
 yrange_diff = diff(yrange)
 
+##################################################
+####   Import Land objects, clip to save object space
+##################################################
 AK = readOGR(paste0(dirname(fun_dir), '/data/shapefiles/AKland.shp')) 
 AK = sp::spTransform(AK, 
-                      CRS = paste0("+proj=utm +zone=5 +lat_1=55 +lat_2=65",
-                                   ' +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0',
-                                   ' +ellps=GRS80 +datum=NAD83 +units=km',
-                                   ' +no_defs'))
+                     CRS = paste0("+proj=utm +zone=5 +lat_1=55 +lat_2=65",
+                                  ' +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0',
+                                  ' +ellps=GRS80 +datum=NAD83 +units=km',
+                                  ' +no_defs'))
 
 CA = readOGR(paste0(dirname(fun_dir), '/data/shapefiles/canada_dcw.shp')) 
 CA = sp::spTransform(CA, 
@@ -96,6 +101,15 @@ CA = sp::spTransform(CA,
                                   ' +lat_0=50 +lon_0=-154 +x_0=0 +y_0=0',
                                   ' +ellps=GRS80 +datum=NAD83 +units=km',
                                   ' +no_defs'))
+
+AK_bbox = matrix(c(-886, 2163, 
+                   5600, 7000), byrow = T, ncol = 2)
+AK = gIntersection(AK, 
+                   as(extent(as.vector(t(AK_bbox))), "SpatialPolygons"), 
+                   byid = TRUE)
+
+CA = subset(CA, POPYADMIN %in% c('BRITISH COLUMBIA',
+                                 'YUKON TERRITORY'))
 
 ############################################
 ## If continuting from where you left on...
@@ -253,7 +267,7 @@ save(list = c('Q', 'PResid'),
          y = yrange[1] + yrange_diff*0.25,
          gsub(sci_names[ispp], pattern = ' ', replacement = '\n'), 
          cex = 1.25, font = 3)
-
+    
     #Add land
     plot(AK, add = T, col = 'tan', border = F)
     plot(CA, add = T, col = 'tan', border = F)
@@ -281,11 +295,10 @@ if(!dir.exists(paste0(diag_dir,'Density/')))
   dir.create(paste0(diag_dir,'Density/'))
 
 {
+  pdf(paste0(diag_dir, 'density.pdf'), onefile = T, 
+      height = 5, width = 7)
   for(ispp in 1:ns){
-    png(paste0(diag_dir, 'Density/density_', 
-               gsub(sci_names[ispp], pattern = ' ', replacement = '_'), 
-               '.png'), 
-        units = 'in', height = 5, width = 7, res = 500)
+    
     
     #Plot layout
     par(mar = c(0,0,0,0), oma = rep(0.5,4), mfrow = c(4,3))
@@ -298,9 +311,9 @@ if(!dir.exists(paste0(diag_dir,'Density/')))
       
       #plot density
       goa = SpatialPointsDataFrame(
-        coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
+        coords = Extrapolation_depths[,c('E_km', 'N_km')], 
         data = data.frame(density = vals) )
-      goa_ras = raster(goa, resolution = 5)
+      goa_ras = raster(goa, resolution = 10)
       goa_ras = rasterize(x = goa, y = goa_ras, field = 'density')
       
       values(goa_ras) = cut(x = values(goa_ras), breaks = val_cuts)
@@ -329,10 +342,14 @@ if(!dir.exists(paste0(diag_dir,'Density/')))
       box()  
     }
     plot(1, type = 'n', axes = F, ann = F)
-    text(1,1, sci_names[ispp], cex = 1.5, font = 3)
-    dev.off()
+    caption = paste0('Predicted density (kg/km2) for\n', sci_names[ispp],
+                     '\nacross the Gulf of Alaska\nfor each observed year.')
+    text(1,1, caption, cex = 1.2, font = 3)
+    
   }  
+  dev.off()
 }
+
 
 ############################################
 ## Plot Omega of the 1st and second components
@@ -362,7 +379,7 @@ if(!dir.exists(paste0(diag_dir,'Density/')))
       
       #Scale to standard normal
       scaled_var = (scaled_var - mean(scaled_var)) / sd(scaled_var)
-    
+      
       goa = SpatialPointsDataFrame(
         coords = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], 
         data = data.frame(var = scaled_var) )
