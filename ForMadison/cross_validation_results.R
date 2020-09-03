@@ -141,7 +141,7 @@ names(RRMSE)[-1] = c('No_Depth', 'Depth')
 ##################################################
 ####   Create the result object that would go into the optimizations
 ##################################################
-D_gcy = array(dim = c(N, ns, 24))
+D_gcy = array(dim = c(N, ns, 24), dimnames = list(NULL, which_spp, NULL))
 
 for(ispp in 1:ns){
   which_model_idx = which.min(RRMSE[ispp, -1])
