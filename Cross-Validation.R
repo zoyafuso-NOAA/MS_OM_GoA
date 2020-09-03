@@ -214,7 +214,7 @@ for( fI in 1:n_fold ){
                        "v_i"=Data_Geostat[,'Vessel'],
                        "PredTF_i"=PredTF_i, 
                        "Parameters"=ParHat,
-                       "getsd"=T,
+                       "getsd"=FALSE,
                        "silent" = T,
                        "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
                        "covariate_data" = cbind(Data_Geostat[,c('Lat', 'Lon',
