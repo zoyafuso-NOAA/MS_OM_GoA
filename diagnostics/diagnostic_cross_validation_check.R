@@ -14,7 +14,7 @@ library(RANN)
 ##################################################
 ####   Set up directories
 ##################################################
-VAST_dir = "C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output6g/"
+VAST_dir = "C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output8b/"
 
 ##################################################
 ####   Result Objects
@@ -37,7 +37,7 @@ for (ifold in 1:5){
     max(abs(fit_new$parameter_estimates$diagnostics$final_gradient))
   
   #Is hessian is positive definite?
-  CV_df$pdHess[ifold] <- fit_new$parameter_estimates$SD$pdHess
+  # CV_df$pdHess[ifold] <- fit_new$parameter_estimates$SD$pdHess
   
   #check_fit chekcs bounds, TRUE is bad and FALSE is good
   CV_df$bound_check[ifold] <- check_fit(fit_new$parameter_estimates)
