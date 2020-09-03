@@ -1,13 +1,28 @@
-######################################
-## Diagnostics
-######################################
+###############################################################################
+## Project:       CrossValidation Checks and Predictive Performance
+## Author:        Zack Oyafuso (zack.oyafuso@noaa.gov)
+## Description:   Check max gradients, hessians, and calculate Relative 
+##                Root Mean Square Error of predictions for each fold
+###############################################################################
 rm(list = ls())
-library(VAST); library(RANN)
 
-#Load Dataset
+##################################################
+####    Import required packages
+##################################################
+library(VAST)
+library(RANN)
+
+##################################################
+####    Set up directories
+##################################################
 # setwd("C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output10d/")
-setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output10c/")
+# setwd("C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output10c/")
 
+VAST_dir = "/Users/zackoyafuso/Google Drive/GOA_VAST_Runs/VAST_output10d/"
+
+##################################################
+####    Set up directories
+##################################################
 CV_df = data.frame(ifold = 1:5)
 RRMSE = array(dim = c(5, ncol = 15, 11))
 
