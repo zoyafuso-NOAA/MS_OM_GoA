@@ -14,7 +14,7 @@ library(RANN)
 ##################################################
 ####   Set up directories
 ##################################################
-VAST_dir = "C:/Users/zack.oyafuso/Desktop/VAST_Runs/VAST_output6f/"
+VAST_dir = "C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output6g/"
 
 ##################################################
 ####   Result Objects
@@ -41,6 +41,8 @@ for (ifold in 1:5){
   
   #check_fit chekcs bounds, TRUE is bad and FALSE is good
   CV_df$bound_check[ifold] <- check_fit(fit_new$parameter_estimates)
+  
+  CV_df$pred_jnll[ifold] <- fit_new$Report$pred_jnll
   
   ##################################################
   ####   Calculate RRMSE
