@@ -27,10 +27,10 @@ github_dir = 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/'
 VAST_dir = 'C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/'
 
 for(depth_in_model in c(T,F)[2]){
-  for(which_spp in c(#'Microstomus pacificus',
+  for(which_spp in c('Microstomus pacificus',
                      'Lepidopsetta polyxystra',
-                     'Lepidopsetta bilineata'
-                     ,
+                     'Lepidopsetta bilineata',
+                     
                      'Hippoglossus stenolepis',
                      'Hippoglossoides elassodon',
                      'Glyptocephalus zachirus',
@@ -42,6 +42,7 @@ for(depth_in_model in c(T,F)[2]){
                      'Sebastes brevispinis',
                      'Sebastes polyspinis', 
                      'Sebastes variabilis',
+                     
                      'Sebastes alutus',
                      'Atheresthes stomias',
                      'Sebastolobus alascanus')){

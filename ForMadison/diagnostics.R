@@ -34,7 +34,7 @@ which_machine = c('Zack_PC' =1, 'Zack_GI_PC'=2)[1]
 github_dir = 'C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/'
 VAST_dir = 'C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/'
 
-for(ispp in c(10:15)){
+for(ispp in c(1:15)){
   which_spp = c( 
     'Microstomus pacificus',
     'Lepidopsetta polyxystra',
@@ -55,7 +55,7 @@ for(ispp in c(10:15)){
     'Atheresthes stomias',
     'Sebastolobus alascanus')[ispp]
   
-  depth_in_model = F
+  depth_in_model = T
   
   result_dir = paste0(VAST_dir, which_spp, 
                       ifelse(depth_in_model,  '_depth', ''), '/')

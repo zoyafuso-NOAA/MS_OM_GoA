@@ -28,7 +28,7 @@ github_dir = paste0(c('/Users/zackoyafuso/Documents/',
 ##################################
 ## Import Strata Allocations and spatial grid and predicted density
 ##################################
-load(paste0(github_dir, 'optimization_data.RData'))
+load(paste0(github_dir, 'model_11/optimization_data.RData'))
 
 which_spp = c( 
   'Atheresthes stomias', 
@@ -61,7 +61,7 @@ CV_df = expand.grid(species = which_spp,
                     fold = 1:NFold,
                     stringsAsFactors = F)
 
-CV_df[,c('max_grad', 'pdHess', 'bound_check', paste0("year", 1:NTime))] = NA
+CV_df[,c('max_grad', 'pdHess', 'bound_check', 'pred_nll', paste0("year", 1:NTime))] = NA
 
 for(irow in 1:nrow(CV_df)){
   
@@ -82,6 +82,8 @@ for(irow in 1:nrow(CV_df)){
     
     #check_fit chekcs bounds, TRUE is bad and FALSE is good
     CV_df$bound_check[irow] = (check_fit(fit_new$parameter_estimates))
+    
+    CV_df$pred_nll[irow] = fit_new$Report$pred_jnll
     
     #Extract incides of withheld data
     withheld_idx = which(fit_new$data_list$PredTF_i == T)
