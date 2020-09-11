@@ -16,9 +16,12 @@ library(tidyr)
 ##################################################
 ####   Set up directores
 ##################################################
-VAST_dir = 'C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/'
+which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[3]
 
-which_machine = c('Zack_MAC'=1, 'Zack_PC' =2, 'Zack_GI_PC'=3)[2]
+VAST_dir = c("",
+             'C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/',
+             "C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/")[which_machine]
+
 github_dir = paste0(c('/Users/zackoyafuso/Documents/', 
                       'C:/Users/Zack Oyafuso/Documents/',
                       'C:/Users/zack.oyafuso/Work/', 
@@ -34,15 +37,19 @@ which_spp = c(
   'Atheresthes stomias', 
   'Gadus chalcogrammus', 
   'Gadus macrocephalus',
+  
   'Glyptocephalus zachirus', 
   'Hippoglossoides elassodon', 
   'Hippoglossus stenolepis', 
+  
   'Lepidopsetta bilineata', 
   'Lepidopsetta polyxystra',
   'Microstomus pacificus',
+  
   'Sebastes alutus',
   'Sebastes B_R',
   'Sebastes brevispinis',
+  
   'Sebastes polyspinis', 
   'Sebastes variabilis',
   'Sebastolobus alascanus')[]
@@ -54,10 +61,10 @@ N = nrow(GOA_grid)
 ##################################################
 ####   Result Objects
 ##################################################
-NFold = 5
+NFold = 10
 NTime = 11
 CV_df = expand.grid(species = which_spp, 
-                    depth = c(T,F), 
+                    depth = c(T,F),
                     fold = 1:NFold,
                     stringsAsFactors = F)
 
@@ -133,12 +140,21 @@ for(irow in 1:nrow(CV_df)){
 ##################################################
 CV_df$RRMSE = rowMeans(CV_df[,paste0('year', 1:NTime)])
 
-RRMSE = tidyr::spread(data = aggregate(RRMSE ~ species + depth, 
+RRMSE = tidyr::spread(data = aggregate(RRMSE ~ species + depth,
                                        data = CV_df, 
                                        FUN = mean), 
                       key = 'depth',  
                       value = 'RRMSE')
 names(RRMSE)[-1] = c('No_Depth', 'Depth')
+
+##################################################
+#### 
+##################################################
+tidyr::spread(data = aggregate(pred_nll ~ species + depth,
+                               data = CV_df,
+                               FUN = sum),
+              key = "depth",
+              value = "pred_nll")
 
 ##################################################
 ####   Create the result object that would go into the optimizations
