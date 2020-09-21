@@ -14,14 +14,19 @@ library(dplyr)
 ####   Set up directories
 ##################################################
 rm(list = ls())
-setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
-data_wd = 'C:/Users/zack.oyafuso/Desktop/'
+# setwd("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/")
+data_wd = "C:/Users/Zack Oyafuso/Desktop/AK_BTS/"
+github_wd = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/"
 
 ##################################################
 #### Import CPUE survey data
+#### Import EFH bathhymetry raster
 ##################################################
 data = read.csv(paste0(data_wd, "data-raw/cpue_GOA_selected_spp.csv"), 
                 stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
+
+bathy <- raster::raster(
+  paste0(github_wd, "EFH_bathymetry/aigoa_bathp1c/dblbnd.adf"))
 
 ##################################################
 #### Join haul data to get coordinates, depth, bottom and surface temperature
@@ -53,7 +58,8 @@ data <- inner_join(data, species_codes)
 ##################################################
 ####  Select and rename columns, dropping rows with mising depths
 ##################################################
-data <- data %>% select(YEAR, SURVEY, BOTTOM_DEPTH = GEAR_DEPTH, 
+data <- data %>% select(YEAR, SURVEY, 
+                        BOTTOM_DEPTH = GEAR_DEPTH,
                         SURFACE_TEMPERATURE, GEAR_TEMPERATURE, 
                         # CPUE = WGTCPUE,
                         EFFORT, WEIGHT,
@@ -100,56 +106,121 @@ B_R_rockfishes <- data %>% dplyr::filter(
 data <- as.data.frame(rbind(data, B_R_rockfishes))
 
 ##################################################
-#### Scale observed bottom depth and calculate depth^2   
-##################################################
-
-data$DEPTH = scale(x = log(data$BOTTOM_DEPTH))
-data$DEPTH2 = data$DEPTH^2
-
-##################################################
 #### Filter species to make it easier to import later
 #### 1. Arrowtooth Flounder (Atherestes stomias, code 10110)
 #### 2. Pacific Cod (Gadus macrocephalus, code 21720)
 #### 3. Pacific Ocean Perch (Sebastes alutus, code 30060)
-#### 4. Sablefish (Anoplopoma fimbria, code 20510)
-#### 5. Walleye pollock (Gadus chalcogrammus, code 21740)
-#### 6. Dover sole (Solea solea, code 10180)
-#### 7. Pacific halibut (Hippoglossus stenolepis, code 10120)
-#### 8. Flathead sole (Hippoglossoides elassodon, code 10130)
-#### 9. Rex sole (Glyptocephalus zachirus, code 10200)
-#### 10. Dusky rockfish (Sebastes variabilis, code 30152)
-#### 11. Northern rockfish (Sebastes polyspinis, code 30420)
-#### 12. Silvergray Rockfish (Sebastes brevispinis, code 30100)
-#### 13. Yellowfin sole (Limanda aspera, code 10210)
-#### 14. Shortspine thornyhead (Sebastolobus alascanus, code 30020
-
-#### 15. Rougheye and blackspotted rockfishes (Sebastes aleutianus and  
+#### 4. Walleye pollock (Gadus chalcogrammus, code 21740)
+#### 5. Dover sole (Solea solea, code 10180)
+#### 6. Pacific halibut (Hippoglossus stenolepis, code 10120)
+#### 7. Flathead sole (Hippoglossoides elassodon, code 10130)
+#### 8. Rex sole (Glyptocephalus zachirus, code 10200)
+#### 0. Dusky rockfish (Sebastes variabilis, code 30152)
+#### 10. Northern rockfish (Sebastes polyspinis, code 30420)
+#### 11. Silvergray Rockfish (Sebastes brevispinis, code 30100)
+#### 12. Shortspine thornyhead (Sebastolobus alascanus, code 30020
+#### 13. Rougheye and blackspotted rockfishes (Sebastes aleutianus and  
 ####     Sebastes melanostictus, respectively, codes 30050,30051,30052)
 
-#### 16/17 Northern and Southern rock sole (Lepidopsetta polyxystra and L.
+#### 14/15 Northern and Southern rock sole (Lepidopsetta polyxystra and L.
 #### bilineata, respectivity, codes 10260,10261,10262)
 ##################################################
 data = subset(data,
-              COMMON_NAME %in% c('Pacific ocean perch', 
-                                 'arrowtooth flounder', 
-                                 'Pacific cod', 
-                                 'walleye pollock', 
-                                 'Pacific halibut', 
-                                 'rex sole', 
-                                 'Dover sole',
-                                 'flathead sole', 
-                                 'sablefish', 
-                                 'dusky rockfish',
-                                 'northern rockfish',
+              COMMON_NAME %in% c("Pacific ocean perch", 
+                                 "arrowtooth flounder", 
+                                 "Pacific cod", 
+                                 
+                                 "walleye pollock", 
+                                 "Pacific halibut", 
+                                 "rex sole", 
+                                 
+                                 "Dover sole",
+                                 "flathead sole", 
+                                 "dusky rockfish",
+                                 
+                                 "northern rockfish",
                                  "northern rock sole", 
                                  "southern rock sole",
-                                 'B_R_rockfishes',
-                                 'shortspine thornyhead',
-                                 'yellowfin sole',
-                                 'silvergray rockfish'))
+                                 
+                                 "B_R_rockfishes",
+                                 "shortspine thornyhead",
+                                 "silvergray rockfish"))
+
+##################################################
+####   Assign station depths from EFH layer
+##################################################
+cpue_shape = sp::SpatialPointsDataFrame(
+  coords = data[, c("LONGITUDE", "LATITUDE")],
+  data = data,
+  proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+cpue_shape_aea <- sp::spTransform(x = cpue_shape,
+                                  CRSobj = crs(bathy))
+cpue_shape_aea@data$depth =  raster::extract(x = bathy,
+                                             y = cpue_shape_aea,
+                                             method = "simple")
+
+##################################################
+####   Plot bathymetry and station locations along with stations without 
+####   assigned depths
+####
+##################################################
+plot(bathy)
+plot(cpue_shape_aea, 
+     add = T,
+     pch = ".")
+plot(cpue_shape_aea[is.na(cpue_shape_aea@data$depth),], 
+     add = T,
+     pch = 16,
+     col = 'red')
+
+##################################################
+####   Plot correlation between EFH depths and reported depth from BTS
+##################################################
+plot(depth ~ BOTTOM_DEPTH,
+     data = cpue_shape_aea@data,
+     subset = COMMON_NAME == "arrowtooth flounder",
+     xlab = "Depth recorded by the BTS",
+     ylab = "Depth extracted from EFH layer")
+with(subset(cpue_shape_aea@data,
+            subset = COMMON_NAME == "arrowtooth flounder"), 
+     cor(depth, BOTTOM_DEPTH, use = "complete.obs"))
+
+##################################################
+####   There are 645 observations (43 stations) without depths, 
+####   near the edges of the data layer. For these stations, we extract raster
+####   values averaged within an iteratively increasing buffer radius. The 
+####   farthest radius was 7.6 km. 
+##################################################
+how_many_NAs = sum(is.na(cpue_shape_aea@data$depth)) #643 stations
+
+distance = 200 #Initial distance
+while (how_many_NAs) {
+  cpue_shape_aea@data$depth[is.na(cpue_shape_aea@data$depth)] <- 
+    raster::extract(x = bathy,
+                    y = cpue_shape_aea[is.na(cpue_shape_aea@data$depth),],
+                    buffer = distance,
+                    na.rm = T,
+                    fun = mean)
+  
+  how_many_NAs = sum(is.na(cpue_shape_aea@data$depth))
+  print(distance)
+  print(how_many_NAs)
+  distance = distance + 200 #Increase buffer by 200 m in next iteration
+}
+
+##################################################
+####   Attach depths to dataset, scaled
+##################################################
+data$DEPTH_EFH = cpue_shape_aea@data$depth
+data$LOG_DEPTH_EFH = log(cpue_shape_aea@data$depth)
+data$LOG_DEPTH_EFH_CEN = scale(data$LOG_DEPTH_EFH)
+data$LOG_DEPTH_EFH_CEN_SQ = data$LOG_DEPTH_EFH_CEN^2
 
 ##################################################
 #### Save
 ##################################################
 data = data[order(data$YEAR, data$SPECIES_NAME),]
-write.csv(x = data, file = "data/GOA_multspp.csv", row.names = F)
+write.csv(x = data, 
+          file = paste0(github_wd, "GOA_multspp.csv"), 
+          row.names = F)

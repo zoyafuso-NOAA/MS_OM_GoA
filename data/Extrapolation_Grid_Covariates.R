@@ -26,8 +26,6 @@ bathy <- raster::raster(
 grid = read.csv("extrapolation_grid/GOAThorsonGrid.csv")
 data = read.csv(paste0(github_dir, "GOA_multspp.csv"))
 
-
-
 ##################################################
 ####   Transform extrapolation grid to aea, extract bathymetry values onto grid
 ##################################################
@@ -72,12 +70,38 @@ spplot(grid_shape_aea[, "depth"],
        cuts = 100,
        colorkey = T)
 
-Extrapolation_depths = grid
+Extrapolation_depths = grid[, c("Shape_Area", "Longitude", "Latitude")]
 Extrapolation_depths$Depth = grid_shape_aea@data$depth
 
 Extrapolation_depths[, c("E_km", "N_km")] <- project(
   xy = coordinates(Extrapolation_depths[, c("Longitude", "Latitude")]), 
   proj = "+proj=utm +zone=5N" )
+
+##################################################
+####   Remove cells that are shallower and deeper than observed
+####   Show in red which cells were removed
+##################################################
+Extrapolation_depths_subset = subset(x = Extrapolation_depths, 
+                                     subset = Depth < max(data$DEPTH_EFH) &
+                                       Depth > min(data$DEPTH_EFH) )
+
+# png(paste0(github_dir, "Subsetted_Extrapolation_Grid.png"),
+#     width = 6, 
+#     height = 5,
+#     units = "in",
+#     res = 500)
+# plot(N_km ~ E_km,
+#      data = Extrapolation_depths,
+#      pch = 15,
+#      cex = 0.2,
+#      col = 'red')
+# points(N_km ~ E_km, 
+#        data = Extrapolation_depths_subset, 
+#        col = 'black',
+#        cex = 0.2,
+#        pch = 15)
+# dev.off()
+
 
 ##################################################
 ####   Save
