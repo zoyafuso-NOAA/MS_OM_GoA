@@ -1,110 +1,86 @@
 ###############################################################################
 ## Project:     VAST covariates across exptraolation grid
 ## Author:      Zack Oyafuso (zack.oyafuso@noaa.gov)
-## Description: Assign bathymetry value to each grid in the Gulf of Alaska 
-##              extrapolation grid.
+## Description: Assign bathymetry value from the EFH data lyaer to each grid in
+##              the Gulf of Alaska extrapolation grid.
 ###############################################################################
+rm(list = ls())
 
 ##################################################
-####   Import Libraries
+####   Import packages
 ##################################################
-library(marmap); library(sp); library(RANN); library(raster);
+library(rgdal)
+library(raster)
 
 ##################################################
 ####   Set up directories
 ##################################################
-rm(list = ls())
-
-which_machine = c('Zack_MAC' = 1, 'Zack_PC' = 2, 'Zack_GI_PC' = 3)[2]
-github_dir = paste0(c('/Users/zackoyafuso/Documents/',
-                      'C:/Users/Zack Oyafuso/Documents/',
-                      'C:/Users/zack.oyafuso/Work/')[which_machine],
-                    'Github/MS_OM_GoA/')
+github_dir <- "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/"
 
 ##################################################
-####   Import observed depths
+####   Import EFH bathymety raster and extrapolation grid
+####   Import CPUE data
 ##################################################
-observed_depths = read.csv(paste0(github_dir, 
-                                  'data/GOA_multspp.csv'))$BOTTOM_DEPTH 
+bathy <- raster::raster(
+  paste0(github_dir, "EFH_bathymetry/aigoa_bathp1c/dblbnd.adf"))
+grid = read.csv("extrapolation_grid/GOAThorsonGrid.csv")
+data = read.csv(paste0(github_dir, "GOA_multspp.csv"))
+
+
 
 ##################################################
-####   Extract fine-scale bathymetry map from the marmap package
-####   Convert latlon to UTM zone 5 (Gulf of Alaska)
-####   Convert UTM to km
+####   Transform extrapolation grid to aea, extract bathymetry values onto grid
 ##################################################
-bathymap <- marmap::getNOAA.bathy(lon1 = -170, lon2 = -132,
-                                  lat1 = 52, lat2 = 60.5,
-                                  resolution = 1)
-bathymap <- marmap::fortify.bathy(bathymap)
-
-bathymap_coord = sp::SpatialPoints(coords = bathymap[,c('x', 'y')],
-                                   proj4string = CRS('+proj=longlat') )
-cord.UTM <- sp::spTransform(bathymap_coord, CRS("+proj=utm +zone=5N"))
-bathymap[,c('E_km', 'N_km')] = cord.UTM@coords / 1000
+grid_shape = sp::SpatialPointsDataFrame(
+  coords = grid[, c("Longitude", "Latitude")],
+  data = data.frame(area = grid$Shape_Area),
+  proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+grid_shape_aea = sp::spTransform(x = grid_shape,
+                                 CRSobj = crs(bathy))
+grid_shape_aea@data$depth =  raster::extract(x = bathy,
+                                             y = grid_shape_aea,
+                                             method = "simple")
 
 ##################################################
-####   Asssign bathymetry values of extrapolation cells to the nearest value 
-####   (using a nearest neighbor calcualtion) on the queried bathymetry map 
+####   There are 3048 gridd cells without depths, For these stations, we 
+####   extract raster values averaged within a 15 km buffer. This seemed to 
+####   be the lowest radius found to provide a value for each unknown station
 ##################################################
-bathy_idx = RANN::nn2(query=Extrapolation_List$Data_Extrap[,c('E_km','N_km')],
-                      data = bathymap[,c('E_km', 'N_km')],
-                      k = 1)$nn.idx
-
-Extrapolation_List$Data_Extrap$depth = -bathymap$z[bathy_idx[,1]]
-
-##################################################
-#### Plot locations where depths are negative (land?)   
-##################################################
-plot(Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')], pch = '.')
-with(Extrapolation_List$Data_Extrap[Extrapolation_List$Data_Extrap$depth<=0,],
-     points(N_km ~ E_km, 
-            pch = 16, col = 'red'))
-
-##################################################
-####   Assign negative bathymetry values (presumably land) to the shallowest
-####   bathymetry observed in the dataset. 
-####   Note: minimum observed depth is 4m
-##################################################
-too_shallow_idx = Extrapolation_List$Data_Extrap$depth <= min(observed_depths)
-Extrapolation_List$Data_Extrap$depth[too_shallow_idx] = min(observed_depths)
-
-neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
-k = 2
-while(neg_depths != 0){
-  idxs = which(Extrapolation_List$Data_Extrap$depth <= 0)
-  Extrapolation_List$Data_Extrap$depth[idxs] = -bathymap$z[bathy_idx[idxs,k]]
-  neg_depths = sum(Extrapolation_List$Data_Extrap$depth <=0)
-  k = k + 1
+distance = 200
+how_many_NAs = sum(is.na(grid_shape_aea@data$depth))
+while (how_many_NAs) {
+  grid_shape_aea@data$depth[is.na(grid_shape_aea@data$depth)] <- 
+    raster::extract(x = bathy,
+                    y = grid_shape_aea[is.na(grid_shape_aea@data$depth),],
+                    buffer = distance,
+                    na.rm = T,
+                    fun = mean)
+  
+  how_many_NAs = sum(is.na(grid_shape_aea@data$depth))
+  print(distance)
+  print(how_many_NAs)
+  distance = distance + 200
 }
 
-#############################
-## Center depth and calculate depth^2
-#############################
-Extrapolation_List$Data_Extrap$DEPTH = scale(
-  log(Extrapolation_List$Data_Extrap$depth)
-)
-Extrapolation_List$Data_Extrap$DEPTH2 = Extrapolation_List$Data_Extrap$DEPTH^2
+##################################################
+####   Plot depth covariate of the extrapolation grid
+##################################################
+spplot(grid_shape_aea[, "depth"], 
+       col.regions = rev(terrain.colors(1000)),
+       pch = 16, 
+       cex = 0.1,
+       cuts = 100,
+       colorkey = T)
 
-#############################
-## Plot Bathyetry Field
-#############################
-test = raster::rasterize(
-  x = Extrapolation_List$Data_Extrap[,c('E_km', 'N_km')],
-  y = raster(nrows=100, ncols=320,
-             xmn=min(Extrapolation_List$Data_Extrap$E_km),
-             xmx=max(Extrapolation_List$Data_Extrap$E_km),
-             ymn=min(Extrapolation_List$Data_Extrap$N_km),
-             ymx=max(Extrapolation_List$Data_Extrap$N_km),
-             crs = CRS("+proj=utm +zone=5N")),
-  field = Extrapolation_List$Data_Extrap$depth)
+Extrapolation_depths = grid
+Extrapolation_depths$Depth = grid_shape_aea@data$depth
 
-par(mar = c(0,0,0,0))
-plot(test, axes = F, legend = F)
+Extrapolation_depths[, c("E_km", "N_km")] <- project(
+  xy = coordinates(Extrapolation_depths[, c("Longitude", "Latitude")]), 
+  proj = "+proj=utm +zone=5N" )
 
-##########################
-## Save
-##########################
-Extrapolation_depths = Extrapolation_List$Data_Extrap
-
-save(list = c("Extrapolation_depths"), file = 'Extrapolation_depths.RData')
-
+##################################################
+####   Save
+##################################################
+save(list = "Extrapolation_depths", 
+     file = paste0(github_dir, 'Extrapolation_depths.RData'))
