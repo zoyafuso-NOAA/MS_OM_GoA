@@ -79,12 +79,14 @@ Extrapolation_depths[, c("E_km", "N_km")] <- project(
 Extrapolation_depths$DEPTH_EFH = grid_shape_aea@data$depth
 
 ##################################################
-####   Remove cells that are shallower and deeper than observed
-####   Show in red which cells were removed
+####   Cell cells with depths outside the observed range to the range
 ##################################################
-Extrapolation_depths = subset(x = Extrapolation_depths,
-                              subset = DEPTH_EFH < max(data$DEPTH_EFH) &
-                                DEPTH_EFH > min(data$DEPTH_EFH) )
+idx_too_shallow <- Extrapolation_depths$DEPTH_EFH < min(data$DEPTH_EFH)
+idx_too_deep <- Extrapolation_depths$DEPTH_EFH > max(data$DEPTH_EFH)
+
+Extrapolation_depths$DEPTH_EFH[idx_too_shallow] <- min(data$DEPTH_EFH)
+Extrapolation_depths$DEPTH_EFH[idx_too_deep] <- max(data$DEPTH_EFH)
+
 # Extrapolation_depths_subset = subset(x = Extrapolation_depths,
 #                                      subset = DEPTH_EFH < max(data$DEPTH_EFH) &
 #                                        DEPTH_EFH > min(data$DEPTH_EFH) )
