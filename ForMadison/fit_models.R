@@ -10,6 +10,7 @@
 ##               Sebastes polyspinis
 ##               Run 5-fold Cross Validation for Each Model
 ###############################################################################
+rm(list = ls())
 
 ##################################################
 ####   Load packages 
@@ -21,32 +22,36 @@ library(VAST)
 ####   Create new directories for each model
 ####   Set up directories
 ##################################################
-rm(list = ls())
+which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[1]
 
-github_dir <- 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/'
-VAST_dir <- 'C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/'
-if (!dir.exists(VAST_dir)) dir.create(VAST_dir)  
+github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
+                'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine]
+VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
+              'C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/')[which_machine]
 
-for (depth_in_model in c(F, T)) {
-  for (which_spp in c('Microstomus pacificus',
-                      'Lepidopsetta polyxystra',
-                      'Lepidopsetta bilineata',
-                      
-                      'Hippoglossus stenolepis',
-                      'Hippoglossoides elassodon',
-                      'Glyptocephalus zachirus',
-                      
-                      'Gadus macrocephalus',
-                      'Gadus chalcogrammus',
-                      'Sebastes B_R',
-                      
-                      'Sebastes brevispinis',
-                      'Sebastes polyspinis', 
-                      'Sebastes variabilis',
-                      
-                      'Sebastes alutus',
-                      'Atheresthes stomias',
-                      'Sebastolobus alascanus')) {
+if (!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)  
+
+for (depth_in_model in c(F, T)[2]) {
+  for (which_spp in c(
+    'Microstomus pacificus',
+    'Lepidopsetta polyxystra',
+    'Lepidopsetta bilineata',
+
+    'Hippoglossus stenolepis',
+    'Hippoglossoides elassodon',
+    'Glyptocephalus zachirus',
+    
+    'Gadus macrocephalus',
+    'Gadus chalcogrammus',
+    'Sebastes B_R',
+    
+    'Sebastes brevispinis',
+    # 'Sebastes polyspinis',
+    'Sebastes variabilis',
+    
+    'Sebastes alutus',
+    'Atheresthes stomias',
+    'Sebastolobus alascanus')) {
     
     #If depth covariates are in the model, import modified function
     if (depth_in_model) source(paste0(github_dir, 'fit_model_X_GTP.R'))
@@ -80,8 +85,8 @@ for (depth_in_model in c(F, T)) {
     
     if (depth_in_model){
       Data_Geostat[, c("LOG_DEPTH", 
-                       "LOG_DEPTH2") ] = data[, c('DEPTH', 
-                                                  'DEPTH2')]
+                       "LOG_DEPTH2") ] = data[, c('LOG_DEPTH_EFH_CEN', 
+                                                  'LOG_DEPTH_EFH_CEN_SQ')]
     }
     
     ##################################################
@@ -129,7 +134,7 @@ for (depth_in_model in c(F, T)) {
     
     settings <- FishStatsUtils::make_settings( 
       n_x = 500,   # Number of knots
-      Region='Gulf_of_Alaska', 
+      Region='Gulf_of_Alaska',
       purpose="index2",
       strata.limits=strata.limits, 
       bias.correct=FALSE,
@@ -155,7 +160,9 @@ for (depth_in_model in c(F, T)) {
       
       X_gtp <- array(dim = c(n_g, n_t, n_p) )
       for (i in 1:n_t) {
-        X_gtp[,i,] <- as.matrix(Extrapolation_depths[,c('DEPTH', 'DEPTH2')])
+        X_gtp[,i,] <- 
+          as.matrix(Extrapolation_depths[,c('LOG_DEPTH_EFH_CEN', 
+                                            'LOG_DEPTH_EFH_CEN_SQ')])
       }
     }
     
@@ -217,6 +224,13 @@ for (depth_in_model in c(F, T)) {
     for (fI in 1:n_fold) { 
       if (!dir.exists(paste0(result_dir, 'CV_', fI))) {
         dir.create(paste0(result_dir, 'CV_', fI))
+        
+        file.copy(from = paste0(result_dir, get_latest_version(), 
+                                c(".cpp", ".dll", ".o")),
+                  to = paste0(result_dir, 'CV_', fI, "/", 
+                              get_latest_version(), 
+                              c(".cpp", ".dll", ".o")))
+        
       }
     } 
     
