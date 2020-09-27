@@ -22,16 +22,21 @@ library(VAST)
 ####   Create new directories for each model
 ####   Set up directories
 ##################################################
-which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[1]
+which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine]
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
-              'C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/')[which_machine]
+              'C:/Users/zack.oyafuso/Desktop/VAST_Runs_EFH/Single_Species/')[which_machine]
+
+##################################################
+####   Import CPUE dataset, species set spreadsheet
+##################################################
+master_data <- read.csv(file = paste0(github_dir, 'data/GOA_multspp.csv') )
 
 if (!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)  
 
-for (depth_in_model in c(F, T)[2]) {
+for (depth_in_model in c(F, T)[1]) {
   for (which_spp in c(
     'Microstomus pacificus',
     'Lepidopsetta polyxystra',
@@ -46,7 +51,7 @@ for (depth_in_model in c(F, T)[2]) {
     'Sebastes B_R',
     
     'Sebastes brevispinis',
-    # 'Sebastes polyspinis',
+    'Sebastes polyspinis',
     'Sebastes variabilis',
     
     'Sebastes alutus',
@@ -60,10 +65,7 @@ for (depth_in_model in c(F, T)[2]) {
                          ifelse(depth_in_model,  '_depth', ''), '/')
     if (!dir.exists(result_dir)) dir.create(result_dir)  
     
-    ##################################################
-    ####   Import CPUE dataset, species set spreadsheet
-    ##################################################
-    master_data <- read.csv(file = paste0(github_dir, 'data/GOA_multspp.csv') )
+
     
     ##################################################
     ####   Subset species
