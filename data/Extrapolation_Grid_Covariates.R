@@ -116,6 +116,7 @@ dev.off()}
 BTS_mean <- mean(log(data$DEPTH_EFH))
 BTS_sd   <- sd(log(data$DEPTH_EFH))
 
+Extrapolation_depths <- Extrapolation_depths_subset
 Extrapolation_depths$LOG_DEPTH_EFH <- log(Extrapolation_depths$DEPTH_EFH)
 Extrapolation_depths$LOG_DEPTH_EFH_CEN <- 
   (Extrapolation_depths$LOG_DEPTH_EFH - BTS_mean) / BTS_sd
