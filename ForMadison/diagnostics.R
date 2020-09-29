@@ -29,12 +29,12 @@ library(rnaturalearth)
 #### Set up directories     
 ##################################################
 rm(list = ls())
-which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[1]
+which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
-              "C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/")[which_machine]
+              "C:/Users/zack.oyafuso/Desktop/VAST_Runs_EFH/Single_Species/")[which_machine]
 
 for (ispp in c(1:14)) {
   which_spp <- c( "Sebastes polyspinis", "Sebastes variabilis", 

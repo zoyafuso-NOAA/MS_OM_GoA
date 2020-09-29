@@ -41,7 +41,7 @@ for (depth_in_model in c(F, T)[1]) {
     'Microstomus pacificus',
     'Lepidopsetta polyxystra',
     'Lepidopsetta bilineata',
-
+    
     'Hippoglossus stenolepis',
     'Hippoglossoides elassodon',
     'Glyptocephalus zachirus',
@@ -65,7 +65,7 @@ for (depth_in_model in c(F, T)[1]) {
                          ifelse(depth_in_model,  '_depth', ''), '/')
     if (!dir.exists(result_dir)) dir.create(result_dir)  
     
-
+    
     
     ##################################################
     ####   Subset species
@@ -136,7 +136,7 @@ for (depth_in_model in c(F, T)[1]) {
     
     settings <- FishStatsUtils::make_settings( 
       n_x = 500,   # Number of knots
-      Region='Gulf_of_Alaska',
+      Region='User',
       purpose="index2",
       strata.limits=strata.limits, 
       bias.correct=FALSE,
@@ -153,20 +153,20 @@ for (depth_in_model in c(F, T)[1]) {
     ####   Import "true" and not interpolated covariate 
     ####   data if using depth covariates
     ##################################################
-    if (depth_in_model) {
-      load( paste0(github_dir, 'data/Extrapolation_depths.RData'))
-      
-      n_g <- nrow(Extrapolation_depths) #number of grid cells
-      n_t <- diff(range(Data_Geostat$Year)) + 1 #Number of total years
-      n_p <- 2 #two density covariates
-      
-      X_gtp <- array(dim = c(n_g, n_t, n_p) )
-      for (i in 1:n_t) {
-        X_gtp[,i,] <- 
-          as.matrix(Extrapolation_depths[,c('LOG_DEPTH_EFH_CEN', 
-                                            'LOG_DEPTH_EFH_CEN_SQ')])
-      }
+    
+    load( paste0(github_dir, 'data/Extrapolation_depths.RData'))
+    
+    n_g <- nrow(Extrapolation_depths) #number of grid cells
+    n_t <- diff(range(Data_Geostat$Year)) + 1 #Number of total years
+    n_p <- 2 #two density covariates
+    
+    X_gtp <- array(dim = c(n_g, n_t, n_p) )
+    for (i in 1:n_t) {
+      X_gtp[,i,] <- 
+        as.matrix(Extrapolation_depths[,c('LOG_DEPTH_EFH_CEN', 
+                                          'LOG_DEPTH_EFH_CEN_SQ')])
     }
+    
     
     
     ##################################################
@@ -186,7 +186,8 @@ for (depth_in_model in c(F, T)[1]) {
         "max_cells" = Inf,
         "getJointPrecision" = TRUE,
         "newtonsteps" = 1,
-        'test_fit' = F)
+        'test_fit' = F,
+        "input_grid" = Extrapolation_depths)
     }
     
     if (depth_in_model) {
@@ -212,7 +213,8 @@ for (depth_in_model in c(F, T)[1]) {
                                                  'LOG_DEPTH2',
                                                  'Catch_KG')],
                                  Year = NA),
-        "X_gtp" = X_gtp
+        "X_gtp" = X_gtp,
+        "input_grid" = Extrapolation_depths
       )
     }
     save(list = c('fit', 'Data_Geostat'), 
@@ -258,7 +260,8 @@ for (depth_in_model in c(F, T)[1]) {
           "silent" = T,
           "max_cells" = Inf,
           "test_fit" = F,
-          "newtonsteps" = 1)
+          "newtonsteps" = 1,
+          "input_grid" = Extrapolation_depths)
       }
       
       if (depth_in_model) {
@@ -287,7 +290,8 @@ for (depth_in_model in c(F, T)[1]) {
                                                    'LOG_DEPTH2',
                                                    'Catch_KG')],
                                    Year = NA),
-          "X_gtp" = X_gtp)
+          "X_gtp" = X_gtp,
+          "input_grid" = Extrapolation_depths)
       }
       
       # Save fit 

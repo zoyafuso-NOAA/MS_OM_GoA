@@ -16,18 +16,17 @@ library(tidyr)
 ##################################################
 ####   Set up directores
 ##################################################
-which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[2]
+which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[3]
 
 VAST_dir <- 
   c("",
     "C:/Users/Zack Oyafuso/Desktop/VAST_Runs_MARMAP_DEPTHS//Single_Species/",
-    "C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/")[which_machine]
+    "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
 
 github_dir <-
   paste0(c("/Users/zackoyafuso/Documents/", 
            "C:/Users/Zack Oyafuso/Documents/",
-           "C:/Users/zack.oyafuso/Work/", 
-           "C:/Users/zack.oyafuso/Work/" )[which_machine], 
+           "C:/Users/zack.oyafuso/Work/")[which_machine], 
          "GitHub/Optimal_Allocation_GoA/")
 
 ##################################
@@ -165,25 +164,29 @@ tidyr::spread(data = aggregate(pred_nll ~ species + depth,
 ##################################################
 ####   Create the result object that would go into the optimizations
 ##################################################
-# D_gcy = array(dim = c(N, ns, 24), dimnames = list(NULL, which_spp, NULL))
-# 
-# for(ispp in 1:ns){
-#   which_model_idx = which.min(RRMSE[ispp, -1])
-#   
-#   result_dir = paste0(VAST_dir, RRMSE$species[ispp], 
-#                       c("", "_depth")[which_model_idx], "/")
-#   load(paste0(result_dir, "/fit.RData"))
-#   
-#   D_gcy[,ispp,] = fit$Report$D_gcy[,1,]
-# }
-# 
-# rm(fit)
-# fit = list(Report = list(D_gcy = D_gcy))
+N <- 23298
+D_gcy = Index <- array(dim = c(N, ns, 24), 
+                       dimnames = list(NULL, which_spp, NULL))
+
+for(ispp in 1:ns){
+  which_model_idx = which.min(RRMSE[ispp, -1])
+
+  result_dir = paste0(VAST_dir, RRMSE$species[ispp],
+                      c("", "_depth")[which_model_idx], "/")
+  load(paste0(result_dir, "/fit.RData"))
+
+  D_gcy[,ispp,] = fit$Report$D_gcy[,1,]
+  Index[,ispp,] = fit$Report$Index_gcyl[,1, ,1]
+}
+
+rm(fit)
+fit = list(Report = list(D_gcy = D_gcy,
+                         Index = Index))
 
 ##################################################
 ####   Save
 ##################################################
-# if(!dir.exists(paste0(dirname(VAST_dir), "/VAST_output11"))) 
-#   dir.create(paste0(dirname(VAST_dir), "/VAST_output11"))
-# 
-# save("fit", file = paste0(dirname(VAST_dir), "/VAST_output11/fit.RData") )
+if(!dir.exists(paste0(dirname(VAST_dir), "/VAST_output11")))
+  dir.create(paste0(dirname(VAST_dir), "/VAST_output11"))
+
+save("fit", file = paste0(dirname(VAST_dir), "/VAST_output11/fit.RData") )
