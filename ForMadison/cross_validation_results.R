@@ -33,6 +33,7 @@ github_dir <-
 ## Import Strata Allocations and spatial grid and predicted density
 ##################################
 load(paste0(github_dir, "model_11/optimization_data.RData"))
+load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
 which_spp <- c( 
   "Atheresthes stomias", 
@@ -56,9 +57,6 @@ which_spp <- c(
   "Sebastolobus alascanus")
 
 ns <- length(which_spp)
-
-GOA_grid <- make_extrapolation_info(Region = "Gulf_of_Alaska")$Data_Extrap
-N <- nrow(GOA_grid)
 
 ##################################################
 ####   Result Objects
@@ -164,11 +162,11 @@ tidyr::spread(data = aggregate(pred_nll ~ species + depth,
 ##################################################
 ####   Create the result object that would go into the optimizations
 ##################################################
-N <- 23298
+N <- nrow(Extrapolation_depths)
 D_gcy = Index <- array(dim = c(N, ns, 24), 
                        dimnames = list(NULL, which_spp, NULL))
 
-for(ispp in 1:ns){
+for(ispp in 13:ns){
   which_model_idx = which.min(RRMSE[ispp, -1])
 
   result_dir = paste0(VAST_dir, RRMSE$species[ispp],
@@ -177,6 +175,8 @@ for(ispp in 1:ns){
 
   D_gcy[,ispp,] = fit$Report$D_gcy[,1,]
   Index[,ispp,] = fit$Report$Index_gcyl[,1, ,1]
+  
+  print(paste("Finished with", sci_names[ispp]))
 }
 
 rm(fit)
