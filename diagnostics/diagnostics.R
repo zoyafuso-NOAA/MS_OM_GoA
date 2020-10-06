@@ -13,6 +13,7 @@
 ##                Factors loadings
 ##                Anisotropy
 ###############################################################################
+rm(list = ls())
 
 ##################################################
 ####  Import Libraries
@@ -29,25 +30,22 @@ library(rgeos)
 ##################################################
 #### Set up directories     
 ##################################################
-rm(list = ls())
-modelno <- "6g"
+depth_in_model <- c(T, F)[2]
+spp_factors <- 2
 
-main_dir <- "C:/Users/Zack Oyafuso/"
-PP_dir <- paste0(main_dir, "Google Drive/MS_Optimizations/powerpoint_plot/")
-VAST_dir<- paste0(main_dir, "Google Drive/GOA_VAST_Runs/VAST_output", 
-                  modelno, "/")
-diag_dir <- paste0(main_dir, "Google Drive/GOA_VAST_Runs/diagnostics/",
-                   "VAST_model", modelno, "/")
-fun_dir <- paste0(main_dir, "Documents/GitHub/MS_OM_GoA/diagnostics/")
-
+VAST_dir <- paste0("G:/Oyafuso/VAST_Runs_MS/",
+                   ifelse(depth_in_model, "Depth_", "No_Depth_"),
+                   spp_factors, "_factors/")
+fun_dir <- paste0("C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/diagnostics/")
+diag_dir <-  paste0(VAST_dir, "diagnostics/")
+  
 if (! dir.exists(diag_dir)) dir.create(diag_dir)
 
 ##################################################
 ####  Load VAST fit and import customized plot functions 
 ##################################################
-
 load(paste0(VAST_dir, "/fit.RData"))
-load( paste0(dirname(VAST_dir), "/Spatial_Settings_CrVa.RData") )
+load(paste0(VAST_dir, "/Spatial_Settings_CrVa.RData") )
 
 spp_df <- read.csv(paste0(dirname(fun_dir), "/data/spp_df.csv"),
                    check.names=F, header = T, row.names = "modelno")
@@ -80,7 +78,13 @@ MapDetails_List <- make_map_info("Region" = "Gulf_of_Alaska",
                                  "spatial_list" = Spatial_List, 
                                  "Extrapolation_List" = Extrapolation_List )
 
-sci_names <- sort(names(spp_df)[which(spp_df[modelno, ] == T)])
+sci_names <- c("Atheresthes stomias", "Gadus chalcogrammus", 
+               "Gadus macrocephalus", "Glyptocephalus zachirus",
+               "Hippoglossoides elassodon", "Hippoglossus stenolepis",
+               "Lepidopsetta bilineata", "Lepidopsetta polyxystra",
+               "Limanda aspera", "Microstomus pacificus", "Sebastes alutus",
+               "Sebastes B_R", "Sebastes polyspinis", "Sebastes variabilis", 
+               "Sebastolobus alascanus" )
 ns <- length(sci_names)
 
 xrange <- range(Extrapolation_List$Data_Extrap[, "E_km"])
@@ -132,11 +136,11 @@ CA = rgeos::gSimplify(spgeom = CA, tol = 3)
 ## model is probably not appropriate!
 ############################################
 
-plot_data(Extrapolation_List=Extrapolation_List,
-          Spatial_List=Spatial_List,
-          Data_Geostat=Data_Geostat,
+plot_data(Extrapolation_List = Extrapolation_List,
+          Spatial_List = Spatial_List,
+          Data_Geostat = Data_Geostat,
           Year_Set = Years2Include,
-          PlotDir=diag_dir)
+          PlotDir = diag_dir)
 
 ############################################
 ## Convergence
@@ -146,10 +150,10 @@ plot_data(Extrapolation_List=Extrapolation_List,
 ## parameters, please see `?make_data`.
 ############################################
 
-pander::pandoc.table( Opt$diagnostics[,c("Param","Lower","MLE",
-                                         "Upper","final_gradient")] ) 
-
-max(abs(Opt$diagnostics$final_gradient))
+# pander::pandoc.table( Opt$diagnostics[,c("Param","Lower","MLE",
+#                                          "Upper","final_gradient")] ) 
+# 
+# max(abs(Opt$diagnostics$final_gradient))
 
 ############################################
 ## Diagnostics for encounter-probability component
@@ -157,9 +161,9 @@ max(abs(Opt$diagnostics$final_gradient))
 ## probability samples are within the 95% predictive interval for predicted 
 ## encounter probability
 ############################################
-Enc_prob = plot_encounter_diagnostic( Report=Report, 
-                                      Data_Geostat=Data_Geostat, 
-                                      DirName=diag_dir)
+Enc_prob = plot_encounter_diagnostic( Report = Report, 
+                                      Data_Geostat = Data_Geostat, 
+                                      DirName = diag_dir)
 
 ############################################
 ## Diagnostics for positive-catch-rate component
@@ -167,13 +171,19 @@ Enc_prob = plot_encounter_diagnostic( Report=Report,
 ## Q-Q plot.  A good Q-Q plot will have residuals along the one-to-one line.  
 ############################################
 
-Q = plot_quantile_diagnostic( TmbData=TmbData,
-                              Report=Report,
-                              FileName_PP="Posterior_Predictive",
-                              FileName_Phist="Posterior_Predictive-Histogram",
-                              FileName_QQ="Q-Q_plot",
-                              FileName_Qhist="Q-Q_hist",
-                              DateFile=diag_dir )
+Q = plot_quantile_diagnostic( TmbData = TmbData,
+                              Report = Report,
+                              FileName_PP = "Posterior_Predictive",
+                              FileName_Phist = "Posterior_Predictive-Histogram",
+                              FileName_QQ = "Q-Q_plot",
+                              FileName_Qhist = "Q-Q_hist",
+                              DateFile = diag_dir )
+
+############################################
+## Save output
+############################################
+save(list = "Q",
+     file = paste0(diag_dir, "diagnostics.RData"))
 
 ############################################
 ## Diagnostics for positive-catch-rate component
@@ -181,10 +191,17 @@ Q = plot_quantile_diagnostic( TmbData=TmbData,
 ## Q-Q plot.  A good Q-Q plot will have residuals along the one-to-one line.  
 ############################################
 
-{png(filename = paste0(diag_dir, "QQplot.png"), width = 6, height = 8, 
-     units = "in", res = 200)
-  par(mfrow = c(5,3), mar = c(0,0,0,0), oma = c(5,5,1,1))
-  for(ispp in 1:ns){
+{png(filename = paste0(diag_dir, "QQplot.png"), 
+     width = 6, 
+     height = 8, 
+     units = "in", 
+     res = 200)
+  
+  par(mfrow = c(5, 3), 
+      mar = c(0, 0, 0, 0), 
+      oma = c(5, 5, 1, 1))
+  
+  for (ispp in 1:ns) {
     Q_temp = na.omit(Q[[ispp]]$Q)
     Order = order(Q_temp)
     plot(x = seq(0, 1, length = length(Order)), y = Q_temp[Order], 
@@ -389,7 +406,7 @@ save(list = c("Q", "PResid"),
       goa_ras = raster(goa, resolution = 5)
       goa_ras = rasterize(x = goa, y = goa_ras, field = "var")
       
-      goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.075)
+      goa_ras = raster::shift(goa_ras, y = -offset*yrange*0.075)
       
       #Plot spatial effect
       colors = rev(brewer.pal(n = 11, name = "Spectral"))
@@ -469,7 +486,7 @@ for(ispp in 1:ns){
       goa_ras = raster(goa, resolution = 5)
       goa_ras = rasterize(x = goa, y = goa_ras, field = "var")
       
-      goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.12)
+      goa_ras = raster::shift(goa_ras, y = -offset*yrange*0.12)
       
       #Plot spatiotemporal effect
       colors = rev(brewer.pal(n = 11, name = "Spectral"))

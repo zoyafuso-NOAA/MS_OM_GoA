@@ -14,7 +14,7 @@ library(RANN)
 ##################################################
 ####   Set up directories
 ##################################################
-VAST_dir = "C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output8b/"
+VAST_dir = "G:/Oyafuso/VAST_Runs_MS/No_Depth_2_factors/"
 
 ##################################################
 ####   Result Objects
@@ -22,7 +22,7 @@ VAST_dir = "C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/VAST_output8b/"
 CV_df = data.frame(ifold = 1:5)
 RRMSE = array(dim = c(5, ncol = 15, 11))
 
-for (ifold in 1:5){
+for (ifold in 1:2){
   
   ##################################################
   ####   Load Result Object

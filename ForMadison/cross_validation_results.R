@@ -36,25 +36,26 @@ load(paste0(github_dir, "model_11/optimization_data.RData"))
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
 which_spp <- c( 
-  "Atheresthes stomias", 
-  "Gadus chalcogrammus", 
+  "Atheresthes stomias",
+  "Gadus chalcogrammus",
   "Gadus macrocephalus",
-  
-  "Glyptocephalus zachirus", 
-  "Hippoglossoides elassodon", 
-  "Hippoglossus stenolepis", 
-  
-  "Lepidopsetta bilineata", 
+
+  "Glyptocephalus zachirus",
+  "Hippoglossoides elassodon",
+  "Hippoglossus stenolepis",
+
+  "Lepidopsetta bilineata",
   "Lepidopsetta polyxystra",
   "Microstomus pacificus",
-  
+
   "Sebastes alutus",
   "Sebastes B_R",
   "Sebastes brevispinis",
-  
-  "Sebastes polyspinis", 
+
+  "Sebastes polyspinis",
   "Sebastes variabilis",
-  "Sebastolobus alascanus")
+  "Sebastolobus alascanus"
+  )
 
 ns <- length(which_spp)
 
@@ -64,7 +65,7 @@ ns <- length(which_spp)
 NFold <- 10
 NTime <- 11
 CV_df <- expand.grid(species = which_spp, 
-                     depth = c(T,F),
+                     depth = c(T),
                      fold = 1:NFold,
                      stringsAsFactors = F)
 

@@ -36,9 +36,9 @@ master_data <- read.csv(file = paste0(github_dir, 'data/GOA_multspp.csv') )
 
 if (!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)  
 
-for (depth_in_model in c(F, T)[1]) {
+for (depth_in_model in c(F, T)[2]) {
   for (which_spp in c(
-    'Microstomus pacificus',
+    # 'Microstomus pacificus',
     'Lepidopsetta polyxystra',
     'Lepidopsetta bilineata',
     
