@@ -20,9 +20,9 @@ VAST_dir = "G:/Oyafuso/VAST_Runs_MS/No_Depth_2_factors/"
 ####   Result Objects
 ##################################################
 CV_df = data.frame(ifold = 1:5)
-RRMSE = array(dim = c(5, ncol = 15, 11))
+RRMSE = RMAE = array(dim = c(5, ncol = 15, 11))
 
-for (ifold in 1:2){
+for (ifold in 1:5){
   
   ##################################################
   ####   Load Result Object
@@ -97,6 +97,10 @@ for (ifold in 1:2){
                           & mean_pred_density$year == years[itime],
                           'obs_density']
       RRMSE[ifold, ispp, itime] = temp_RMSE / temp_mean_pred_density
+      
+      temp_MAE <- mean(abs(split_df$obs_density - split_df$pred_density))
+      RMAE[ifold, ispp, itime] <- temp_MAE / temp_mean_pred_density
+      
     }
     
   }
@@ -107,3 +111,5 @@ CV_df
 
 #Average RRMSE across years
 round(apply(RRMSE, MARGIN = 1:2, mean), 2)
+round(apply(RMAE, MARGIN = 1:2, mean), 2)
+
