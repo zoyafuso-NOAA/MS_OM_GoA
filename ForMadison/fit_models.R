@@ -2,13 +2,13 @@
 ## Project:      Univariate VAST model runs
 ## Author:       Zack Oyafuso (zack.oyafuso@noaa.gov)
 ## Contributors: Lewis Barnett (lewis.barnett@noaa.gov)
-##               Jim Thorson's VAST wiki example
+##               Jim Thorson"s VAST wiki example
 ##           (https://github.com/James-Thorson-NOAA/VAST/wiki/Crossvalidation)
 ## Description:  Run single-species VAST models for 
 ##               Sebastes variabilis
 ##               Sebastes aleutus
 ##               Sebastes polyspinis
-##               Run 5-fold Cross Validation for Each Model
+##               Run 10-fold Cross Validation for Each Model
 ###############################################################################
 rm(list = ls())
 
@@ -25,54 +25,53 @@ library(VAST)
 which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
-                'C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/')[which_machine]
+                "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
-              'G:/Oyafuso/VAST_Runs_EFH/Single_Species/')[which_machine]
+              "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
+if(!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)
 
 ##################################################
 ####   Import CPUE dataset, species set spreadsheet
 ##################################################
-master_data <- read.csv(file = paste0(github_dir, 'data/GOA_multspp.csv') )
+master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 
-if (!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)  
-
-for (depth_in_model in c(F, T)[2]) {
-  for (which_spp in c(
-    # 'Microstomus pacificus',
-    'Lepidopsetta polyxystra',
-    'Lepidopsetta bilineata',
-    
-    'Hippoglossus stenolepis',
-    'Hippoglossoides elassodon',
-    'Glyptocephalus zachirus',
-    
-    'Gadus macrocephalus',
-    'Gadus chalcogrammus',
-    'Sebastes B_R',
-    
-    'Sebastes brevispinis',
-    'Sebastes polyspinis',
-    'Sebastes variabilis',
-    
-    'Sebastes alutus',
-    'Atheresthes stomias',
-    'Sebastolobus alascanus')) {
-    
-    #If depth covariates are in the model, import modified function
-    if (depth_in_model) source(paste0(github_dir, 'fit_model_X_GTP.R'))
+for (which_spp in c(
+  # "Sebastes polyspinis",
+  # "Sebastes variabilis",
+  "Sebastes brevispinis",
+  
+  "Microstomus pacificus",
+  "Lepidopsetta polyxystra",
+  "Lepidopsetta bilineata",
+  
+  "Hippoglossus stenolepis",
+  "Hippoglossoides elassodon",
+  "Glyptocephalus zachirus",
+  
+  "Gadus macrocephalus",
+  "Gadus chalcogrammus",
+  "Sebastes B_R",
+  
+  "Sebastes alutus",
+  "Atheresthes stomias",
+  "Sebastolobus alascanus")) {
+  
+  for (depth_in_model in c(F, T)) {
+    # If depth covariates are in the model, import modified function
+    if (depth_in_model) source(paste0(github_dir, "fit_model_X_GTP.R"))
     
     result_dir <- paste0(VAST_dir, which_spp, 
-                         ifelse(depth_in_model,  '_depth', ''), '/')
+                         ifelse(depth_in_model,  "_depth", ""), "/")
     if (!dir.exists(result_dir)) dir.create(result_dir)  
-    
-    
+    if(!dir.exists(paste0(result_dir, "/diagnostics"))){
+      dir.create(paste0(result_dir, "/diagnostics"))
+    }
     
     ##################################################
     ####   Subset species
     ##################################################
     data <- subset(master_data, 
                    SPECIES_NAME == which_spp)
-    data$SPECIES_NAME <- droplevels(data$SPECIES_NAME)
     
     ##################################################
     ####   Prepare the dataframe for catch-rate data in the VAST format
@@ -83,12 +82,13 @@ for (depth_in_model in c(F, T)[2]) {
                                 "AreaSwept_km2" = data$EFFORT,
                                 "Vessel" = 0,
                                 "Lat" = data$LATITUDE,
-                                "Lon" = data$LONGITUDE)
+                                "Lon" = data$LONGITUDE, 
+                                stringsAsFactors = T)
     
     if (depth_in_model){
       Data_Geostat[, c("LOG_DEPTH", 
-                       "LOG_DEPTH2") ] = data[, c('LOG_DEPTH_EFH_CEN', 
-                                                  'LOG_DEPTH_EFH_CEN_SQ')]
+                       "LOG_DEPTH2") ] = data[, c("LOG_DEPTH_EFH_CEN", 
+                                                  "LOG_DEPTH_EFH_CEN_SQ")]
     }
     
     ##################################################
@@ -120,7 +120,7 @@ for (depth_in_model in c(F, T)[2]) {
     for (iyear in years) {
       for (ifold in paste(1:n_fold)) {
         Data_Geostat[Data_Geostat$latlon %in% foldno[[iyear]][[ifold]] , 
-                     'fold'] = as.integer(ifold) 
+                     "fold"] = as.integer(ifold) 
       }
     }
     
@@ -130,23 +130,24 @@ for (depth_in_model in c(F, T)[2]) {
     ####   Stratification for results
     ##################################################
     Method <- "Mesh"
-    strata.limits <- data.frame('STRATA' = c("All_areas"),
-                                'west_border' = -Inf,
-                                'east_border' = Inf)
+    strata.limits <- data.frame("STRATA" = c("All_areas"),
+                                "west_border" = -Inf,
+                                "east_border" = Inf)
     
     settings <- FishStatsUtils::make_settings( 
       n_x = 500,   # Number of knots
-      Region='User',
-      purpose="index2",
-      strata.limits=strata.limits, 
-      bias.correct=FALSE,
-      FieldConfig =  c("Omega1"=1, "Epsilon1"=1, "Omega2"=1, "Epsilon2"=1),
-      RhoConfig = c("Beta1"=0, "Beta2"=0, "Epsilon1"=0, "Epsilon2"=0),
-      OverdispersionConfig = c("Eta1"=0, "Eta2"=0), 
-      ObsModel = c(2,0),
-      Options = c("SD_site_density" = 0, 
-                  "SD_site_logdensity" = 0, 
-                  "Project_factors" = 0),
+      Region = "User",
+      purpose = "index2",
+      strata.limits = strata.limits, 
+      bias.correct = FALSE,
+      FieldConfig = c("Omega1" = 1, "Epsilon1" = 1, 
+                      "Omega2" = 1, "Epsilon2" = 1),
+      RhoConfig = c("Beta1" = 0, "Beta2" = 0, 
+                    "Epsilon1" = 0, "Epsilon2" = 0),
+      OverdispersionConfig = c("Eta1" = 0, "Eta2" = 0), 
+      "Options" = c("Calculate_Range" = F, 
+                    "Calculate_effective_area" = F),
+      ObsModel = c(2, 0),
       use_anisotropy = T)
     
     ##################################################
@@ -154,20 +155,18 @@ for (depth_in_model in c(F, T)[2]) {
     ####   data if using depth covariates
     ##################################################
     
-    load( paste0(github_dir, 'data/Extrapolation_depths.RData'))
+    load( paste0(github_dir, "data/Extrapolation_depths.RData"))
     
     n_g <- nrow(Extrapolation_depths) #number of grid cells
     n_t <- diff(range(Data_Geostat$Year)) + 1 #Number of total years
     n_p <- 2 #two density covariates
     
-    X_gtp <- array(dim = c(n_g, n_t, n_p) )
+    X_gtp <- array(dim = c(n_g, 1, n_t, n_p) )
     for (i in 1:n_t) {
-      X_gtp[,i,] <- 
-        as.matrix(Extrapolation_depths[,c('LOG_DEPTH_EFH_CEN', 
-                                          'LOG_DEPTH_EFH_CEN_SQ')])
+      X_gtp[,,i,] <- 
+        as.matrix(Extrapolation_depths[,c("LOG_DEPTH_EFH_CEN", 
+                                          "LOG_DEPTH_EFH_CEN_SQ")])
     }
-    
-    
     
     ##################################################
     ####   Fit the model and save output
@@ -176,17 +175,19 @@ for (depth_in_model in c(F, T)[2]) {
       fit = FishStatsUtils::fit_model( 
         "settings" = settings,
         "working_dir" = result_dir,
-        "Lat_i" = Data_Geostat[, 'Lat'],
-        "Lon_i" = Data_Geostat[, 'Lon'],
-        "t_i" = Data_Geostat[, 'Year'],
-        "c_i" = as.numeric(Data_Geostat[, 'spp']) - 1,
-        "b_i" = Data_Geostat[, 'Catch_KG'],
-        "a_i" = Data_Geostat[, 'AreaSwept_km2'],
-        "v_i" = Data_Geostat[, 'Vessel'],
+        "Lat_i" = Data_Geostat[, "Lat"],
+        "Lon_i" = Data_Geostat[, "Lon"],
+        "t_i" = Data_Geostat[, "Year"],
+        "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+        "b_i" = Data_Geostat[, "Catch_KG"],
+        "a_i" = Data_Geostat[, "AreaSwept_km2"],
+        "v_i" = Data_Geostat[, "Vessel"],
         "max_cells" = Inf,
         "getJointPrecision" = TRUE,
         "newtonsteps" = 1,
-        'test_fit' = F,
+        "test_fit" = F,
+        "Options" = c("Calculate_Range" = F, 
+                      "Calculate_effective_area" = F),
         "input_grid" = Extrapolation_depths)
     }
     
@@ -194,44 +195,59 @@ for (depth_in_model in c(F, T)[2]) {
       fit = fit_model( 
         "settings" = settings,
         "working_dir" = result_dir,
-        "Lat_i" = Data_Geostat[, 'Lat'],
-        "Lon_i" = Data_Geostat[, 'Lon'],
-        "t_i" = Data_Geostat[, 'Year'],
-        "c_i" = as.numeric(Data_Geostat[, 'spp']) - 1,
-        "b_i" = Data_Geostat[, 'Catch_KG'],
-        "a_i" = Data_Geostat[, 'AreaSwept_km2'],
-        "v_i" = Data_Geostat[, 'Vessel'],
+        "Lat_i" = Data_Geostat[, "Lat"],
+        "Lon_i" = Data_Geostat[, "Lon"],
+        "t_i" = Data_Geostat[, "Year"],
+        "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+        "b_i" = Data_Geostat[, "Catch_KG"],
+        "a_i" = Data_Geostat[, "AreaSwept_km2"],
+        "v_i" = Data_Geostat[, "Vessel"],
         "max_cells" = Inf,
         "getJointPrecision" = TRUE,
         "newtonsteps" = 1,
-        'test_fit' = F,
+        "test_fit" = F,
         ##Additional arguments for covariates
-        "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-        "covariate_data" = cbind(Data_Geostat[,c('Lat', 
-                                                 'Lon',
-                                                 'LOG_DEPTH',
-                                                 'LOG_DEPTH2',
-                                                 'Catch_KG')],
+        "X1_formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+        "X2_formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+        "covariate_data" = cbind(Data_Geostat[,c("Lat", 
+                                                 "Lon",
+                                                 "LOG_DEPTH",
+                                                 "LOG_DEPTH2",
+                                                 "Catch_KG")],
                                  Year = NA),
         "X_gtp" = X_gtp,
         "input_grid" = Extrapolation_depths
       )
     }
-    save(list = c('fit', 'Data_Geostat'), 
-         file = paste0(result_dir, '/fit.RData'))
-    
     
     ##################################################
-    ####   5-fold Cross Validation
+    ####   Standard DIagnostics
+    ##################################################
+    # diagnostics <- plot_results( fit, 
+    #                              check_residuals = T,
+    #                              working_dir = paste0(result_dir, 
+    #                                                   "diagnostics/"))
+    
+    ##################################################
+    ####   Save
+    ##################################################
+    save(list = c("fit", "Data_Geostat"), 
+         file = paste0(result_dir, "/fit.RData"))
+    
+    # save(list = "diagnostics", 
+    #      file = paste0(result_dir, "diagnostics/diagnostics.RData"))
+
+    ##################################################
+    ####   10-fold Cross Validation
     ##################################################
     n_fold <- 10
     for (fI in 1:n_fold) { 
-      if (!dir.exists(paste0(result_dir, 'CV_', fI))) {
-        dir.create(paste0(result_dir, 'CV_', fI))
+      if (!dir.exists(paste0(result_dir, "CV_", fI))) {
+        dir.create(paste0(result_dir, "CV_", fI))
         
         file.copy(from = paste0(result_dir, get_latest_version(), 
                                 c(".cpp", ".dll", ".o")),
-                  to = paste0(result_dir, 'CV_', fI, "/", 
+                  to = paste0(result_dir, "CV_", fI, "/", 
                               get_latest_version(), 
                               c(".cpp", ".dll", ".o")))
         
@@ -246,18 +262,17 @@ for (depth_in_model in c(F, T)[2]) {
         # Refit, starting at MLE, without calculating standard errors (to save time)
         fit_new = FishStatsUtils::fit_model( 
           "settings" = settings, 
-          "working_dir" = paste0(result_dir,'CV_', fI),
-          "Lat_i" = Data_Geostat[, 'Lat'],
-          "Lon_i" = Data_Geostat[, 'Lon'], 
-          "t_i" = Data_Geostat[, 'Year'],
-          "c_i" = as.numeric(Data_Geostat[, 'spp']) - 1, 
-          "b_i" = Data_Geostat[, 'Catch_KG'],
-          "a_i" = Data_Geostat[, 'AreaSwept_km2'], 
-          "v_i" = Data_Geostat[, 'Vessel'],
+          "working_dir" = paste0(result_dir,"CV_", fI),
+          "Lat_i" = Data_Geostat[, "Lat"],
+          "Lon_i" = Data_Geostat[, "Lon"], 
+          "t_i" = Data_Geostat[, "Year"],
+          "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1, 
+          "b_i" = Data_Geostat[, "Catch_KG"],
+          "a_i" = Data_Geostat[, "AreaSwept_km2"], 
+          "v_i" = Data_Geostat[, "Vessel"],
           "PredTF_i" = PredTF_i, 
           "Parameters" = fit$ParHat,
           "getsd" = T,
-          "silent" = T,
           "max_cells" = Inf,
           "test_fit" = F,
           "newtonsteps" = 1,
@@ -267,36 +282,38 @@ for (depth_in_model in c(F, T)[2]) {
       if (depth_in_model) {
         fit_new = fit_model(
           "settings" = settings, 
-          "working_dir" = paste0(result_dir, 'CV_', fI),
-          "Lat_i" = Data_Geostat[, 'Lat'],
-          "Lon_i" = Data_Geostat[, 'Lon'], 
-          "t_i" = Data_Geostat[, 'Year'],
-          "c_i" = as.numeric(Data_Geostat[, 'spp']) - 1, 
-          "b_i" = Data_Geostat[, 'Catch_KG'],
-          "a_i" = Data_Geostat[, 'AreaSwept_km2'], 
-          "v_i" = Data_Geostat[, 'Vessel'],
+          "working_dir" = paste0(result_dir, "CV_", fI),
+          "Lat_i" = Data_Geostat[, "Lat"],
+          "Lon_i" = Data_Geostat[, "Lon"], 
+          "t_i" = Data_Geostat[, "Year"],
+          "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1, 
+          "b_i" = Data_Geostat[, "Catch_KG"],
+          "a_i" = Data_Geostat[, "AreaSwept_km2"], 
+          "v_i" = Data_Geostat[, "Vessel"],
           "PredTF_i" = PredTF_i, 
           "Parameters" = fit$ParHat,
           "getsd" = T,
-          "silent" = T,
           "max_cells" = Inf,
           "test_fit" = F,
+          "Options" = c("Calculate_Range" = F, 
+                        "Calculate_effective_area" = F),
           "newtonsteps" = 1,
           ##Additional arguments for covariates
-          "formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-          "covariate_data" = cbind(Data_Geostat[,c('Lat', 
-                                                   'Lon',
-                                                   'LOG_DEPTH',
-                                                   'LOG_DEPTH2',
-                                                   'Catch_KG')],
+          "X1_formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+          "X2_formula" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+          "covariate_data" = cbind(Data_Geostat[,c("Lat", 
+                                                   "Lon",
+                                                   "LOG_DEPTH",
+                                                   "LOG_DEPTH2",
+                                                   "Catch_KG")],
                                    Year = NA),
           "X_gtp" = X_gtp,
           "input_grid" = Extrapolation_depths)
       }
       
       # Save fit 
-      save(list = 'fit_new',  
-           file = paste0(result_dir,'CV_', fI, '/fit.RData'))
+      save(list = "fit_new",  
+           file = paste0(result_dir,"CV_", fI, "/fit.RData"))
     }
   }
 }

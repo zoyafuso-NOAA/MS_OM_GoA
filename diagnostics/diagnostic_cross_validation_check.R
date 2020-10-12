@@ -14,15 +14,16 @@ library(RANN)
 ##################################################
 ####   Set up directories
 ##################################################
-VAST_dir = "G:/Oyafuso/VAST_Runs_MS/No_Depth_2_factors/"
+VAST_dir = "G:/Oyafuso/VAST_Runs_EFH/Single_Species/Sebastes brevispinis/"
 
 ##################################################
 ####   Result Objects
 ##################################################
-CV_df = data.frame(ifold = 1:5)
-RRMSE = RMAE = array(dim = c(5, ncol = 15, 11))
+nfolds = 10
+CV_df = data.frame(ifold = 1:nfolds)
+RRMSE = RMAE = array(dim = c(nfolds, 11))
 
-for (ifold in 1:5){
+for (ifold in 1:10){
   
   ##################################################
   ####   Load Result Object
@@ -52,10 +53,10 @@ for (ifold in 1:5){
   #Withheld data locations
   withheld_df <- data.frame(
     idx =  withheld_idx,
-    E_km = fit_new$spatial_list$loc_i[withheld_idx,'E_km'],
-    N_km = fit_new$spatial_list$loc_i[withheld_idx,'N_km'],
+    E_km = fit_new$spatial_list$loc_i[withheld_idx, 'E_km'],
+    N_km = fit_new$spatial_list$loc_i[withheld_idx, 'N_km'],
     spp = 1+fit_new$data_frame$c_iz[withheld_idx],
-    year = 1+fit_new$data_list$t_iz[withheld_idx,1],
+    year = 1+fit_new$data_list$t_i[withheld_idx],
     obs_density = (fit_new$data_frame$b_i/fit_new$data_frame$a_i)[withheld_idx]
   )
   
@@ -74,7 +75,7 @@ for (ifold in 1:5){
   #to the location of the data
   for (irow in 1:nrow(withheld_df)) {
     withheld_df$pred_density[irow] <-
-      fit_new$Report$D_gcy[grid_idx[irow],
+      fit_new$Report$D_gct[grid_idx[irow],
                            withheld_df$spp[irow],
                            withheld_df$year[irow]]
   }
@@ -87,29 +88,26 @@ for (ifold in 1:5){
   
   #Calculate RRMSE for each year for each species using the mean observed
   #density calculated above
-  for (ispp in 1:15) {
-    for (itime in 1:11) {
-      split_df <- subset(withheld_df,
-                         spp == ispp & year == years[itime])
-      temp_RMSE <- sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
-      temp_mean_pred_density <-
-        mean_pred_density[mean_pred_density$spp == ispp
-                          & mean_pred_density$year == years[itime],
-                          'obs_density']
-      RRMSE[ifold, ispp, itime] = temp_RMSE / temp_mean_pred_density
-      
-      temp_MAE <- mean(abs(split_df$obs_density - split_df$pred_density))
-      RMAE[ifold, ispp, itime] <- temp_MAE / temp_mean_pred_density
-      
-    }
+  
+  for (itime in 1:11) {
+    split_df <- subset(withheld_df, year == years[itime])
+    temp_RMSE <- sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
+    temp_mean_pred_density <-
+      mean_pred_density[mean_pred_density$year == years[itime],
+                        'obs_density']
+    RRMSE[ifold, itime] = temp_RMSE / temp_mean_pred_density
+    
+    temp_MAE <- mean(abs(split_df$obs_density - split_df$pred_density))
+    RMAE[ifold, itime] <- temp_MAE / temp_mean_pred_density
     
   }
+  
   print(paste0('Done with fold ', ifold))
 }
 
 CV_df
 
 #Average RRMSE across years
-round(apply(RRMSE, MARGIN = 1:2, mean), 2)
-round(apply(RMAE, MARGIN = 1:2, mean), 2)
-
+mean(RMAE)
+mean(RRMSE)
+sum(CV_df$pred_jnll)
