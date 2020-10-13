@@ -12,12 +12,13 @@ rm(list = ls())
 library(rgdal)
 library(raster)
 library(sp)
-library(FishStatsUtils)
+library(rgeos)
 
 ##################################################
 ####   Set up directories
 ##################################################
-github_dir <- "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/"
+EFH_dir <- "G:/Oyafuso/data/aigoa_bathp1c/"
+github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/"
 
 ##################################################
 ####   Import EFH bathymety raster
@@ -25,22 +26,28 @@ github_dir <- "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/"
 ####   Import Extrapolation grid
 ####   Import CPUE data
 ##################################################
-bathy <- raster::raster(
-  paste0(github_dir, "EFH_bathymetry/aigoa_bathp1c/dblbnd.adf"))
-bathy = bathy + abs(min(values(bathy), na.rm = T))
+bathy <- raster::raster( paste0(EFH_dir, "dblbnd.adf"))
+bathy <- bathy + abs(min(values(bathy), na.rm = T))
 
-current_survey_mask <- rgdal::readOGR(paste0(github_dir, 
-                                             "shapefiles/goa_strata.shp"))
+current_survey_strata <- rgdal::readOGR(
+  paste0(github_dir, "shapefiles/goa_strata.shp"))
+
+current_survey_mask <- rgdal::readOGR(
+  paste0(github_dir, "shapefiles/goagrid_polygon.shp"))
 current_survey_mask <- sp::spTransform(x = current_survey_mask,
                                        CRSobj = crs(bathy))
-current_survey_mask <- subset(current_survey_mask, STRATUM != 0)
+current_survey_mask <- rgeos::gUnaryUnion(spgeom = current_survey_mask)
 
+goa_grid_nountrawl <- read.csv(
+  paste0(github_dir, 
+         "extrapolation_grid/GOA_ALL_nountrawl.csv"))
 
 goa_grid <- read.csv(paste0(github_dir, 
                             "extrapolation_grid/GOAThorsonGrid.csv"))
-goa_grid <- goa_grid[, c("Shape_Area", "Longitude", "Latitude")]
+
+goa_grid <- goa_grid[, c("Id", "Shape_Area", "Longitude", "Latitude")]
 goa_grid$Shape_Area <- goa_grid$Shape_Area / 1000 / 1000 #Convert to km2 
-names(goa_grid) <- c("Area_km2", "Lon", "Lat")
+names(goa_grid) <- c( "Id", "Area_km2", "Lon", "Lat")
 
 data = read.csv(paste0(github_dir, "GOA_multspp.csv"))
 
@@ -54,10 +61,9 @@ grid_shape = sp::SpatialPointsDataFrame(
 
 grid_shape_aea = sp::spTransform(x = grid_shape,
                                  CRSobj = crs(bathy))
-grid_shape_aea@data$depth =  raster::extract(x = bathy,
-                                             y = grid_shape_aea,
-                                             method = "simple")
-nrow(grid_shape_aea)
+grid_shape_aea@data$DEPTH_EFH =  raster::extract(x = bathy,
+                                                 y = grid_shape_aea,
+                                                 method = "simple")
 
 ##################################################
 ####   Remove cells not already in the goa stratification
@@ -69,13 +75,13 @@ grid_shape_aea <- raster::intersect(x = grid_shape_aea,
 ####   Remove cells with depths outside the observed range to the range
 ##################################################
 grid_shape_aea <- subset(grid_shape_aea,
-                         depth >= min(data$DEPTH_EFH) & 
-                           depth <= max(data$DEPTH_EFH))
+                         DEPTH_EFH >= min(data$DEPTH_EFH) & 
+                           DEPTH_EFH <= max(data$DEPTH_EFH))
 
 ##################################################
 ####   Plot depth covariate of the extrapolation grid
 ##################################################
-spplot(grid_shape_aea[, "depth"], 
+spplot(grid_shape_aea[, "DEPTH_EFH"], 
        col.regions = rev(terrain.colors(1000)),
        pch = 16, 
        cex = 0.1,
@@ -85,12 +91,10 @@ spplot(grid_shape_aea[, "depth"],
 ##################################################
 ####   Remove cells with depths outside the observed range to the range
 ##################################################
-Extrapolation_depths <- grid_shape_aea@data[, c("Lon", "Lat", 
-                                                "Area_km2", "STRATUM")]
+Extrapolation_depths <- grid_shape_aea@data
 Extrapolation_depths[, c("E_km", "N_km")] <- project(
   xy = coordinates(Extrapolation_depths[, c("Lon", "Lat")]), 
   proj = "+proj=utm +zone=5N +units=km" )
-Extrapolation_depths$DEPTH_EFH = grid_shape_aea@data$depth
 
 ##################################################
 ####   scale grid bathymetry values to standard normal, using the mean and sd
@@ -106,7 +110,37 @@ Extrapolation_depths$LOG_DEPTH_EFH_CEN_SQ <-
   Extrapolation_depths$LOG_DEPTH_EFH_CEN ^ 2
 
 ##################################################
+####   Add current strata labels to each grid cell
+##################################################
+Extrapolation_depths$stratum <- raster::extract( x = current_survey_strata, 
+                                                 y = grid_shape_aea)$STRATUM
+
+##################################################
+####   Create indices to easily subset <700 m cells and untrawlable cells
+##################################################
+cells_shallower_than_700m <- 
+  Extrapolation_depths$Id[Extrapolation_depths$DEPTH_EFH <= 700] 
+cells_trawlable <- goa_grid_nountrawl$Id
+
+par(mar = c(4,4,1,1))
+plot(Lat ~ Lon, 
+     asp = 1,
+     data = Extrapolation_depths, 
+     pch = 15, cex = 0.3,
+     las = 1)
+points(Lat ~ Lon, 
+       data = Extrapolation_depths,
+       subset = Id %in% cells_shallower_than_700m, 
+       pch = 15, cex = 0.3, col = "red")
+points(Lat ~ Lon, 
+       data = Extrapolation_depths,
+       subset = !(Id %in% cells_trawlable), 
+       pch = 15, cex = 0.3, col = "blue")
+
+##################################################
 ####   Save
 ##################################################
-save(list = "Extrapolation_depths", 
-     file = paste0(github_dir, 'Extrapolation_depths.RData'))
+save(list = c("Extrapolation_depths", 
+              "cells_shallower_than_700m", 
+              "cells_trawlable"),
+     file = paste0(github_dir, "Extrapolation_depths.RData"))
