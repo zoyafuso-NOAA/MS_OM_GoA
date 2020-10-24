@@ -14,95 +14,91 @@ library(RANN)
 ##################################################
 ####   Set up directories
 ##################################################
-VAST_dir = "G:/Oyafuso/VAST_Runs_EFH/Single_Species/Sebastes brevispinis/"
+VAST_dir <- "G:/Oyafuso/VAST_Runs_EFH/Single_Species/" 
+github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
+
+##################################################
+####   Load in some constants
+##################################################
+load(paste0(github_dir, "model_11/optimization_data.RData"))
 
 ##################################################
 ####   Result Objects
 ##################################################
-nfolds = 10
-CV_df = data.frame(ifold = 1:nfolds)
-RRMSE = RMAE = array(dim = c(nfolds, 11))
+n_fold <- 10
 
-for (ifold in 1:10){
+CV_df <- expand.grid(species = sci_names, 
+                     depth = c(T, F),
+                     fold = 1:n_fold,
+                     stringsAsFactors = F)
+
+CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
+         paste0("year", 1:NTime))] <- NA
+
+for (irow in 1:nrow(CV_df)) {
   
-  ##################################################
-  ####   Load Result Object
-  ##################################################
-  load(paste0(VAST_dir, "CV_", ifold, '/fit.RData'))
+  #Load fitted object
+  result_dir <- paste0(VAST_dir, CV_df$species[irow], 
+                       ifelse(CV_df$depth[irow],  "_depth", ""), "/")
+  filename <- paste0(result_dir, "CV_", CV_df$fold[irow], "/fit.RData")
   
-  ##################################################
-  ####   Some Convergence/Hessian Checks
-  ##################################################
-  #Final maximum absolute gradient
-  CV_df$max_grad[ifold] <-
-    max(abs(fit_new$parameter_estimates$diagnostics$final_gradient))
-  
-  #Is hessian is positive definite?
-  # CV_df$pdHess[ifold] <- fit_new$parameter_estimates$SD$pdHess
-  
-  #check_fit chekcs bounds, TRUE is bad and FALSE is good
-  CV_df$bound_check[ifold] <- check_fit(fit_new$parameter_estimates)
-  
-  CV_df$pred_jnll[ifold] <- fit_new$Report$pred_jnll
-  
-  ##################################################
-  ####   Calculate RRMSE
-  ##################################################
-  withheld_idx <- which(fit_new$data_list$PredTF_i == T)
-  
-  #Withheld data locations
-  withheld_df <- data.frame(
-    idx =  withheld_idx,
-    E_km = fit_new$spatial_list$loc_i[withheld_idx, 'E_km'],
-    N_km = fit_new$spatial_list$loc_i[withheld_idx, 'N_km'],
-    spp = 1+fit_new$data_frame$c_iz[withheld_idx],
-    year = 1+fit_new$data_list$t_i[withheld_idx],
-    obs_density = (fit_new$data_frame$b_i/fit_new$data_frame$a_i)[withheld_idx]
-  )
-  
-  #Grid locations
-  loc_g <- fit_new$spatial_list$loc_g
-  
-  #Year indices
-  years = unique(withheld_df$year)
-  
-  #which grids are closest to each withheld data location
-  grid_idx <- RANN::nn2(query = withheld_df[,c('E_km', 'N_km')],
-                        data = loc_g,
-                        k = 1)$nn.idx
-  
-  #For each station, locate cell/spp/year density predictions that correspond
-  #to the location of the data
-  for (irow in 1:nrow(withheld_df)) {
-    withheld_df$pred_density[irow] <-
-      fit_new$Report$D_gct[grid_idx[irow],
-                           withheld_df$spp[irow],
-                           withheld_df$year[irow]]
-  }
-  
-  #Calculate the mean observed density for the calculation of the RRMSE
-  #There are many ways to do this and I chose for the normalizing constant to
-  #be specific to year and species.
-  mean_pred_density = aggregate(obs_density ~ spp + year, data = withheld_df,
-                                FUN = mean)
-  
-  #Calculate RRMSE for each year for each species using the mean observed
-  #density calculated above
-  
-  for (itime in 1:11) {
-    split_df <- subset(withheld_df, year == years[itime])
-    temp_RMSE <- sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
-    temp_mean_pred_density <-
-      mean_pred_density[mean_pred_density$year == years[itime],
-                        'obs_density']
-    RRMSE[ifold, itime] = temp_RMSE / temp_mean_pred_density
+  if ( file.exists(filename) ){
+    load(filename)
     
-    temp_MAE <- mean(abs(split_df$obs_density - split_df$pred_density))
-    RMAE[ifold, itime] <- temp_MAE / temp_mean_pred_density
+    #Final Gradient
+    CV_df$max_grad[irow] <-
+      max(abs(fit_new$parameter_estimates$diagnostics$final_gradient))
     
+    #Check whether hessian matrix is positive definite
+    CV_df$pdHess[irow] <- fit_new$parameter_estimates$SD$pdHess
+    
+    #check_fit chekcs bounds, TRUE is bad and FALSE is good
+    CV_df$bound_check[irow] <- (check_fit(fit_new$parameter_estimates))
+    
+    CV_df$pred_nll[irow] <- fit_new$Report$pred_jnll
+    
+    #Extract incides of withheld data
+    withheld_idx <- which(fit_new$data_list$PredTF_i == T)
+    
+    #Withheld data locations, species/year indices, observed CPUE
+    withheld_df <- data.frame(
+      idx =  withheld_idx,
+      E_km = fit_new$spatial_list$loc_i[withheld_idx,"E_km"],
+      N_km = fit_new$spatial_list$loc_i[withheld_idx,"N_km"],
+      year = 1+fit_new$data_list$t_iz[withheld_idx,1],
+      obs_density = (fit_new$data_frame$b_i/fit_new$data_frame$a_i)[withheld_idx]
+    )
+    
+    #Extrapolation Grid locations
+    loc_g <- fit_new$spatial_list$loc_g
+    
+    #which extrapoaltion grid cells are closest to each withheld data location 
+    grid_idx <- RANN::nn2(query = withheld_df[,c("E_km", "N_km")], 
+                          data = loc_g, 
+                          k = 1)$nn.idx
+    
+    for (jrow in 1:nrow(withheld_df)) {
+      temp_density <- 
+        fit_new$Report$D_gcy[grid_idx[jrow], , withheld_df$year[jrow]]
+      withheld_df$pred_density[jrow] <- temp_density
+    }
+    
+    #Calculate mean predicted density for calculation of RRMSE
+    mean_pred_density <- aggregate(obs_density ~ year,
+                                   data = withheld_df, 
+                                   FUN = mean)
+    
+    for (itime in 1:NTime) {
+      split_df <- subset(withheld_df, year ==  unique(withheld_df$year)[itime])
+      temp_RMSE <- sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
+      temp_mean_pred_density <- mean_pred_density[itime, "obs_density"]
+      CV_df[irow, paste0("year", itime)] <- temp_RMSE / temp_mean_pred_density
+    } 
+    
+    print(paste0("Done with: ", CV_df$species[irow], ", ", 
+                 ifelse(CV_df$depth[irow], "Depth, ", "No Depth, "),
+                 "Fold Number ", CV_df$fold[irow]))
   }
-  
-  print(paste0('Done with fold ', ifold))
 }
 
 CV_df
@@ -111,3 +107,29 @@ CV_df
 mean(RMAE)
 mean(RRMSE)
 sum(CV_df$pred_jnll)
+
+##################################################
+####   Create the result object that would go into the optimizations
+##################################################
+# D_gcy = array(dim = c(N, ns, 24), dimnames = list(NULL, which_spp, NULL))
+# 
+# for(ispp in 1:ns){
+#   which_model_idx = which.min(RRMSE[ispp, -1])
+#   
+#   result_dir = paste0(VAST_dir, RRMSE$species[ispp], 
+#                       c("", "_depth")[which_model_idx], "/")
+#   load(paste0(result_dir, "/fit.RData"))
+#   
+#   D_gcy[,ispp,] = fit$Report$D_gcy[,1,]
+# }
+# 
+# rm(fit)
+# fit = list(Report = list(D_gcy = D_gcy))
+
+##################################################
+####   Save
+##################################################
+# if(!dir.exists(paste0(dirname(VAST_dir), "/VAST_output11"))) 
+#   dir.create(paste0(dirname(VAST_dir), "/VAST_output11"))
+# 
+# save("fit", file = paste0(dirname(VAST_dir), "/VAST_output11/fit.RData") )
