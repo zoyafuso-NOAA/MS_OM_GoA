@@ -18,44 +18,35 @@ library(tidyr)
 ##################################################
 which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[3]
 
-VAST_dir <- 
-  c("",
-    "C:/Users/Zack Oyafuso/Desktop/VAST_Runs_MARMAP_DEPTHS//Single_Species/",
-    "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
-
-github_dir <-
-  paste0(c("/Users/zackoyafuso/Documents/", 
-           "C:/Users/Zack Oyafuso/Documents/",
-           "C:/Users/zack.oyafuso/Work/")[which_machine], 
-         "GitHub/Optimal_Allocation_GoA/")
+VAST_dir <-  "G:/Oyafuso/VAST_Runs_EFH/Single_Species/" 
+github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
 
 ##################################
 ## Import Strata Allocations and spatial grid and predicted density
 ##################################
-load(paste0(github_dir, "model_11/optimization_data.RData"))
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
 which_spp <- c( 
   "Atheresthes stomias",
   "Gadus chalcogrammus",
   "Gadus macrocephalus",
-
+  
   "Glyptocephalus zachirus",
   "Hippoglossoides elassodon",
   "Hippoglossus stenolepis",
-
+  
   "Lepidopsetta bilineata",
   "Lepidopsetta polyxystra",
   "Microstomus pacificus",
-
+  
   "Sebastes alutus",
   "Sebastes B_R",
   "Sebastes brevispinis",
-
+  
   "Sebastes polyspinis",
   "Sebastes variabilis",
   "Sebastolobus alascanus"
-  )
+)
 
 ns <- length(which_spp)
 
@@ -65,14 +56,14 @@ ns <- length(which_spp)
 NFold <- 10
 NTime <- 11
 CV_df <- expand.grid(species = which_spp, 
-                     depth = c(T),
+                     depth = c(T, F),
                      fold = 1:NFold,
                      stringsAsFactors = F)
 
 CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
-         paste0("year", 1:NTime))] <- NA
+         "RMSE", "RRMSE", "MAE", "RMAE")] <- NA
 
-for (irow in 1:nrow(CV_df)) {
+for (irow in (1:nrow(CV_df))[-206] ) {
   
   #Load fitted object
   result_dir <- paste0(VAST_dir, CV_df$species[irow], 
@@ -102,7 +93,7 @@ for (irow in 1:nrow(CV_df)) {
       idx =  withheld_idx,
       E_km = fit_new$spatial_list$loc_i[withheld_idx,"E_km"],
       N_km = fit_new$spatial_list$loc_i[withheld_idx,"N_km"],
-      year = 1+fit_new$data_list$t_iz[withheld_idx,1],
+      year = 1+fit_new$data_list$t_i[withheld_idx],
       obs_density = (fit_new$data_frame$b_i/fit_new$data_frame$a_i)[withheld_idx]
     )
     
@@ -115,41 +106,27 @@ for (irow in 1:nrow(CV_df)) {
                           k = 1)$nn.idx
     
     for (jrow in 1:nrow(withheld_df)) {
-      temp_density <- 
-        fit_new$Report$D_gcy[grid_idx[jrow], , withheld_df$year[jrow]]
-      withheld_df$pred_density[jrow] <- temp_density
+      withheld_df$pred_density[jrow] <- 
+        fit_new$Report$D_gct[grid_idx[jrow], , withheld_df$year[jrow]]
     }
     
-    #Calculate mean predicted density for calculation of RRMSE
-    mean_pred_density <- aggregate(obs_density ~ year,
-                                   data = withheld_df, 
-                                   FUN = mean)
+    #Calculate mean absolute error and root mean square error
+    CV_df$MAE[irow] = mean(abs(withheld_df$obs_density - 
+                                 withheld_df$pred_density))
     
-    for (itime in 1:NTime) {
-      split_df <- subset(withheld_df, year ==  unique(withheld_df$year)[itime])
-      temp_RMSE <- sqrt(mean((split_df$obs_density - split_df$pred_density)^2))
-      temp_mean_pred_density <- mean_pred_density[itime, "obs_density"]
-      CV_df[irow, paste0("year", itime)] <- temp_RMSE / temp_mean_pred_density
-    } 
+    CV_df$RMSE[irow] = sqrt(mean((withheld_df$obs_density - 
+                                    withheld_df$pred_density)^2))
+    
+    #Calculate mean predicted density for calculation of RRMSE and RMAE
+    mean_pred_density <- mean(withheld_df$obs_density)
+    CV_df$RRMSE[irow] <- CV_df$RMSE[irow] / mean_pred_density
+    CV_df$RMAE[irow] <- CV_df$MAE[irow] / mean_pred_density
     
     print(paste0("Done with: ", CV_df$species[irow], ", ", 
                  ifelse(CV_df$depth[irow], "Depth, ", "No Depth, "),
                  "Fold Number ", CV_df$fold[irow]))
   }
 }
-
-##################################################
-####   Calculate Mean relatie root mean square error of predictions
-####   for models that include and don"t include depth
-##################################################
-CV_df$RRMSE <- rowMeans(CV_df[, paste0("year", 1:NTime)])
-
-RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
-                                        data = CV_df, 
-                                        FUN = mean), 
-                       key = "depth",  
-                       value = "RRMSE")
-names(RRMSE)[-1] <- c("No_Depth", "Depth")
 
 ##################################################
 #### 
@@ -160,34 +137,36 @@ tidyr::spread(data = aggregate(pred_nll ~ species + depth,
               key = "depth",
               value = "pred_nll")
 
+RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
+                                        data = CV_df,
+                                        FUN = mean),
+                       key = "depth",
+                       value = "RRMSE")
+
 ##################################################
 ####   Create the result object that would go into the optimizations
 ##################################################
 N <- nrow(Extrapolation_depths)
-D_gcy = Index <- array(dim = c(N, ns, 24), 
+D_gct = Index <- array(dim = c(N, ns, 24), 
                        dimnames = list(NULL, which_spp, NULL))
 
-for(ispp in 13:ns){
+for(ispp in 1:ns){
   which_model_idx = which.min(RRMSE[ispp, -1])
-
+  
   result_dir = paste0(VAST_dir, RRMSE$species[ispp],
                       c("", "_depth")[which_model_idx], "/")
-  load(paste0(result_dir, "/fit.RData"))
-
-  D_gcy[,ispp,] = fit$Report$D_gcy[,1,]
-  Index[,ispp,] = fit$Report$Index_gcyl[,1, ,1]
   
-  print(paste("Finished with", sci_names[ispp]))
+  load(paste0(result_dir, "/fit.RData"))
+  
+  D_gct[,ispp,] = fit$Report$D_gct[,1,]
+  Index[,ispp,] = fit$Report$Index_gctl[,1, ,1]
+  
+  print(result_dir)
 }
-
-rm(fit)
-fit = list(Report = list(D_gcy = D_gcy,
-                         Index = Index))
 
 ##################################################
 ####   Save
 ##################################################
-if(!dir.exists(paste0(dirname(VAST_dir), "/VAST_output11")))
-  dir.create(paste0(dirname(VAST_dir), "/VAST_output11"))
+save("D_gct", file = paste0(github_dir, "/model_11/fit_density.RData") )
+save("Index", file = paste0(github_dir, "/model_11/fit_index.RData") )
 
-save("fit", file = paste0(dirname(VAST_dir), "/VAST_output11/fit.RData") )
