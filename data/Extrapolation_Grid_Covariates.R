@@ -19,6 +19,7 @@ library(rgeos)
 ##################################################
 EFH_dir <- "G:/Oyafuso/data/aigoa_bathp1c/"
 github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/"
+github_dir2 <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/data/" 
 
 ##################################################
 ####   Import EFH bathymety raster
@@ -118,9 +119,13 @@ Extrapolation_depths$stratum <- raster::extract( x = current_survey_strata,
 ##################################################
 ####   Create indices to easily subset <700 m cells and untrawlable cells
 ##################################################
-cells_shallower_than_700m <- 
-  Extrapolation_depths$Id[Extrapolation_depths$DEPTH_EFH <= 700] 
-cells_trawlable <- goa_grid_nountrawl$Id
+Extrapolation_depths$shallower_than_700m <- cells_shallower_than_700m <-
+  Extrapolation_depths$DEPTH_EFH <= 700
+Extrapolation_depths$trawlable <- cells_trawlable <-
+  Extrapolation_depths$Id %in% goa_grid_nountrawl$Id
+Extrapolation_depths$shallow_trawlable <- 
+  rowSums(Extrapolation_depths[, c("shallower_than_700m", 
+                                   "trawlable")]) == 2
 
 par(mar = c(4,4,1,1))
 plot(Lat ~ Lon, 
@@ -129,13 +134,8 @@ plot(Lat ~ Lon,
      pch = 15, cex = 0.3,
      las = 1)
 points(Lat ~ Lon, 
-       data = Extrapolation_depths,
-       subset = Id %in% cells_shallower_than_700m, 
+       data = Extrapolation_depths[!Extrapolation_depths$shallow_trawlable, ], 
        pch = 15, cex = 0.3, col = "red")
-points(Lat ~ Lon, 
-       data = Extrapolation_depths,
-       subset = !(Id %in% cells_trawlable), 
-       pch = 15, cex = 0.3, col = "blue")
 
 ##################################################
 ####   Save
@@ -144,3 +144,8 @@ save(list = c("Extrapolation_depths",
               "cells_shallower_than_700m", 
               "cells_trawlable"),
      file = paste0(github_dir, "Extrapolation_depths.RData"))
+
+save(list = c("Extrapolation_depths", 
+              "cells_shallower_than_700m", 
+              "cells_trawlable"),
+     file = paste0(github_dir2, "Extrapolation_depths.RData"))
