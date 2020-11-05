@@ -47,4 +47,19 @@ flatfishes, and rockfishes:
 combined into a species group we will refer as "Sebastes B_R" (blackspotted 
 rockfish and rougheye rockfish, respectively) hereafter. 
 
+## Input Data -- Spatial Domain
+
+The spatial domain of the survey optimization is the Gulf of Alaska 
+divided into a rougly 5-km resolution grid resulting in N = 22832 total survey cells.
+The script used to create the survey grid is contained in the MS_OM_GoA repo 
+(https://github.com/zoyafuso-NOAA/MS_OM_GoA) in the using the script 
+Extrapolation_Grid_Covariates.R in the data/ directory. That script produces 
+an RData producted called Extrapolation_depths.RData that is contained within 
+the data/ directory this repo. Extrapolation_depths.RData contains a variable 
+called Extrapolation_depths which is a dataframe of N rows. Useful fields for 
+this analysis are stated in the table below:
+
+![Spatial domain of the Gulf of Alaska (black), N = 22832.](graphics/domain.png)
+
+
 ![](graphics/Workflow.png)
