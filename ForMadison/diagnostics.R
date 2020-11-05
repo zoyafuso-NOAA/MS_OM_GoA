@@ -33,10 +33,11 @@ which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
-VAST_dir <- c("C:/Users/Zack Oyafuso/Google Drive/GOA_VAST_Runs/Single_Species/",
-              "C:/Users/zack.oyafuso/Desktop/VAST_Runs/Single_Species/")[which_machine]
+VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
+              "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
 
-for (ispp in c(1:14)) {
+depth_in_model <- T
+for (ispp in c(1:2)) {
   which_spp <- c( "Sebastes polyspinis", "Sebastes variabilis", 
                   "Sebastes brevispinis", "Microstomus pacificus", 
                   "Lepidopsetta polyxystra", "Lepidopsetta bilineata",
@@ -45,7 +46,7 @@ for (ispp in c(1:14)) {
                   "Gadus chalcogrammus", "Sebastes alutus",
                   "Atheresthes stomias", "Sebastolobus alascanus")[ispp]
   
-  depth_in_model <- F
+
   
   result_dir <- paste0(VAST_dir, which_spp, 
                        ifelse(depth_in_model,  "_depth", ""), "/")
@@ -283,7 +284,7 @@ for (ispp in c(1:14)) {
       goa_ras = raster(goa, resolution = 5)
       goa_ras = rasterize(x = goa, y = goa_ras, field = "var")
       
-      goa_ras = raster::shift(goa_ras, y = -offset*yrange*0.075)
+      goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.075)
       
       #Plot spatial effect
       colors = rev(brewer.pal(n = 11, name = "Spectral"))
@@ -348,7 +349,7 @@ for (ispp in c(1:14)) {
         goa_ras = raster(goa, resolution = 5)
         goa_ras = rasterize(x = goa, y = goa_ras, field = "var")
         
-        goa_ras = raster::shift(goa_ras, y = -offset*yrange*0.12)
+        goa_ras = raster::shift(goa_ras, dy = -offset*yrange*0.12)
         
         #Plot spatiotemporal effect
         colors = rev(brewer.pal(n = 11, name = "Spectral"))
