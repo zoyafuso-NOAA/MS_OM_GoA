@@ -164,6 +164,12 @@ Models with lower RMSE are preferred:
 | Sebastes variabilis       | 3558           | 3536           |
 | Sebastolobus alascanus    | 639            | 692            |
 
+The density and index predictions from the better of the two model
+types are knitted together into a 3-D array (dimensions: ns, N, NTime),
+saved in the [Optimal_Allocation_GoA repository](https://github.com/zoyafuso-NOAA/Optimal_Allocation_GoA/tree/master/model_11) 
+as /fit_density.RData /fit_Index.RData, respectively. The table of 
+RMSE values are saved /within RMSE_VAST_models.RData.
+
 Because the VAST output is too large to load on GitHub, the output is 
 tentatively placed in Oyafuso's shared G drive 
 (G:/Oyafuso/VAST_EFH/Single_Species/). 30 subdirectories are 
@@ -187,3 +193,7 @@ of DHarma residuals
 9. /diagnostics/Table_for_SS3.csv: tabulated Index w/ SEs
 
 ![](graphics/workflow3.png)
+
+##Final Graphical Workflow
+
+![](graphics/workflow.png)
