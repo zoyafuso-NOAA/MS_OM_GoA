@@ -16,25 +16,26 @@ library(tidyr)
 ##################################################
 ####   Set up directores
 ##################################################
+which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[3]
+
 VAST_dir <-  "G:/Oyafuso/VAST_Runs_EFH/Single_Species/" 
 github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
-
 
 ##################################
 ## Import Strata Allocations and spatial grid and predicted density
 ##################################
-load(paste0(github_dir, "model_11/optimization_data.RData"))
+load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
 which_spp <- c( 
-  "Atheresthes stomias", 
-  "Gadus chalcogrammus", 
+  "Atheresthes stomias",
+  "Gadus chalcogrammus",
   "Gadus macrocephalus",
   
-  "Glyptocephalus zachirus", 
-  "Hippoglossoides elassodon", 
-  "Hippoglossus stenolepis", 
+  "Glyptocephalus zachirus",
+  "Hippoglossoides elassodon",
+  "Hippoglossus stenolepis",
   
-  "Lepidopsetta bilineata", 
+  "Lepidopsetta bilineata",
   "Lepidopsetta polyxystra",
   "Microstomus pacificus",
   
@@ -63,6 +64,7 @@ CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll",
          "RMSE", "RRMSE", "MAE", "RMAE")] <- NA
 
 for (irow in (1:nrow(CV_df))[-206] ) {
+  
   #Load fitted object
   result_dir <- paste0(VAST_dir, CV_df$species[irow], 
                        ifelse(CV_df$depth[irow],  "_depth", ""), "/")
@@ -119,7 +121,7 @@ for (irow in (1:nrow(CV_df))[-206] ) {
     mean_pred_density <- mean(withheld_df$obs_density)
     CV_df$RRMSE[irow] <- CV_df$RMSE[irow] / mean_pred_density
     CV_df$RMAE[irow] <- CV_df$MAE[irow] / mean_pred_density
-
+    
     print(paste0("Done with: ", CV_df$species[irow], ", ", 
                  ifelse(CV_df$depth[irow], "Depth, ", "No Depth, "),
                  "Fold Number ", CV_df$fold[irow]))
@@ -127,21 +129,7 @@ for (irow in (1:nrow(CV_df))[-206] ) {
 }
 
 ##################################################
-####   Calculate Mean relatie root mean square error of predictions
-####   for models that include and don"t include depth
-##################################################
-CV_df$RRMSE <- rowMeans(CV_df[, paste0("year", 1:NTime)])
-
-RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
-                                        data = CV_df, 
-                                        FUN = mean), 
-                       key = "depth",  
-                       value = "RRMSE")
-names(RRMSE)[-1] <- c("No_Depth", "Depth")
-
-##################################################
-####   Calculate Mean relatie root mean square error of predictions
-####   for models that include and don"t include depth 
+####  Calculate summed predicted NLL across folds and Mean RRMSE across folds
 ##################################################
 tidyr::spread(data = aggregate(pred_nll ~ species + depth,
                                data = CV_df,
@@ -149,11 +137,15 @@ tidyr::spread(data = aggregate(pred_nll ~ species + depth,
               key = "depth",
               value = "pred_nll")
 
-RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
-                                        data = CV_df,
-                                        FUN = mean),
-                       key = "depth",
-                       value = "RRMSE")
+RMSE <- tidyr::spread(data = aggregate(RMSE ~ species + depth,
+                                       data = CV_df,
+                                       FUN = mean),
+                      key = "depth",
+                      value = "RMSE")
+
+RMSE$depth_in_model <- c(F, T)[apply(X = RMSE[,-1],
+                                     MARGIN = 1,
+                                     FUN = which.min)]
 
 ##################################################
 ####   Create the result object that would go into the optimizations
@@ -163,10 +155,11 @@ D_gct = Index <- array(dim = c(N, ns, 24),
                        dimnames = list(NULL, which_spp, NULL))
 
 for(ispp in 1:ns){
-  which_model_idx = which.min(RRMSE[ispp, -1])
+  depth_in_model <- RMSE$depth_in_model[ispp]
   
-  result_dir = paste0(VAST_dir, RRMSE$species[ispp],
-                      c("", "_depth")[which_model_idx], "/")
+  result_dir = paste0(VAST_dir, RMSE$species[ispp],
+                      ifelse(depth_in_model, "_depth", ""),
+                      "/")
   
   load(paste0(result_dir, "/fit.RData"))
   
@@ -179,6 +172,7 @@ for(ispp in 1:ns){
 ##################################################
 ####   Save
 ##################################################
-
+save("RMSE", file = paste0(github_dir, "/model_11/RMSE_VAST_models.RData"))
 save("D_gct", file = paste0(github_dir, "/model_11/fit_density.RData") )
 save("Index", file = paste0(github_dir, "/model_11/fit_index.RData") )
+
