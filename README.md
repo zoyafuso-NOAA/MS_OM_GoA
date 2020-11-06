@@ -47,19 +47,6 @@ flatfishes, and rockfishes for a total of ns = 15 species:
 combined into a species group we will refer as "Sebastes B_R" (blackspotted 
 rockfish and rougheye rockfish, respectively) hereafter. 
 
-
-## Input Data -- Spatiotemporal Domain
-
-The spatial domain of the survey optimization is the Gulf of Alaska 
-divided into a rougly 5-km resolution grid resulting in N = 22832 total cells.
-The Gulf of Alaska groundfish bottom trawl survey has been conducted triennially
- starting in 1987 and biennially since 1999. To maintain consistency 
-in survey protocol and survey extent, only survey years between 1996-2019 
-(inclusive) were used with the exception of 2001, resulting in NTime = 11 
-observed years.
-
-![Spatial domain of the Gulf of Alaska (black), N = 22832.](graphics/domain.png)
-
 ## Input Data -- Catch-per-unit-effort (CPUE) Data [(/data/data_survey.R)](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/EFH-depths/data/data_survey.R)
 Raw data are contained in Oyafuso's RACE_FG G drive. These are large datafiles
 so currently these data are stored in a shared drive only accessible to those
@@ -68,15 +55,15 @@ Fisheries Science Center. A more public option will be integrated at a later
 time. Three major datasets are used to synthesize the CPUE data with the major
 relevant fields as follows:
 
-1. cpue_GOA_selected_spp.csv: species code, year, stratum, catch, effort, 
-vessel ID, cruise ID, haul ID, weight, and numbers. 
+1. ~/data/data-raw/cpue_GOA_selected_spp.csv: species code, year, stratum, 
+catch, effort, vessel ID, cruise ID, haul ID, weight, and numbers. 
 
-2. haul.csv: haul-specific information including location, date, and 
-recorded depth
+2. ~/data/data-raw/haul.csv: haul-specific information including location, 
+date, and recorded depth
 
-3. species.csv: key for species codes
+3. ~data/data-raw/species.csv: key for species codes
 
-4. bathymetry: ...
+4. ~data/aigoa_bathp1c/dblbnd.adf: bathymetry raster
 
 the [data_survey.R](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/EFH-depths/data/data_survey.R) 
 script organizes the dataset so it best matches the format of the data inputs
@@ -106,19 +93,41 @@ for VAST, and outputs a .csv file called GOA_multspp.csv, a dataframe with:
 
 ![](graphics/workflow1.png)
 
-## Input Data -- Spatial Domain
+## Input Data -- Spatial Domain [/data/Extrapolation_Grid_Covariates.R](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/master/data/Extrapolation_Grid_Covariates.R) 
 
 The spatial domain of the survey optimization is the Gulf of Alaska 
-divided into a rougly 5-km resolution grid resulting in N = 22832 total survey cells.
+divided into a rougly 5-km resolution grid resulting in N = 22832 total cells.
+This script uses five spatial layers to create a dataframe of the grid cells.
 
-The script used to create the survey grid is contained in the MS_OM_GoA repo 
-(https://github.com/zoyafuso-NOAA/MS_OM_GoA) in the using the script 
-Extrapolation_Grid_Covariates.R in the data/ directory. That script produces 
-an RData producted called Extrapolation_depths.RData that is contained within 
-the data/ directory this repo. Extrapolation_depths.RData contains a variable 
-called Extrapolation_depths which is a dataframe of N rows. Useful fields for 
-this analysis are stated in the table below:
+1. ~/data/shapefiles/goa_strata.shp: 
+2. ~/data/shapefiles/goagrid_polygons.shp
+3. ~/data/shapefiles/GOA_ALL_nountrawl
+4. ~/data/extrapolation_grid/GOAThorsonGrid.csv
+5. ~data/aigoa_bathp1c/dblbnd.adf: EFH bathymetry raster
+
+Depth values are extracted from the same EFH bathymetry layer used in the CPUE
+input data section. ~/data/Extrapolation_depths.RData is created when running 
+this script and contains a dataframe called Extrapolation_depths consisting of
+N rows. Useful fields for this analysis are stated in the table below:
+
+| Field Name          | Description                                 |
+|---------------------|---------------------------------------------|
+| Area_km2            | num, Area of grid cell in square kilometers |
+| Lon                 | num, Longitude                              |
+| Lat                 | num, Latitude                               |
+| Depth_EFH           | num, Depth in meters                        |
+| E_km                | num, Eastings in kilometers, 5N UTM         |
+| N_km                | num, Northings in kilometers, 5N UTM        |
+| stratum             | int, Stratum ID in current STRS design      |
+| trawlable           | logi, is the cell trawlable?                |
+| shallower_than_700m | logi, is the cell < 700 m?                  |
+| shallow_trawlable   | logi, is the cells trawlable and < 700 m    |
+
+This grid is used as the "extrapolation grid" in VAST and is the spatial 
+resolution where VAST will predict onto: 
 
 ![Spatial domain of the Gulf of Alaska (black), N = 22832.](graphics/domain.png)
+
+![](graphics/workflow2.png)
 
 ![](graphics/Workflow.png)
