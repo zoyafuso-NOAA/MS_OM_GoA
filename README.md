@@ -178,5 +178,12 @@ contained in its own subdirectory called diagnostics:
 1. /diagnostics/denisty.pdf: maps predicted density across years
 2. /diagnostics/omega.png: map of average spatial effect
 3. /diagnostics/Epsilon.png: map of spatiotemporal effects 
+4. /diagnostics/Aniso.png: anisometry extent
+5. /diagnostics/Data_and_knot.png: position of data and knots
+6. /diagnostics/Data_by_year.png: position of data by years
+7. /diagnostics/quantile_residuals.png: QQ DHarma residual plot
+8. /diagnostics/quantile_residuals_on_map.png: spatial distribution
+of DHarma residuals
+9. /diagnostics/Table_for_SS3.csv: tabulated Index w/ SEs
 
 ![](graphics/workflow3.png)
