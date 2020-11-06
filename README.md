@@ -172,6 +172,11 @@ output from the fit_model() function. Results from each cross-fold
 are saved in their own subdirectories (CV_1, CV_2, ..., CV_10). 
 And the version of the VAST .cpp file is also included. 
 
-![](graphics/workflow3.png)
+Finally, the fit.RData object is used in various diagnostics plots
+contained in its own subdirectory called diagnostics:
 
-![](graphics/Workflow.png)
+1. /diagnostics/denisty.pdf: maps predicted density across years
+2. /diagnostics/omega.png: map of average spatial effect
+3. /diagnostics/Epsilon.png: map of spatiotemporal effects 
+
+![](graphics/workflow3.png)
