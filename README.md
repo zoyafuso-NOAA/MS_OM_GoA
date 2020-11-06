@@ -93,7 +93,7 @@ for VAST, and outputs a .csv file called GOA_multspp.csv, a dataframe with:
 
 ![](graphics/workflow1.png)
 
-## Input Data -- Spatial Domain [/data/Extrapolation_Grid_Covariates.R](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/master/data/Extrapolation_Grid_Covariates.R) 
+## Input Data -- Spatial Domain [(/data/Extrapolation_Grid_Covariates.R)](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/master/data/Extrapolation_Grid_Covariates.R) 
 
 The spatial domain of the survey optimization is the Gulf of Alaska 
 divided into a rougly 5-km resolution grid resulting in N = 22832 total cells.
@@ -129,5 +129,49 @@ resolution where VAST will predict onto:
 ![Spatial domain of the Gulf of Alaska (black), N = 22832.](graphics/domain.png)
 
 ![](graphics/workflow2.png)
+
+## Fit VAST Model [(fit_models.R)](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/master/ForMadison/fit_models.R)
+Two types of single-species VAST models are fited for each species:
+without density covariates and depth included as a quadratic effect.
+Models used R version 4.0.3 (2020-10-10), VAST version 3.6.0 (2020-09-22),
+and FishStatsUtils version 2.8.0 (2020-09-22). The organized CPUE data 
+(/data/GOA_multspp.csv) and extrapolation grid 
+(data/Extrapolation_depths.RData) are used as inputs. A modified version
+of the FishStatsUtils::fit_model() is used [(fit_model_X_GTP)](https://github.com/zoyafuso-NOAA/MS_OM_GoA/blob/master/fit_model_X_GTP.R). This function forces VAST
+to use the extracted depth values provided by the extrapolation grid,
+instead of what is done by default, interpolates covariate values on the
+extrapolation grid from observed covariate values. 
+
+Once fitted, a ten-fold cross-validation is conducted and the average 
+out-of-fold root mean square error (RMSE) is calculated for each model.
+Models with lower RMSE are preferred: 
+
+| Species Name              | Depth Excluded | Depth Included |
+|---------------------------|----------------|----------------|
+| Atheresthes stomias       | 15705          | 15579          |
+| Gadus chalcogrammus       | 11361          | 12007          |
+| Gadus macrocephalus       | 6918           | 6892           |
+| Glyptocephalus zachirus   | 792            | 772            |
+| Hippoglossoides elassodon | 2020           | 2268           |
+| Hippoglossus stenolepis   | 4417           | 4389           |
+| Lepidopsetta bilineata    | 1185           | 1209           |
+| Lepidopsetta polyxystra   | 1190           | 1227           |
+| Microstomus pacificus     | 592            | 584            |
+| Sebastes alutus           | 22808          | 22620          |
+| Sebastes B_R              | 1316           | 1225           |
+| Sebastes brevispinis      | 1958           | 1968           |
+| Sebastes polyspinis       | 8093           | 7468           |
+| Sebastes variabilis       | 3558           | 3536           |
+| Sebastolobus alascanus    | 639            | 692            |
+
+Because the VAST output is too large to load on GitHub, the output is 
+tentatively placed in Oyafuso's shared G drive 
+(G:/Oyafuso/VAST_EFH/Single_Species/). 30 subdirectories are 
+created (15 species x 2 model types) and fit.RData is the saved
+output from the fit_model() function. Results from each cross-fold 
+are saved in their own subdirectories (CV_1, CV_2, ..., CV_10). 
+And the version of the VAST .cpp file is also included. 
+
+![](graphics/workflow3.png)
 
 ![](graphics/Workflow.png)
