@@ -192,8 +192,6 @@ contained in its own subdirectory called diagnostics:
 of DHarma residuals
 9. /diagnostics/Table_for_SS3.csv: tabulated Index w/ SEs
 
-![](graphics/workflow3.png)
-
 ##Final Graphical Workflow
 
 ![](graphics/workflow.png)
