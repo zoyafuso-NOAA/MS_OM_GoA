@@ -172,7 +172,7 @@ for(ispp in 1:ns){
 ##################################################
 ####   Save
 ##################################################
-save("RMSE", file = paste0(github_dir, "/model_11/RMSE_VAST_models.RData"))
-save("D_gct", file = paste0(github_dir, "/model_11/fit_density.RData") )
-save("Index", file = paste0(github_dir, "/model_11/fit_index.RData") )
+save("RMSE", file = paste0(github_dir, "/data/RMSE_VAST_models.RData"))
+save("D_gct", file = paste0(github_dir, "/data/fit_density.RData") )
+save("Index", file = paste0(github_dir, "/data/fit_index.RData") )
 
