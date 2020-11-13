@@ -36,8 +36,8 @@ if(!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)
 master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 
 for (which_spp in c(
-  # "Sebastes polyspinis",
-  # "Sebastes variabilis",
+  "Sebastes polyspinis",
+  "Sebastes variabilis",
   "Sebastes brevispinis",
   
   "Microstomus pacificus",
