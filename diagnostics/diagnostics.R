@@ -57,15 +57,6 @@ CA = rgeos::gSimplify(spgeom = CA, tol = 3)
 ####    Loop over species and model types and calculate diagnostics and 
 ####    outputs if not recorded
 ##################################################
-depth_in_model <- c(T, F)[1]
-which_spp <- c("Atheresthes stomias", "Gadus chalcogrammus", 
-               "Gadus macrocephalus", "Glyptocephalus zachirus",
-               "Hippoglossoides elassodon", "Hippoglossus stenolepis",
-               "Lepidopsetta bilineata", "Lepidopsetta polyxystra",
-               "Limanda aspera", "Microstomus pacificus", "Sebastes alutus",
-               "Sebastes B_R", "Sebastes polyspinis", "Sebastes variabilis", 
-               "Sebastolobus alascanus" ) [13]
-
 for (depth_in_model in c(T, F)) {
   for (which_spp in c("Atheresthes stomias", "Gadus chalcogrammus", 
                       "Gadus macrocephalus", "Glyptocephalus zachirus",
@@ -105,7 +96,8 @@ for (depth_in_model in c(T, F)) {
       TmbData <- fit$data_list
       
       Year_Set <- seq(min(Data_Geostat[,"Year"]), max(Data_Geostat[, "Year"]))
-      Years2Include <- which(Year_Set %in% sort(unique(Data_Geostat[, "Year"])))
+      Years2Include <- which(Year_Set %in% 
+                               sort(unique(Data_Geostat[, "Year"])))
       
       MapDetails_List <- FishStatsUtils::make_map_info(
         "Region" = "Gulf_of_Alaska", 
@@ -119,15 +111,20 @@ for (depth_in_model in c(T, F)) {
       yrange_diff <- diff(yrange)
       
       ############################################
-      ## Diagnostics for encounter-probability component
-      ## Next, we check whether observed encounter frequencies for either low or high 
-      ## probability samples are within the 95% predictive interval for predicted 
-      ## encounter probability
+      ## Plot Dharma residuals
       ############################################
-      Enc_prob = FishStatsUtils::plot_encounter_diagnostic( 
-        Report = Report, 
-        Data_Geostat = Data_Geostat, 
-        DirName = diag_dir)
+      
+      if(!file.exists(paste0(VAST_dir, 
+                             "/diagnostics/quantile_residuals.png"))){
+        dyn.load(paste0(VAST_dir, "VAST_v12_0_0.dll"))
+        
+        plot( fit, 
+              check_residuals = TRUE,
+              working_dir = paste0(VAST_dir, "/diagnostics/"))
+        
+        dyn.unload(paste0(VAST_dir, "VAST_v12_0_0.dll"))
+      }
+
       
       ############################################
       ## Plot Density across years for each Species
@@ -404,8 +401,6 @@ for (depth_in_model in c(T, F)) {
                                   use_biascorr=TRUE, 
                                   category_names=levels(Data_Geostat[,"spp"]) )
     }
-    
-    
   }
 }
 
