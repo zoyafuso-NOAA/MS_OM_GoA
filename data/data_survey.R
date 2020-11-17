@@ -15,8 +15,8 @@ library(raster)
 ##################################################
 ####   Set up directories
 ##################################################
-data_wd = "C:/Users/Zack Oyafuso/Desktop/AK_BTS/"
-github_wd = "C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/data/"
+data_wd = "G:/Oyafuso/data/"
+github_wd = "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/data/"
 
 ##################################################
 #### Import CPUE survey data
@@ -28,7 +28,7 @@ data = read.csv(paste0(data_wd, "data-raw/cpue_GOA_selected_spp.csv"),
                 stringsAsFactors = FALSE) # CPUE is (num or kg / km^2)
 
 bathy <- raster::raster(
-  paste0(github_wd, "EFH_bathymetry/aigoa_bathp1c/dblbnd.adf"))
+  paste0(data_wd, "aigoa_bathp1c/dblbnd.adf"))
 
 haul <- read.csv(paste0(data_wd, "data-raw/haul.csv"), 
                  stringsAsFactors = FALSE)
@@ -110,6 +110,18 @@ B_R_rockfishes <- data %>% dplyr::filter(
 data <- as.data.frame(rbind(data, B_R_rockfishes))
 
 ##################################################
+####  Sum catches of big and longnose skate 
+##################################################
+skates <- data %>% dplyr::filter(
+  COMMON_NAME %in% c("big skate", 
+                     "longnose skate")) %>%
+  group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+  summarise(WEIGHT = sum(WEIGHT)) %>%
+  ungroup() %>%
+  mutate(SPECIES_NAME = "Beringraja spp.", COMMON_NAME = "skates spp.")
+data <- as.data.frame(rbind(data, skates))
+
+##################################################
 #### Filter species to make it easier to import later
 #### 1. Arrowtooth Flounder (Atherestes stomias, code 10110)
 #### 2. Pacific Cod (Gadus macrocephalus, code 21720)
@@ -148,7 +160,19 @@ data = subset(data,
                                  
                                  "B_R_rockfishes",
                                  "shortspine thornyhead",
-                                 "silvergray rockfish"))
+                                 "silvergray rockfish",
+                                 
+                                 #Species to include in evaluation but not in
+                                 #the optimization:
+                                 "sablefish",
+                                 "Atka mackerel",
+                                 "shortraker rockfish",
+                                 "spiny dogfish",
+                                 "skates spp.",
+                                 "yelloweye rockfish",
+                                 "giant octopus",
+                                 "harlequin rockfish"
+              ))
 
 ##################################################
 ####   Assign station depths from EFH layer
@@ -193,78 +217,78 @@ with(subset(cpue_shape_aea@data,
             subset = COMMON_NAME == "arrowtooth flounder"), 
      cor(depth, BOTTOM_DEPTH, use = "complete.obs"))
 abline(a = 0, b = 1)
-
-##################################################
-####   There are 645 observations (43 stations) without depths, 
-####   near the edges of the data layer. For these stations, we extract raster
-####   values averaged within an iteratively increasing buffer radius. The 
-####   farthest radius was 7.6 km. 
-##################################################
-cpue_shape_aea@data$depth_buffer = cpue_shape_aea@data$depth
-
-how_many_NAs = sum(is.na(cpue_shape_aea@data$depth_buffer)) #643 stations
-
-distance = 200 #Initial distance
-while (how_many_NAs) {
-  cpue_shape_aea@data$depth_buffer[is.na(cpue_shape_aea@data$depth_buffer)] <- 
-    raster::extract(x = bathy,
-                    y = cpue_shape_aea[is.na(cpue_shape_aea@data$depth_buffer),],
-                    buffer = distance,
-                    na.rm = T,
-                    fun = mean)
-  
-  how_many_NAs = sum(is.na(cpue_shape_aea@data$depth_buffer))
-  print(distance)
-  print(how_many_NAs)
-  distance = distance + 200 #Increase buffer by 200 m in next iteration
-}
-
-plot(cpue_shape_aea@data[mismatched_idx, c("BOTTOM_DEPTH", "depth_buffer")])
-abline(a = 0, b = 1)
-cor(cpue_shape_aea@data[mismatched_idx, c("BOTTOM_DEPTH", "depth_buffer")])
-
-##################################################
-####   There are 645 observations (43 stations) without depths, 
-####   near the edges of the data layer. For these stations, we extract raster
-####   values averaged within an iteratively increasing buffer radius. The 
-####   farthest radius was 7.6 km. 
-##################################################
-# then take the raster value with lowest distance to point AND non-NA value in the raster
-mismatched_idx = which(is.na(cpue_shape_aea@data$depth))
-unique_locs <- unique(cpue_shape_aea@coords[mismatched_idx, ])
-cpue_shape_aea@data$nearest_depth = cpue_shape_aea@data$depth
-
-EW_NS_ID = paste0(cpue_shape_aea@coords[, 1],
-                  cpue_shape_aea@coords[, 2])
-
-for (idx in 1:nrow(unique_locs)) {
-  
-  obs_same_station <- which(EW_NS_ID == paste0(unique_locs[idx, 1],
-                                               unique_locs[idx, 2]) ) 
-  
-  #Create a bounding-box around the proximity of the station
-  temp_bbox <-
-    sp::bbox(SpatialPoints(
-      cbind(x = c(unique_locs[idx, 1] + 50000 * c(-1, 1)),
-            y = c(unique_locs[idx, 2] + 50000 * c(-1, 1)))))
-  
-  #Crop bathy raster to just the locality of the station
-  cropped_raster <- raster::crop(x = bathy, 
-                                 y = temp_bbox)
-  
-  cpue_shape_aea@data$nearest_depth[obs_same_station] <- 
-    values(cropped_raster)[which.min(
-      replace(  
-        distanceFromPoints(cropped_raster, 
-                           cpue_shape_aea@coords[mismatched_idx[idx], ]), 
-        is.na(cropped_raster), NA))]
-}
-
-plot(cpue_shape_aea@data[mismatched_idx , c("BOTTOM_DEPTH", "nearest_depth")])
-abline(a = 0, b = 1)
-
-cor(cpue_shape_aea@data[mismatched_idx , 
-                        c("BOTTOM_DEPTH", "nearest_depth", "depth_buffer")])
+# 
+# ##################################################
+# ####   There are 645 observations (43 stations) without depths, 
+# ####   near the edges of the data layer. For these stations, we extract raster
+# ####   values averaged within an iteratively increasing buffer radius. The 
+# ####   farthest radius was 7.6 km. 
+# ##################################################
+# cpue_shape_aea@data$depth_buffer = cpue_shape_aea@data$depth
+# 
+# how_many_NAs = sum(is.na(cpue_shape_aea@data$depth_buffer)) #643 stations
+# 
+# distance = 200 #Initial distance
+# while (how_many_NAs) {
+#   cpue_shape_aea@data$depth_buffer[is.na(cpue_shape_aea@data$depth_buffer)] <- 
+#     raster::extract(x = bathy,
+#                     y = cpue_shape_aea[is.na(cpue_shape_aea@data$depth_buffer),],
+#                     buffer = distance,
+#                     na.rm = T,
+#                     fun = mean)
+#   
+#   how_many_NAs = sum(is.na(cpue_shape_aea@data$depth_buffer))
+#   print(distance)
+#   print(how_many_NAs)
+#   distance = distance + 200 #Increase buffer by 200 m in next iteration
+# }
+# 
+# plot(cpue_shape_aea@data[mismatched_idx, c("BOTTOM_DEPTH", "depth_buffer")])
+# abline(a = 0, b = 1)
+# cor(cpue_shape_aea@data[mismatched_idx, c("BOTTOM_DEPTH", "depth_buffer")])
+# 
+# ##################################################
+# ####   There are 645 observations (43 stations) without depths, 
+# ####   near the edges of the data layer. For these stations, we extract raster
+# ####   values averaged within an iteratively increasing buffer radius. The 
+# ####   farthest radius was 7.6 km. 
+# ##################################################
+# # then take the raster value with lowest distance to point AND non-NA value in the raster
+# mismatched_idx = which(is.na(cpue_shape_aea@data$depth))
+# unique_locs <- unique(cpue_shape_aea@coords[mismatched_idx, ])
+# cpue_shape_aea@data$nearest_depth = cpue_shape_aea@data$depth
+# 
+# EW_NS_ID = paste0(cpue_shape_aea@coords[, 1],
+#                   cpue_shape_aea@coords[, 2])
+# 
+# for (idx in 1:nrow(unique_locs)) {
+#   
+#   obs_same_station <- which(EW_NS_ID == paste0(unique_locs[idx, 1],
+#                                                unique_locs[idx, 2]) ) 
+#   
+#   #Create a bounding-box around the proximity of the station
+#   temp_bbox <-
+#     sp::bbox(SpatialPoints(
+#       cbind(x = c(unique_locs[idx, 1] + 50000 * c(-1, 1)),
+#             y = c(unique_locs[idx, 2] + 50000 * c(-1, 1)))))
+#   
+#   #Crop bathy raster to just the locality of the station
+#   cropped_raster <- raster::crop(x = bathy, 
+#                                  y = temp_bbox)
+#   
+#   cpue_shape_aea@data$nearest_depth[obs_same_station] <- 
+#     values(cropped_raster)[which.min(
+#       replace(  
+#         distanceFromPoints(cropped_raster, 
+#                            cpue_shape_aea@coords[mismatched_idx[idx], ]), 
+#         is.na(cropped_raster), NA))]
+# }
+# 
+# plot(cpue_shape_aea@data[mismatched_idx , c("BOTTOM_DEPTH", "nearest_depth")])
+# abline(a = 0, b = 1)
+# 
+# cor(cpue_shape_aea@data[mismatched_idx , 
+#                         c("BOTTOM_DEPTH", "nearest_depth", "depth_buffer")])
 
 ##################################################
 ####   Attach depths to dataset, scaled
