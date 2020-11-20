@@ -58,14 +58,24 @@ CA = rgeos::gSimplify(spgeom = CA, tol = 3)
 ####    outputs if not recorded
 ##################################################
 for (depth_in_model in c(T, F)) {
-  for (which_spp in c("Atheresthes stomias", "Gadus chalcogrammus", 
-                      "Gadus macrocephalus", "Glyptocephalus zachirus",
-                      "Hippoglossoides elassodon", "Hippoglossus stenolepis",
-                      "Lepidopsetta bilineata", "Lepidopsetta polyxystra",
-                      "Microstomus pacificus", "Sebastes alutus",
-                      "Sebastes B_R", "Sebastes brevispinis",
-                      "Sebastes polyspinis", "Sebastes variabilis", 
-                      "Sebastolobus alascanus" )) {
+  for (which_spp in c(
+    # "Atheresthes stomias", "Gadus chalcogrammus", 
+    # "Gadus macrocephalus", "Glyptocephalus zachirus",
+    # "Hippoglossoides elassodon", "Hippoglossus stenolepis",
+    # "Lepidopsetta bilineata", "Lepidopsetta polyxystra",
+    # "Microstomus pacificus", "Sebastes alutus",
+    # "Sebastes B_R", "Sebastes brevispinis",
+    # "Sebastes polyspinis", "Sebastes variabilis", 
+    # "Sebastolobus alascanus" 
+    # "Anoplopoma fimbria",
+    # "Beringraja spp.",
+    # "Enteroctopus dofleini"
+    # "Pleurogrammus monopterygius"
+    "Sebastes borealis",
+    "Sebastes ruberrimus",
+    "Sebastes variegatus",
+    "Squalus suckleyi"
+  )) {
     
     VAST_dir <- paste0("G:/Oyafuso/VAST_Runs_EFH/Single_Species/", which_spp,
                        ifelse(depth_in_model, "_depth", ""), "/")
@@ -124,7 +134,7 @@ for (depth_in_model in c(T, F)) {
         
         dyn.unload(paste0(VAST_dir, "VAST_v12_0_0.dll"))
       }
-
+      
       
       ############################################
       ## Plot Density across years for each Species
@@ -152,7 +162,7 @@ for (depth_in_model in c(T, F)) {
             coords = Extrapolation_List$Data_Extrap[,c("E_km", "N_km")], 
             data = data.frame(density = vals) )
           goa_ras <- raster::raster(goa, 
-                                    resolution = 5)
+                                    resolution = 10)
           goa_ras <- raster::rasterize(x = goa, 
                                        y = goa_ras, 
                                        field = "density")

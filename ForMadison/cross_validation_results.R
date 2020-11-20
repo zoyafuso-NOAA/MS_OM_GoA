@@ -45,7 +45,16 @@ which_spp <- c(
   
   "Sebastes polyspinis",
   "Sebastes variabilis",
-  "Sebastolobus alascanus"
+  "Sebastolobus alascanus",
+  
+  "Anoplopoma fimbria",
+  "Beringraja spp.",
+  "Enteroctopus dofleini",
+  "Pleurogrammus monopterygius",
+  "Sebastes borealis",
+  # "Sebastes ruberrimus",
+  "Sebastes variegatus",
+  "Squalus suckleyi"
 )
 
 ns <- length(which_spp)
@@ -63,8 +72,8 @@ CV_df <- expand.grid(species = which_spp,
 CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
          "RMSE", "RRMSE", "MAE", "RMAE")] <- NA
 
-for (irow in (1:nrow(CV_df))[-206] ) {
-  
+for (irow in (1:nrow(CV_df))[-297] ) {
+
   #Load fitted object
   result_dir <- paste0(VAST_dir, CV_df$species[irow], 
                        ifelse(CV_df$depth[irow],  "_depth", ""), "/")

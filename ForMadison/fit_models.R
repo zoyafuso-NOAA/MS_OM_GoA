@@ -36,27 +36,36 @@ if(!dir.exists(VAST_dir)) dir.create(VAST_dir, recursive = T)
 master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 
 for (which_spp in c(
-  "Sebastes polyspinis",
-  "Sebastes variabilis",
-  "Sebastes brevispinis",
+  # "Sebastes polyspinis",
+  # "Sebastes variabilis",
+  # "Sebastes brevispinis",
+  # 
+  # "Microstomus pacificus",
+  # "Lepidopsetta polyxystra",
+  # "Lepidopsetta bilineata",
+  # 
+  # "Hippoglossus stenolepis",
+  # "Hippoglossoides elassodon",
+  # "Glyptocephalus zachirus",
+  # 
+  # "Gadus macrocephalus",
+  # "Gadus chalcogrammus",
+  # "Sebastes B_R",
+  # 
+  # "Sebastes alutus",
+  # "Atheresthes stomias",
+  # "Sebastolobus alascanus"
+  # "Anoplopoma fimbria",
+  # "Beringraja spp.",
+  # "Enteroctopus dofleini",
+  # "Pleurogrammus monopterygius",
+  # "Sebastes borealis",
+  "Sebastes ruberrimus",
+  # "Sebastes variegatus",
+  # "Squalus suckleyi" 
+  )) {
   
-  "Microstomus pacificus",
-  "Lepidopsetta polyxystra",
-  "Lepidopsetta bilineata",
-  
-  "Hippoglossus stenolepis",
-  "Hippoglossoides elassodon",
-  "Glyptocephalus zachirus",
-  
-  "Gadus macrocephalus",
-  "Gadus chalcogrammus",
-  "Sebastes B_R",
-  
-  "Sebastes alutus",
-  "Atheresthes stomias",
-  "Sebastolobus alascanus")) {
-  
-  for (depth_in_model in c(F, T)) {
+  for (depth_in_model in c(F, T)[2]) {
     # If depth covariates are in the model, import modified function
     if (depth_in_model) source(paste0(github_dir, "fit_model_X_GTP.R"))
     
