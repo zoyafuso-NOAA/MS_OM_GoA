@@ -161,7 +161,7 @@ RMSE$depth_in_model <- c(F, T)[apply(X = RMSE[,-1],
 ##################################################
 N <- nrow(Extrapolation_depths)
 D_gct = Index <- array(dim = c(N, ns, 24), 
-                       dimnames = list(NULL, which_spp, NULL))
+                       dimnames = list(NULL, sort(which_spp), NULL))
 
 for(ispp in 1:ns){
   depth_in_model <- RMSE$depth_in_model[ispp]
