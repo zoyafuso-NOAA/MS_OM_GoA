@@ -57,10 +57,10 @@ for (which_spp in c(
   # "Sebastolobus alascanus"
   # "Anoplopoma fimbria",
   # "Beringraja spp.",
-  # "Enteroctopus dofleini",
+  "Octopus spp."
   # "Pleurogrammus monopterygius",
   # "Sebastes borealis",
-  "Sebastes ruberrimus",
+  # "Sebastes ruberrimus",
   # "Sebastes variegatus",
   # "Squalus suckleyi" 
   )) {

@@ -122,6 +122,18 @@ skates <- data %>% dplyr::filter(
 data <- as.data.frame(rbind(data, skates))
 
 ##################################################
+####  Sum catches of octopuses
+##################################################
+octopus <- data %>% dplyr::filter(
+  COMMON_NAME %in% c("octopus unid.",
+                     "giant octopus")) %>%
+  group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+  summarise(WEIGHT = sum(WEIGHT)) %>%
+  ungroup() %>%
+  mutate(SPECIES_NAME = "Octopus spp.", COMMON_NAME = "octopus spp.")
+data <- as.data.frame(rbind(data, octopus))
+
+##################################################
 #### Filter species to make it easier to import later
 #### 1. Arrowtooth Flounder (Atherestes stomias, code 10110)
 #### 2. Pacific Cod (Gadus macrocephalus, code 21720)
@@ -170,7 +182,7 @@ data = subset(data,
                                  "spiny dogfish",
                                  "skates spp.",
                                  "yelloweye rockfish",
-                                 "giant octopus",
+                                 "octopus spp.",
                                  "harlequin rockfish"
               ))
 
