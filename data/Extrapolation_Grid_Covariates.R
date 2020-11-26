@@ -26,6 +26,7 @@ github_dir2 <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/data/"
 ####   Import Current Strata (need to match the current spatial domain)
 ####   Import Extrapolation grid
 ####   Import CPUE data
+####   Untrawlable areas
 ##################################################
 bathy <- raster::raster( paste0(EFH_dir, "dblbnd.adf"))
 bathy <- bathy + abs(min(values(bathy), na.rm = T))
@@ -39,10 +40,6 @@ current_survey_mask <- sp::spTransform(x = current_survey_mask,
                                        CRSobj = crs(bathy))
 current_survey_mask <- rgeos::gUnaryUnion(spgeom = current_survey_mask)
 
-goa_grid_nountrawl <- read.csv(
-  paste0(github_dir, 
-         "extrapolation_grid/GOA_ALL_nountrawl.csv"))
-
 goa_grid <- read.csv(paste0(github_dir, 
                             "extrapolation_grid/GOAThorsonGrid.csv"))
 
@@ -51,6 +48,10 @@ goa_grid$Shape_Area <- goa_grid$Shape_Area / 1000 / 1000 #Convert to km2
 names(goa_grid) <- c( "Id", "Area_km2", "Lon", "Lat")
 
 data = read.csv(paste0(github_dir, "GOA_multspp.csv"))
+
+goa_grid_nountrawl <- read.csv(
+  paste0(github_dir, 
+         "extrapolation_grid/GOA_ALL_nountrawl.csv"))
 
 ##################################################
 ####   Transform extrapolation grid to aea, extract bathymetry values onto grid
@@ -98,6 +99,17 @@ Extrapolation_depths[, c("E_km", "N_km")] <- project(
   proj = "+proj=utm +zone=5N +units=km" )
 
 ##################################################
+####   Create indices to easily subset <700 m cells and untrawlable cells
+##################################################
+Extrapolation_depths$shallower_than_700m <- cells_shallower_than_700m <-
+  Extrapolation_depths$DEPTH_EFH <= 700
+Extrapolation_depths$trawlable <- cells_trawlable <-
+  Extrapolation_depths$Id %in% goa_grid_nountrawl$Id
+Extrapolation_depths$shallow_trawlable <- 
+  rowSums(Extrapolation_depths[, c("shallower_than_700m", 
+                                   "trawlable")]) == 2
+
+##################################################
 ####   scale grid bathymetry values to standard normal, using the mean and sd
 ####   of the BTS data
 ##################################################
@@ -115,37 +127,13 @@ Extrapolation_depths$LOG_DEPTH_EFH_CEN_SQ <-
 ##################################################
 Extrapolation_depths$stratum <- raster::extract( x = current_survey_strata, 
                                                  y = grid_shape_aea)$STRATUM
-
-##################################################
-####   Create indices to easily subset <700 m cells and untrawlable cells
-##################################################
-Extrapolation_depths$shallower_than_700m <- cells_shallower_than_700m <-
-  Extrapolation_depths$DEPTH_EFH <= 700
-Extrapolation_depths$trawlable <- cells_trawlable <-
-  Extrapolation_depths$Id %in% goa_grid_nountrawl$Id
-Extrapolation_depths$shallow_trawlable <- 
-  rowSums(Extrapolation_depths[, c("shallower_than_700m", 
-                                   "trawlable")]) == 2
-
-par(mar = c(4,4,1,1))
-plot(Lat ~ Lon, 
-     asp = 1,
-     data = Extrapolation_depths, 
-     pch = 15, cex = 0.3,
-     las = 1)
-points(Lat ~ Lon, 
-       data = Extrapolation_depths[!Extrapolation_depths$shallow_trawlable, ], 
-       pch = 15, cex = 0.3, col = "red")
+Extrapolation_depths$stratum[is.na(Extrapolation_depths$stratum)] <- 0
 
 ##################################################
 ####   Save
 ##################################################
-save(list = c("Extrapolation_depths", 
-              "cells_shallower_than_700m", 
-              "cells_trawlable"),
+save(list = c("Extrapolation_depths"),
      file = paste0(github_dir, "Extrapolation_depths.RData"))
 
-save(list = c("Extrapolation_depths", 
-              "cells_shallower_than_700m", 
-              "cells_trawlable"),
+save(list = c("Extrapolation_depths"),
      file = paste0(github_dir2, "Extrapolation_depths.RData"))

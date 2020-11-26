@@ -15,17 +15,6 @@
 ###############################################################################
 
 ##################################################
-####  Import Libraries
-##################################################
-library(VAST)
-library(raster)
-library(sp)
-library(rgdal)
-library(RColorBrewer)
-library(plotrix)
-library(rnaturalearth)
-
-##################################################
 #### Set up directories     
 ##################################################
 rm(list = ls())
@@ -35,6 +24,17 @@ github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
               "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
+
+##################################################
+####  Import Libraries
+##################################################
+library(VAST)
+library(raster)
+library(sp)
+library(rgdal)
+library(RColorBrewer)
+library(plotrix)
+library(rnaturalearth)
 
 depth_in_model <- T
 for (ispp in c(1:2)) {

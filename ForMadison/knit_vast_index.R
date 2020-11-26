@@ -1,7 +1,7 @@
 ###############################################################################
-## Project:       Simulate Data 
+## Project:       
 ## Author:        Zack Oyafuso (zack.oyafuso@noaa.gov)
-## Description:   simulate 10 sets of data for each species and save 
+## Description:    
 ###############################################################################
 rm(list = ls())
 
@@ -37,17 +37,17 @@ load(paste0(github_dir, "data/optimization_data.RData"))
 ##################################################
 vast_index <- data.frame()
 
-for (ispp in 1:ns) {
+for (ispp in 1:ns_all) {
   temp_index <- read.csv(
     paste0(VAST_dir, 
-           sci_names[ispp], 
+           sci_names_all[ispp], 
            ifelse(RMSE$depth_in_model[ispp], "_depth", ""),
            "/diagnostics/Table_for_SS3.csv"))[Years2Include,]
   
   vast_index = rbind(vast_index,
                      with( temp_index, 
                            data.frame(
-                             spp = sci_names[ispp],
+                             spp = sci_names_all[ispp],
                              year = Year,
                              est = Estimate_metric_tons, 
                              cv = SD_mt / Estimate_metric_tons)
