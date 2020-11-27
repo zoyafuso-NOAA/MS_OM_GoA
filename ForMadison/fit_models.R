@@ -230,21 +230,10 @@ for (which_spp in c(
     }
     
     ##################################################
-    ####   Standard DIagnostics
-    ##################################################
-    # diagnostics <- plot_results( fit, 
-    #                              check_residuals = T,
-    #                              working_dir = paste0(result_dir, 
-    #                                                   "diagnostics/"))
-    
-    ##################################################
     ####   Save
     ##################################################
     save(list = c("fit", "Data_Geostat"), 
          file = paste0(result_dir, "/fit.RData"))
-    
-    # save(list = "diagnostics", 
-    #      file = paste0(result_dir, "diagnostics/diagnostics.RData"))
 
     ##################################################
     ####   10-fold Cross Validation
@@ -268,7 +257,7 @@ for (which_spp in c(
       PredTF_i <- ifelse( Data_Geostat$fold == fI, TRUE, FALSE )
       
       if (!depth_in_model) {
-        # Refit, starting at MLE, without calculating standard errors (to save time)
+        # Refit, starting at MLE
         fit_new = FishStatsUtils::fit_model( 
           "settings" = settings, 
           "working_dir" = paste0(result_dir,"CV_", fI),

@@ -26,7 +26,7 @@ github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
 ##################################
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
-which_spp <- c( 
+which_spp <- sort(c( 
   "Atheresthes stomias",
   "Gadus chalcogrammus",
   "Gadus macrocephalus",
@@ -49,13 +49,13 @@ which_spp <- c(
   
   "Anoplopoma fimbria",
   "Beringraja spp.",
-  "Enteroctopus dofleini",
+  "Octopus spp.",
   "Pleurogrammus monopterygius",
   "Sebastes borealis",
   # "Sebastes ruberrimus",
   "Sebastes variegatus",
   "Squalus suckleyi"
-)
+))
 
 ns <- length(which_spp)
 
@@ -72,8 +72,8 @@ CV_df <- expand.grid(species = which_spp,
 CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
          "RMSE", "RRMSE", "MAE", "RMAE")] <- NA
 
-for (irow in (1:nrow(CV_df))[-297] ) {
-
+for (irow in (302:nrow(CV_df)) ) {
+  
   #Load fitted object
   result_dir <- paste0(VAST_dir, CV_df$species[irow], 
                        ifelse(CV_df$depth[irow],  "_depth", ""), "/")
@@ -161,7 +161,7 @@ RMSE$depth_in_model <- c(F, T)[apply(X = RMSE[,-1],
 ##################################################
 N <- nrow(Extrapolation_depths)
 D_gct = Index <- array(dim = c(N, ns, 24), 
-                       dimnames = list(NULL, sort(which_spp), NULL))
+                       dimnames = list(NULL, which_spp, NULL))
 
 for(ispp in 1:ns){
   depth_in_model <- RMSE$depth_in_model[ispp]

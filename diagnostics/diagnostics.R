@@ -69,12 +69,12 @@ for (depth_in_model in c(T, F)) {
     # "Sebastolobus alascanus" 
     # "Anoplopoma fimbria",
     # "Beringraja spp.",
-    # "Enteroctopus dofleini"
+    "Octopus spp."
     # "Pleurogrammus monopterygius"
-    "Sebastes borealis",
-    "Sebastes ruberrimus",
-    "Sebastes variegatus",
-    "Squalus suckleyi"
+    # "Sebastes borealis",
+    # "Sebastes ruberrimus",
+    # "Sebastes variegatus",
+    # "Squalus suckleyi"
   )) {
     
     VAST_dir <- paste0("G:/Oyafuso/VAST_Runs_EFH/Single_Species/", which_spp,
@@ -396,20 +396,6 @@ for (depth_in_model in c(T, F)) {
         dev.off()
       }
       
-      if(!dir.exists(paste0(diag_dir,"Index/"))) 
-        dir.create(paste0(diag_dir,"Index/"))
-      Index = plot_biomass_index( DirName=paste0(diag_dir,"Index/"), 
-                                  TmbData=TmbData, 
-                                  Sdreport=Opt[["SD"]], 
-                                  Year_Set=Year_Set, 
-                                  Years2Include=Years2Include, 
-                                  strata_names = strata.limits <- data.frame(
-                                    "STRATA" = c("All_areas"),#, "west_of_140W"),
-                                    "west_border" = c(-Inf),#, -Inf),
-                                    "east_border" = c(Inf)#, -140)
-                                  )[,1], 
-                                  use_biascorr=TRUE, 
-                                  category_names=levels(Data_Geostat[,"spp"]) )
     }
   }
 }
