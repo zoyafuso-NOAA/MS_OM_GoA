@@ -1,30 +1,20 @@
 ###############################################################################
-## Project:       
+## Project:       Knit together VAST results
 ## Author:        Zack Oyafuso (zack.oyafuso@noaa.gov)
-## Description:    
+## Description:   Calculate CVs for VAST Runs, save to file 
 ###############################################################################
 rm(list = ls())
+
+##################################################
+####   Set up directories
+##################################################
+github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
+VAST_dir <- "G:/Oyafuso/VAST_Runs_EFH/Single_Species/"
 
 ##################################################
 ####    Import required packages
 ##################################################
 library(FishStatsUtils)
-
-##################################################
-####   Set up directories
-####
-####   Set up some constants of the optimization
-####   Multispeceis: Spatiotemporal Variance, species specific CV constraints
-####   Single_Species: Spatiotemporal Variance, univariate optimization, 
-##################################################
-which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[3]
-
-github_dir <- paste0(c("/Users/zackoyafuso/Documents/", 
-                       "C:/Users/Zack Oyafuso/Documents/",
-                       "C:/Users/zack.oyafuso/Work/")[which_machine],
-                     "GitHub/Optimal_Allocation_GoA/")
-
-VAST_dir <- "G:/Oyafuso/VAST_Runs_EFH/Single_Species/"
 
 ##################################################
 ####    Load Data
@@ -38,12 +28,14 @@ load(paste0(github_dir, "data/optimization_data.RData"))
 vast_index <- data.frame()
 
 for (ispp in 1:ns_all) {
+  #Load vast output
   temp_index <- read.csv(
     paste0(VAST_dir, 
            sci_names_all[ispp], 
            ifelse(RMSE$depth_in_model[ispp], "_depth", ""),
            "/diagnostics/Table_for_SS3.csv"))[Years2Include,]
   
+  #Record CV 
   vast_index = rbind(vast_index,
                      with( temp_index, 
                            data.frame(
@@ -56,7 +48,7 @@ for (ispp in 1:ns_all) {
 }
 
 ##################################################
-####    Plot
+####    Plot for show
 ##################################################
 par(mar = c(3,12,1,1))
 boxplot(cv ~ spp, 
