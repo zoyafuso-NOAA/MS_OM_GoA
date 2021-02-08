@@ -58,6 +58,10 @@ RMSE$common_name <- c(
   "harlequin rockfish", "shortspine thornyhead", "spiny dogfish"
 )
 
+plot_spp_names <- gsub(x = RMSE$species, 
+                     pattern = "\\.", 
+                     replacement = "" )
+
 #################################################
 #### Loop over species
 ##################################################
@@ -67,13 +71,14 @@ for (which_spp in 1:nrow(RMSE)) {
   ###################################
   ## Set up png plot
   ###################################
-  plot_filename <- paste0(output_dir, RMSE$species[which_spp], "_VAST.png")
+  plot_filename <- paste0(output_dir, plot_spp_names[which_spp], "_VAST.png")
   
   png(filename = plot_filename,
       width = 170,
       height = 220,
       units = "mm",
-      res = 500)
+      res = 500,
+      family = "serif")
   
   ###################################
   ## Set up plot layout
@@ -191,9 +196,9 @@ for (which_spp in 1:nrow(RMSE)) {
          "B) Spatiotemporal random effect for the occurrence predictor\n",
          "C) Spatiotemporal random effect for the positive response\n", 
          "D) Predicted density across years\n",
-         "E) Probability integral transform (PIT) residual QQ plot\n",
-         "F) PIT residual versus ranked model predictions\n",
-         "G) PIT residual over space"),
+         "E) QQ plot of probability integral transform (PIT) residuals\n",
+         "F) PIT residuals versus ranked model predictions\n",
+         "G) PIT residuals over space"),
        cex = 1.25,
        family = "serif")
   
