@@ -20,7 +20,7 @@ github_dir2 <- paste0(c("C:/Users/Zack Oyafuso/Documents/",
                         "C:/Users/zack.oyafuso/Work/")[which_machine],
                       "GitHub/Optimal_Allocation_GoA/")
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
-              "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
+              "G:/Oyafuso/VAST_Runs_EFH/Single_Species_orginal/")[which_machine]
 output_dir <- paste0(github_dir, "appendix_plots/")
 if(!dir.exists(output_dir)) dir.create(path = output_dir)
 
@@ -32,6 +32,7 @@ library(rgdal)
 library(raster)
 library(DHARMa)
 library(RColorBrewer)
+library(VAST)
 
 ##################################################
 #### Load Data
@@ -65,8 +66,8 @@ plot_spp_names <- gsub(x = RMSE$species,
 #################################################
 #### Loop over species
 ##################################################
-# for (which_spp in 1) {
-for (which_spp in 1:nrow(RMSE)) {
+for (which_spp in 2) {
+# for (which_spp in 1:nrow(RMSE)) {
   
   ###################################
   ## Set up png plot
@@ -200,6 +201,7 @@ for (which_spp in 1:nrow(RMSE)) {
          "F) PIT residuals versus ranked model predictions\n",
          "G) PIT residuals over space"),
        cex = 1.25,
+       adj = 1,
        family = "serif")
   
   box()
@@ -208,241 +210,241 @@ for (which_spp in 1:nrow(RMSE)) {
   ## Plot Spatiotemporal Effects
   ########################################
 
-  for(epstype in 1:2){
-    ## Base Layer
-    plot(1, 
-         type = "n",
-         xlim = range(Extrapolation_depths$E_km),
-         ylim = with(Extrapolation_depths, 
-                     c(min(N_km) + 0.0*yrange_diff, 
-                       max(N_km) + 6*yrange_diff)), 
-         axes = F,
-         ann = F,
-         asp = 1)
-    box()
-    
-    ## Subtitle
-    mtext(side = 3, 
-          text = c("B) Spatiotemporal Effect\n(Prob. of Occurrence)", 
-                   "C) Spatiotemporal Effect\n(Positive Response)")[epstype], 
-          line = -2.5,
-          cex = 0.8)
-    
-    ## z-lim applied to all plots
-    zlim_ <- max(abs(
-      unlist(list(report$Epsilon1_gct[, 1, years_included],
-                  report$Epsilon2_gct[, 1, years_included])[epstype])))
-    
-    for (iyear in 1:length(years_included)) {
-      
-      #Extract density values for a species in a year,
-      vals = list(report$Epsilon1_gct[, 1, years_included[iyear] ],
-                  report$Epsilon2_gct[, 1, years_included[iyear]])[[epstype]]
-      
-      ##plot spatiotemporal effect
-      goa = sp::SpatialPointsDataFrame(
-        coords = Extrapolation_depths[, c("E_km", "N_km")],
-        data = data.frame(density = vals) )
-      goa_ras = raster::raster(x = goa,
-                               resolution = 10)
-      goa_ras = raster::rasterize(x = goa,
-                                  y = goa_ras,
-                                  field = "density")
-      
-      offset_y <- 0.6 * yrange_diff * (iyear - 1)
-      goa_ras <- raster::shift(goa_ras,
-                               dy = offset_y )
-      
-      image(x = goa_ras,
-            add = T,
-            axes = F,
-            ann = F,
-            zlim = zlim_ * c(-1, 1),
-            col = colors,
-            asp = 1)
-      
-      #Year label
-      text(x = goa_ras@extent[1] + 0.7 * diff(goa_ras@extent[1:2]),
-           y = goa_ras@extent[3]+ 0.7 * diff(goa_ras@extent[3:4]),
-           labels = year_set[years_included[iyear]],
-           cex = 1)
-      
-    }
-    
-    ## Add legend
-    plotrix::color.legend(
-      xl = xrange[1] + xrange_diff * 0.1,
-      xr = xrange[1] + xrange_diff * 0.9,
-      yb = yrange[1] + yrange_diff * -0.4,
-      yt = yrange[1] + yrange_diff * -0.25,
-      legend = pretty(((-ceiling(zlim_)):(ceiling(zlim_))), n = 3),
-      colorRampPalette(colors)(1000) ,
-      gradient = "x", 
-      align = "rb",
-      cex = 0.75)
-  }
-  
-  ########################################
-  ## Predicted Density
-  ########################################
-  ## Base Layer
-  plot(1, 
-       type = "n",
-       xlim = range(Extrapolation_depths$E_km),
-       ylim = with(Extrapolation_depths, 
-                   c(min(N_km) + 0.0 * yrange_diff, 
-                     max(N_km) + 6 * yrange_diff)), 
-       axes = F,
-       ann = F,
-       asp = 1)
-  box()
-  
-  ## Subtitle
-  mtext(side = 3, 
-        text = "D) Predicted Density\n(kg/km2)", 
-        line = -2.5,
-        cex = 0.8)
-  
-  ## Calculate quantiles of the density distribution
-  vals  = report$D_gct[, 1, years_included]
-  val_cuts = c(0,quantile(x = vals[vals > 10], 
-                          probs = seq(0, 1, length = 9) ))
-  
-  #Add legend
-  val_cuts_legend = round(val_cuts[-1])
-  colors = c("lightgrey", brewer.pal(n = 7, name = "Oranges"), "black")
-  legend(x = xrange[1],
-         y = yrange[1] - yrange_diff * 0.15,
-         fill = colors, 
-         bty = "n",
-         ncol = 3, 
-         cex = 0.7,
-         legend = c("< 10", paste0("10-", val_cuts_legend[2]),
-                    paste0(val_cuts_legend[2:(length(val_cuts_legend)-1)], "-",
-                           val_cuts_legend[3:length(val_cuts_legend)])) )
-  
-  ## Loop over years and plot spatial distributions
-  for (iyear in 1:length(years_included)) {
-    
-    #Extract density values for a species in a year,
-    vals  = report$D_gct[, 1, years_included[iyear]]
-    
-    #plot density
-    goa = sp::SpatialPointsDataFrame(
-      coords = Extrapolation_depths[, c("E_km", "N_km")],
-      data = data.frame(density = vals) )
-    goa_ras = raster::raster(x = goa,
-                             resolution = 10)
-    goa_ras = raster::rasterize(x = goa,
-                                y = goa_ras,
-                                field = "density")
-    
-    #Discretize into quantiles
-    values(goa_ras) = cut(x = values(goa_ras),
-                          breaks = val_cuts)
-    
-    offset_y <- 0.6 * yrange_diff * (iyear - 1)
-    goa_ras <- raster::shift(goa_ras,
-                             dy = offset_y )
-    
-    #lay image
-    image(x = goa_ras,
-          asp = 1,
-          axes = F,
-          ann = F,
-          add = T,
-          col = colors)
-    
-    #Year label
-    text(x = goa_ras@extent[1] + 0.7 * diff(goa_ras@extent[1:2]),
-         y = goa_ras@extent[3]+ 0.7 * diff(goa_ras@extent[3:4]),
-         labels = year_set[years_included[iyear]],
-         cex = 1)
-  }
-  ## Calculate DHARMa Residuals
-  dyn.load(paste0(result_dir, "/VAST_v12_0_0.dll"))
-  dharmaRes = summary( fit, what = "residuals", working_dir = NA )
-  dyn.unload(paste0(result_dir, "/VAST_v12_0_0.dll"))
-  
-  par(mar = c(3.5, 4, 1.25, 1))
-  ###################################
-  ## QQ Plot
-  ###################################
-  gap::qqunif(dharmaRes$scaledResiduals, pch = 2, bty = "n",
-              logscale = F, col = "black", cex = 0.6,
-              cex.main = 1, ann = F, cex.axis = 0.8)
-  
-  mtext(side = 1, line = 2, text = "Expected", cex = 0.7)
-  mtext(side = 2, line = 2.5, text = "Observed", cex = 0.7)
-  
-  box()
-  box(which = "figure")
-  text(x = -0.31,
-       y = 1.05,
-       label = "E)",
-       xpd = NA,
-       cex = 1.25)
-  
-  ###################################
-  ## Residual Plot
-  ###################################
-  DHARMa::plotResiduals(dharmaRes,
-                        rank = TRUE,
-                        ann = F,
-                        xlim = c(0, 1))
-  mtext(side = 1,
-        line = 2,
-        text = "Rank-Transformed Model Predictions",
-        cex = 0.6)
-  mtext(side = 2,
-        line = 2,
-        text = "Standardized\nResidual",
-        cex = 0.6)
-  box(which = "figure")
-  text(x = -0.3,
-       y = 1.05,
-       label = "F)",
-       xpd = NA,
-       cex = 1.25)
-  
-  #############################
-  ## Residuals in Space
-  #############################
-  goa = sp::SpatialPointsDataFrame(
-    coords = fit$spatial_list$loc_i,
-    data = data.frame(PIT = dharmaRes$scaledResiduals) )
-  goa_ras = raster::raster(x = goa,
-                           resolution = 15)
-  goa_ras = raster::rasterize(x = goa,
-                              y = goa_ras,
-                              field = "PIT")
-  
-  par(mar = c(1, 1, 1, 1))
-  image(goa_ras, 
-        col = RColorBrewer::brewer.pal(n = 11, name = "RdBu"), 
-        zlim = c(0, 1),
-        axes = F,
-        ann = F,
-        asp = 1)
-  box(which = "figure")
-  
-  ## Legend
-  plotrix::color.legend(
-    xl = xrange[1] + xrange_diff *  0.25,
-    xr = xrange[1] + xrange_diff *  0.75,
-    yb = yrange[1] + yrange_diff * -0.30,
-    yt = yrange[1] + yrange_diff * -0.15,
-    legend = seq(from = 0, to = 1, by = 0.25),
-    rect.col = RColorBrewer::brewer.pal(n = 11, name = "RdBu"),
-    gradient = "x", 
-    align = "rb",
-    cex = 0.5)
-  
-  text(x = xrange[1] + xrange_diff * 0,
-       y = yrange[2] + yrange_diff * 0.35,
-       labels = "G)",
-       xpd = NA,
-       cex = 1.25)
+  # for(epstype in 1:2){
+  #   ## Base Layer
+  #   plot(1, 
+  #        type = "n",
+  #        xlim = range(Extrapolation_depths$E_km),
+  #        ylim = with(Extrapolation_depths, 
+  #                    c(min(N_km) + 0.0*yrange_diff, 
+  #                      max(N_km) + 6*yrange_diff)), 
+  #        axes = F,
+  #        ann = F,
+  #        asp = 1)
+  #   box()
+  #   
+  #   ## Subtitle
+  #   mtext(side = 3, 
+  #         text = c("B) Spatiotemporal Effect\n(Prob. of Occurrence)", 
+  #                  "C) Spatiotemporal Effect\n(Positive Response)")[epstype], 
+  #         line = -2.5,
+  #         cex = 0.8)
+  #   
+  #   ## z-lim applied to all plots
+  #   zlim_ <- max(abs(
+  #     unlist(list(report$Epsilon1_gct[, 1, years_included],
+  #                 report$Epsilon2_gct[, 1, years_included])[epstype])))
+  #   
+  #   for (iyear in 1:length(years_included)) {
+  #     
+  #     #Extract density values for a species in a year,
+  #     vals = list(report$Epsilon1_gct[, 1, years_included[iyear] ],
+  #                 report$Epsilon2_gct[, 1, years_included[iyear]])[[epstype]]
+  #     
+  #     ##plot spatiotemporal effect
+  #     goa = sp::SpatialPointsDataFrame(
+  #       coords = Extrapolation_depths[, c("E_km", "N_km")],
+  #       data = data.frame(density = vals) )
+  #     goa_ras = raster::raster(x = goa,
+  #                              resolution = 10)
+  #     goa_ras = raster::rasterize(x = goa,
+  #                                 y = goa_ras,
+  #                                 field = "density")
+  #     
+  #     offset_y <- 0.6 * yrange_diff * (iyear - 1)
+  #     goa_ras <- raster::shift(goa_ras,
+  #                              dy = offset_y )
+  #     
+  #     image(x = goa_ras,
+  #           add = T,
+  #           axes = F,
+  #           ann = F,
+  #           zlim = zlim_ * c(-1, 1),
+  #           col = colors,
+  #           asp = 1)
+  #     
+  #     #Year label
+  #     text(x = goa_ras@extent[1] + 0.7 * diff(goa_ras@extent[1:2]),
+  #          y = goa_ras@extent[3]+ 0.7 * diff(goa_ras@extent[3:4]),
+  #          labels = year_set[years_included[iyear]],
+  #          cex = 1)
+  #     
+  #   }
+  #   
+  #   ## Add legend
+  #   plotrix::color.legend(
+  #     xl = xrange[1] + xrange_diff * 0.1,
+  #     xr = xrange[1] + xrange_diff * 0.9,
+  #     yb = yrange[1] + yrange_diff * -0.4,
+  #     yt = yrange[1] + yrange_diff * -0.25,
+  #     legend = pretty(((-ceiling(zlim_)):(ceiling(zlim_))), n = 3),
+  #     colorRampPalette(colors)(1000) ,
+  #     gradient = "x", 
+  #     align = "rb",
+  #     cex = 0.75)
+  # }
+  # 
+  # ########################################
+  # ## Predicted Density
+  # ########################################
+  # ## Base Layer
+  # plot(1, 
+  #      type = "n",
+  #      xlim = range(Extrapolation_depths$E_km),
+  #      ylim = with(Extrapolation_depths, 
+  #                  c(min(N_km) + 0.0 * yrange_diff, 
+  #                    max(N_km) + 6 * yrange_diff)), 
+  #      axes = F,
+  #      ann = F,
+  #      asp = 1)
+  # box()
+  # 
+  # ## Subtitle
+  # mtext(side = 3, 
+  #       text = "D) Predicted Density\n(kg/km2)", 
+  #       line = -2.5,
+  #       cex = 0.8)
+  # 
+  # ## Calculate quantiles of the density distribution
+  # vals  = report$D_gct[, 1, years_included]
+  # val_cuts = c(0,quantile(x = vals[vals > 10], 
+  #                         probs = seq(0, 1, length = 9) ))
+  # 
+  # #Add legend
+  # val_cuts_legend = round(val_cuts[-1])
+  # colors = c("lightgrey", brewer.pal(n = 7, name = "Oranges"), "black")
+  # legend(x = xrange[1],
+  #        y = yrange[1] - yrange_diff * 0.15,
+  #        fill = colors, 
+  #        bty = "n",
+  #        ncol = 3, 
+  #        cex = 0.7,
+  #        legend = c("< 10", paste0("10-", val_cuts_legend[2]),
+  #                   paste0(val_cuts_legend[2:(length(val_cuts_legend)-1)], "-",
+  #                          val_cuts_legend[3:length(val_cuts_legend)])) )
+  # 
+  # ## Loop over years and plot spatial distributions
+  # for (iyear in 1:length(years_included)) {
+  #   
+  #   #Extract density values for a species in a year,
+  #   vals  = report$D_gct[, 1, years_included[iyear]]
+  #   
+  #   #plot density
+  #   goa = sp::SpatialPointsDataFrame(
+  #     coords = Extrapolation_depths[, c("E_km", "N_km")],
+  #     data = data.frame(density = vals) )
+  #   goa_ras = raster::raster(x = goa,
+  #                            resolution = 10)
+  #   goa_ras = raster::rasterize(x = goa,
+  #                               y = goa_ras,
+  #                               field = "density")
+  #   
+  #   #Discretize into quantiles
+  #   values(goa_ras) = cut(x = values(goa_ras),
+  #                         breaks = val_cuts)
+  #   
+  #   offset_y <- 0.6 * yrange_diff * (iyear - 1)
+  #   goa_ras <- raster::shift(goa_ras,
+  #                            dy = offset_y )
+  #   
+  #   #lay image
+  #   image(x = goa_ras,
+  #         asp = 1,
+  #         axes = F,
+  #         ann = F,
+  #         add = T,
+  #         col = colors)
+  #   
+  #   #Year label
+  #   text(x = goa_ras@extent[1] + 0.7 * diff(goa_ras@extent[1:2]),
+  #        y = goa_ras@extent[3]+ 0.7 * diff(goa_ras@extent[3:4]),
+  #        labels = year_set[years_included[iyear]],
+  #        cex = 1)
+  # }
+  # ## Calculate DHARMa Residuals
+  # dyn.load(paste0(result_dir, "/VAST_v12_0_0.dll"))
+  # dharmaRes = summary( fit, what = "residuals", working_dir = NA )
+  # dyn.unload(paste0(result_dir, "/VAST_v12_0_0.dll"))
+  # 
+  # par(mar = c(3.5, 4, 1.25, 1))
+  # ###################################
+  # ## QQ Plot
+  # ###################################
+  # gap::qqunif(dharmaRes$scaledResiduals, pch = 2, bty = "n",
+  #             logscale = F, col = "black", cex = 0.6,
+  #             cex.main = 1, ann = F, cex.axis = 0.8)
+  # 
+  # mtext(side = 1, line = 2, text = "Expected", cex = 0.7)
+  # mtext(side = 2, line = 2.5, text = "Observed", cex = 0.7)
+  # 
+  # box()
+  # box(which = "figure")
+  # text(x = -0.31,
+  #      y = 1.05,
+  #      label = "E)",
+  #      xpd = NA,
+  #      cex = 1.25)
+  # 
+  # ###################################
+  # ## Residual Plot
+  # ###################################
+  # DHARMa::plotResiduals(dharmaRes,
+  #                       rank = TRUE,
+  #                       ann = F,
+  #                       xlim = c(0, 1))
+  # mtext(side = 1,
+  #       line = 2,
+  #       text = "Rank-Transformed Model Predictions",
+  #       cex = 0.6)
+  # mtext(side = 2,
+  #       line = 2,
+  #       text = "Standardized\nResidual",
+  #       cex = 0.6)
+  # box(which = "figure")
+  # text(x = -0.3,
+  #      y = 1.05,
+  #      label = "F)",
+  #      xpd = NA,
+  #      cex = 1.25)
+  # 
+  # #############################
+  # ## Residuals in Space
+  # #############################
+  # goa = sp::SpatialPointsDataFrame(
+  #   coords = fit$spatial_list$loc_i,
+  #   data = data.frame(PIT = dharmaRes$scaledResiduals) )
+  # goa_ras = raster::raster(x = goa,
+  #                          resolution = 15)
+  # goa_ras = raster::rasterize(x = goa,
+  #                             y = goa_ras,
+  #                             field = "PIT")
+  # 
+  # par(mar = c(1, 1, 1, 1))
+  # image(goa_ras, 
+  #       col = RColorBrewer::brewer.pal(n = 11, name = "RdBu"), 
+  #       zlim = c(0, 1),
+  #       axes = F,
+  #       ann = F,
+  #       asp = 1)
+  # box(which = "figure")
+  # 
+  # ## Legend
+  # plotrix::color.legend(
+  #   xl = xrange[1] + xrange_diff *  0.25,
+  #   xr = xrange[1] + xrange_diff *  0.75,
+  #   yb = yrange[1] + yrange_diff * -0.30,
+  #   yt = yrange[1] + yrange_diff * -0.15,
+  #   legend = seq(from = 0, to = 1, by = 0.25),
+  #   rect.col = RColorBrewer::brewer.pal(n = 11, name = "RdBu"),
+  #   gradient = "x", 
+  #   align = "rb",
+  #   cex = 0.5)
+  # 
+  # text(x = xrange[1] + xrange_diff * 0,
+  #      y = yrange[2] + yrange_diff * 0.35,
+  #      labels = "G)",
+  #      xpd = NA,
+  #      cex = 1.25)
 
   dev.off()
 }
