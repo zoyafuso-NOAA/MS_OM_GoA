@@ -16,8 +16,6 @@ library(tidyr)
 ##################################################
 ####   Set up directores
 ##################################################
-which_machine <- c("Zack_MAC" = 1, "Zack_PC" = 2, "Zack_GI_PC" = 3)[3]
-
 VAST_dir <-  "G:/Oyafuso/VAST_Runs_EFH/Single_Species/" 
 github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
 
@@ -26,73 +24,57 @@ github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
 ##################################
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
 
-which_spp <- sort(c( 
-  "Atheresthes stomias",
-  "Gadus chalcogrammus",
-  "Gadus macrocephalus",
-  
-  "Glyptocephalus zachirus",
-  "Hippoglossoides elassodon",
-  "Hippoglossus stenolepis",
-  
-  "Lepidopsetta bilineata",
-  "Lepidopsetta polyxystra",
-  "Microstomus pacificus",
-  
-  "Sebastes alutus",
-  "Sebastes B_R",
-  "Sebastes brevispinis",
-  
-  "Sebastes polyspinis",
-  "Sebastes variabilis",
-  "Sebastolobus alascanus",
-  
-  "Anoplopoma fimbria",
-  "Beringraja spp.",
-  "Octopus spp.",
-  "Pleurogrammus monopterygius",
-  "Sebastes borealis",
-  # "Sebastes ruberrimus",
-  "Sebastes variegatus",
-  "Squalus suckleyi"
-))
+which_spp <- sort(c("Sebastes polyspinis", "Sebastes variabilis", 
+                    "Sebastes brevispinis", "Microstomus pacificus",
+                    "Lepidopsetta polyxystra", "Lepidopsetta bilineata",
+                    "Hippoglossus stenolepis", "Hippoglossoides elassodon",
+                    "Glyptocephalus zachirus", "Gadus macrocephalus",
+                    "Gadus chalcogrammus", "Sebastes B_R", "Sebastes alutus",
+                    "Atheresthes stomias", "Sebastolobus alascanus",
+                    "Anoplopoma fimbria", "Beringraja spp", "Octopus spp",
+                    "Pleurogrammus monopterygius", "Sebastes borealis",
+                    "Sebastes variegatus", "Squalus suckleyi"))
 
 ns <- length(which_spp)
+n_folds <- 10
+n_years <- 11
 
 ##################################################
 ####   Result Objects
 ##################################################
-NFold <- 10
-NTime <- 11
-CV_df <- expand.grid(species = which_spp, 
+cv_df <- expand.grid(species = which_spp, 
                      depth = c(T, F),
-                     fold = 1:NFold,
+                     fold = 1:n_folds,
                      stringsAsFactors = F)
 
-CV_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
+cv_df[,c("max_grad", "pdHess", "bound_check", "pred_nll", 
          "RMSE", "RRMSE", "MAE", "RMAE")] <- NA
 
-for (irow in (302:nrow(CV_df)) ) {
+for (irow in (1:nrow(cv_df)) ) {
   
   #Load fitted object
-  result_dir <- paste0(VAST_dir, CV_df$species[irow], 
-                       ifelse(CV_df$depth[irow],  "_depth", ""), "/")
-  filename <- paste0(result_dir, "CV_", CV_df$fold[irow], "/fit.RData")
+  result_dir <- paste0(VAST_dir, cv_df$species[irow], 
+                       ifelse(cv_df$depth[irow],  "_depth", ""), "/")
+  filename <- paste0(result_dir, "CV_", cv_df$fold[irow], "/fit.RData")
   
   if ( file.exists(filename) ){
+    
+    ## Load crossvalidation result and assign temporary result objects
     load(filename)
+    pars <- fit_new$parameter_estimates
+    spatial_list <- fit_new$spatial_list
+    temp_df <- fit_new$data_frame
     
     #Final Gradient
-    CV_df$max_grad[irow] <-
-      max(abs(fit_new$parameter_estimates$diagnostics$final_gradient))
+    cv_df$max_grad[irow] <- max(abs(pars$diagnostics$final_gradient))
     
     #Check whether hessian matrix is positive definite
-    CV_df$pdHess[irow] <- fit_new$parameter_estimates$SD$pdHess
+    cv_df$pdHess[irow] <- pars$SD$pdHess
     
     #check_fit chekcs bounds, TRUE is bad and FALSE is good
-    CV_df$bound_check[irow] <- (check_fit(fit_new$parameter_estimates))
+    cv_df$bound_check[irow] <- check_fit(pars)
     
-    CV_df$pred_nll[irow] <- fit_new$Report$pred_jnll
+    cv_df$pred_nll[irow] <- fit_new$Report$pred_jnll
     
     #Extract incides of withheld data
     withheld_idx <- which(fit_new$data_list$PredTF_i == T)
@@ -100,40 +82,43 @@ for (irow in (302:nrow(CV_df)) ) {
     #Withheld data locations, species/year indices, observed CPUE
     withheld_df <- data.frame(
       idx =  withheld_idx,
-      E_km = fit_new$spatial_list$loc_i[withheld_idx,"E_km"],
-      N_km = fit_new$spatial_list$loc_i[withheld_idx,"N_km"],
-      year = 1+fit_new$data_list$t_i[withheld_idx],
-      obs_density = (fit_new$data_frame$b_i/fit_new$data_frame$a_i)[withheld_idx]
+      E_km = spatial_list$loc_i[withheld_idx, "E_km"],
+      N_km = spatial_list$loc_i[withheld_idx, "N_km"],
+      year = 1 + fit_new$data_list$t_i[withheld_idx],
+      obs_density = (temp_df$b_i / temp_df$a_i)[withheld_idx]
     )
     
     #Extrapolation Grid locations
-    loc_g <- fit_new$spatial_list$loc_g
+    loc_g <- spatial_list$loc_g
     
     #which extrapoaltion grid cells are closest to each withheld data location 
     grid_idx <- RANN::nn2(query = withheld_df[,c("E_km", "N_km")], 
                           data = loc_g, 
                           k = 1)$nn.idx
     
+    # for each withheld datum, assign its predicted density to that of its
+    # nearest neighboring extrapolation grid cell
     for (jrow in 1:nrow(withheld_df)) {
       withheld_df$pred_density[jrow] <- 
         fit_new$Report$D_gct[grid_idx[jrow], , withheld_df$year[jrow]]
     }
     
     #Calculate mean absolute error and root mean square error
-    CV_df$MAE[irow] = mean(abs(withheld_df$obs_density - 
+    cv_df$MAE[irow] = mean(abs(withheld_df$obs_density - 
                                  withheld_df$pred_density))
     
-    CV_df$RMSE[irow] = sqrt(mean((withheld_df$obs_density - 
+    cv_df$RMSE[irow] = sqrt(mean((withheld_df$obs_density - 
                                     withheld_df$pred_density)^2))
     
-    #Calculate mean predicted density for calculation of RRMSE and RMAE
-    mean_pred_density <- mean(withheld_df$obs_density)
-    CV_df$RRMSE[irow] <- CV_df$RMSE[irow] / mean_pred_density
-    CV_df$RMAE[irow] <- CV_df$MAE[irow] / mean_pred_density
+    #Calculate mean obs density for calculation of RRMSE and RMAE
+    mean_obs_density <- mean(temp_df$b_i / temp_df$a_i)
+    cv_df$RRMSE[irow] <- cv_df$RMSE[irow] / mean_obs_density
+    cv_df$RMAE[irow] <- cv_df$MAE[irow] / mean_obs_density
     
-    print(paste0("Done with: ", CV_df$species[irow], ", ", 
-                 ifelse(CV_df$depth[irow], "Depth, ", "No Depth, "),
-                 "Fold Number ", CV_df$fold[irow]))
+    #Update progress
+    print(paste0("Done with: ", cv_df$species[irow], ", ", 
+                 ifelse(cv_df$depth[irow], "Depth, ", "No Depth, "),
+                 "Fold Number ", cv_df$fold[irow]))
   }
 }
 
@@ -141,18 +126,38 @@ for (irow in (302:nrow(CV_df)) ) {
 ####  Calculate summed predicted NLL across folds and Mean RRMSE across folds
 ##################################################
 tidyr::spread(data = aggregate(pred_nll ~ species + depth,
-                               data = CV_df,
+                               data = cv_df,
                                FUN = sum),
               key = "depth",
               value = "pred_nll")
 
-RMSE <- tidyr::spread(data = aggregate(RMSE ~ species + depth,
-                                       data = CV_df,
+RMAE <- tidyr::spread(data = aggregate(RMAE ~ species + depth,
+                                       data = cv_df,
                                        FUN = mean),
                       key = "depth",
-                      value = "RMSE")
+                      value = "RMAE")
 
-RMSE$depth_in_model <- c(F, T)[apply(X = RMSE[,-1],
+RMAE$depth_in_model <- c(F, T)[apply(X = RMAE[,-1],
+                                     MARGIN = 1,
+                                     FUN = which.min)]
+
+RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
+                                        data = cv_df,
+                                        FUN = mean),
+                       key = "depth",
+                       value = "RRMSE")
+
+RRMSE$depth_in_model <- c(F, T)[apply(X = RRMSE[,-1],
+                                      MARGIN = 1,
+                                      FUN = which.min)]
+
+prednll <- tidyr::spread(data = aggregate(pred_nll ~ species + depth,
+                                       data = cv_df,
+                                       FUN = mean),
+                      key = "depth",
+                      value = "pred_nll")
+
+prednll$depth_in_model <- c(F, T)[apply(X = prednll[,-1],
                                      MARGIN = 1,
                                      FUN = which.min)]
 
@@ -164,7 +169,7 @@ D_gct = Index <- array(dim = c(N, ns, 24),
                        dimnames = list(NULL, which_spp, NULL))
 
 for(ispp in 1:ns){
-  depth_in_model <- RMSE$depth_in_model[ispp]
+  depth_in_model <- RRMSE$depth_in_model[ispp]
   
   result_dir = paste0(VAST_dir, RMSE$species[ispp],
                       ifelse(depth_in_model, "_depth", ""),
@@ -181,7 +186,7 @@ for(ispp in 1:ns){
 ##################################################
 ####   Save
 ##################################################
-save("RMSE", file = paste0(github_dir, "/data/RMSE_VAST_models.RData"))
+save("RRMSE", file = paste0(github_dir, "/data/RRMSE_VAST_models.RData"))
 save("D_gct", file = paste0(github_dir, "/data/fit_density.RData") )
 save("Index", file = paste0(github_dir, "/data/fit_index.RData") )
 
