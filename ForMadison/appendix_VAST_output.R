@@ -20,7 +20,7 @@ github_dir2 <- paste0(c("C:/Users/Zack Oyafuso/Documents/",
                         "C:/Users/zack.oyafuso/Work/")[which_machine],
                       "GitHub/Optimal_Allocation_GoA/")
 VAST_dir <- c("C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/",
-              "G:/Oyafuso/VAST_Runs_EFH/Single_Species_orginal/")[which_machine]
+              "G:/Oyafuso/VAST_Runs_EFH/Single_Species/")[which_machine]
 output_dir <- paste0(github_dir, "appendix_plots/")
 if(!dir.exists(output_dir)) dir.create(path = output_dir)
 
@@ -38,7 +38,7 @@ library(VAST)
 #### Load Data
 ##################################################
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
-load(paste0(github_dir2, "data/RMSE_VAST_models.RData"))
+load(paste0(github_dir2, "data/RRMSE_VAST_models.RData"))
 
 ##################################################
 #### Some plotting constants
@@ -48,7 +48,7 @@ yrange <- range(Extrapolation_depths[, "N_km"])
 xrange_diff <- diff(xrange)
 yrange_diff <- diff(yrange)
 
-RMSE$common_name <- c(
+RRMSE$common_name <- c(
   "sablefish"
   , "arrowtooth flounder", "skates spp.", "Alaska pollock", 
   "Pacific cod", "rex sole", "flathead sole", "Pacific halibut", 
@@ -59,7 +59,7 @@ RMSE$common_name <- c(
   "harlequin rockfish", "shortspine thornyhead", "spiny dogfish"
 )
 
-plot_spp_names <- gsub(x = RMSE$species, 
+plot_spp_names <- gsub(x = RRMSE$species, 
                      pattern = "\\.", 
                      replacement = "" )
 
@@ -67,7 +67,7 @@ plot_spp_names <- gsub(x = RMSE$species,
 #### Loop over species
 ##################################################
 # for (which_spp in 2) {
-for (which_spp in 1:nrow(RMSE)) {
+for (which_spp in 1:nrow(RRMSE)) {
   
   ###################################
   ## Set up png plot
@@ -94,11 +94,11 @@ for (which_spp in 1:nrow(RMSE)) {
   
   ###################################
   ## load VAST fit according to the model (depth or no depth as covariate)
-  ## with the "best" (i.e., lower RMSE) predictive performance 
+  ## with the "best" (i.e., lower RRMSE) predictive performance 
   ###################################
-  depth_in_model <- RMSE$depth_in_model[which_spp]
+  depth_in_model <- RRMSE$depth_in_model[which_spp]
   result_dir <- paste0(VAST_dir, 
-                       RMSE$species[which_spp],
+                       RRMSE$species[which_spp],
                        ifelse(test = depth_in_model, 
                               yes = "_depth", 
                               no = ""))
@@ -190,7 +190,7 @@ for (which_spp in 1:nrow(RMSE)) {
        y = 0.5,
        labels = paste0(
          "Appendix Figure A-", which_spp, ". -- ",
-         RMSE$common_name[which_spp], " (depth ", 
+         RRMSE$common_name[which_spp], " (depth ", 
          ifelse(depth_in_model, yes = "included).", no = "excluded)."), 
          "\n                                        ",
          "Various VAST model output and diagnostic plots:",
