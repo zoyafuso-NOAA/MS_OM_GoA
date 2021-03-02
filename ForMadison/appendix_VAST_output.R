@@ -49,15 +49,13 @@ xrange_diff <- diff(xrange)
 yrange_diff <- diff(yrange)
 
 RRMSE$common_name <- c(
-  "sablefish"
-  , "arrowtooth flounder", "skates spp.", "Alaska pollock", 
+  "sablefish", "arrowtooth flounder", "skates spp", "walleye pollock", 
   "Pacific cod", "rex sole", "flathead sole", "Pacific halibut", 
-  "southern rock sole", "northern rock sole", "Pacific Dover sole", 
-  "Octopus spp.", "Atka mackerel", "Pacific ocean perch", 
-  "blackspotted/rougheye rockfishes", "shortraker rockfish",
-  "silvergrey rockfish", "northern rockfish", "dusky rockfish", 
-  "harlequin rockfish", "shortspine thornyhead", "spiny dogfish"
-)
+  "southern rock sole", "northern rock sole", "Dover sole", "Octopus spp", 
+  "Atka mackerel", "Pacific ocean perch", "BS and RE rockfishes", 
+  "shortraker rockfish", "silvergrey rockfish", "northern rockfish", 
+  "dusky rockfish", "harlequin rockfish", "shortspine thornyhead", 
+  "Pacific spiny dogfish")
 
 plot_spp_names <- gsub(x = RRMSE$species, 
                      pattern = "\\.", 
@@ -65,14 +63,14 @@ plot_spp_names <- gsub(x = RRMSE$species,
 
 #################################################
 #### Loop over species
-##################################################
-# for (which_spp in 2) {
+################################################
+# for (which_spp in 1) {
 for (which_spp in 1:nrow(RRMSE)) {
   
   ###################################
   ## Set up png plot
   ###################################
-  plot_filename <- paste0(output_dir, plot_spp_names[which_spp], "_VAST.png")
+  plot_filename <- paste0(output_dir, RRMSE$common_name[which_spp], "_VAST.png")
   
   png(filename = plot_filename,
       width = 170,
@@ -378,9 +376,15 @@ for (which_spp in 1:nrow(RRMSE)) {
   ###################################
   ## QQ Plot
   ###################################
-  gap::qqunif(dharmaRes$scaledResiduals, pch = 2, bty = "n",
-              logscale = F, col = "black", cex = 0.6,
-              cex.main = 1, ann = F, cex.axis = 0.8)
+  gap::qqunif(dharmaRes$scaledResiduals, 
+              pch = 2, 
+              bty = "n",
+              logscale = F, 
+              col = "black", 
+              cex = 0.6,
+              cex.main = 1, 
+              ann = F, 
+              cex.axis = 0.8)
 
   mtext(side = 1, line = 2, text = "Expected", cex = 0.7)
   mtext(side = 2, line = 2.5, text = "Observed", cex = 0.7)
