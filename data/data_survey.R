@@ -112,79 +112,74 @@ data <- as.data.frame(rbind(data, B_R_rockfishes))
 ##################################################
 ####  Sum catches of big and longnose skate 
 ##################################################
-skates <- data %>% dplyr::filter(
-  COMMON_NAME %in% c("big skate", 
-                     "longnose skate")) %>%
-  group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
-  summarise(WEIGHT = sum(WEIGHT)) %>%
-  ungroup() %>%
-  mutate(SPECIES_NAME = "Beringraja spp.", COMMON_NAME = "skates spp.")
-data <- as.data.frame(rbind(data, skates))
+# skates <- data %>% dplyr::filter(
+#   COMMON_NAME %in% c("big skate", 
+#                      "longnose skate")) %>%
+#   group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+#   summarise(WEIGHT = sum(WEIGHT)) %>%
+#   ungroup() %>%
+#   mutate(SPECIES_NAME = "Beringraja spp.", COMMON_NAME = "skates spp.")
+# data <- as.data.frame(rbind(data, skates))
 
 ##################################################
 ####  Sum catches of octopuses
 ##################################################
-octopus <- data %>% dplyr::filter(
-  COMMON_NAME %in% c("octopus unid.",
-                     "giant octopus")) %>%
+# octopus <- data %>% dplyr::filter(
+#   COMMON_NAME %in% c("octopus unid.",
+#                      "giant octopus")) %>%
+#   group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
+#   summarise(WEIGHT = sum(WEIGHT)) %>%
+#   ungroup() %>%
+#   mutate(SPECIES_NAME = "Octopus spp.", COMMON_NAME = "octopus spp.")
+# data <- as.data.frame(rbind(data, octopus))
+
+##################################################
+####  Sum catches of sculpins
+##################################################
+sculpins <- data %>% dplyr::filter(
+  COMMON_NAME %in% c("bigeye sculpin", "great sculpin", 
+                     "plain sculpin", "yellow Irish lord")) %>%
   group_by_at(vars(-WEIGHT, -COMMON_NAME, -SPECIES_NAME)) %>%
   summarise(WEIGHT = sum(WEIGHT)) %>%
   ungroup() %>%
-  mutate(SPECIES_NAME = "Octopus spp.", COMMON_NAME = "octopus spp.")
-data <- as.data.frame(rbind(data, octopus))
+  mutate(SPECIES_NAME = "sculpins", COMMON_NAME = "sculpins")
+data <- as.data.frame(rbind(data, sculpins))
 
 ##################################################
-#### Filter species to make it easier to import later
-#### 1. Arrowtooth Flounder (Atherestes stomias, code 10110)
-#### 2. Pacific Cod (Gadus macrocephalus, code 21720)
-#### 3. Pacific Ocean Perch (Sebastes alutus, code 30060)
-#### 4. Walleye pollock (Gadus chalcogrammus, code 21740)
-#### 5. Dover sole (Solea solea, code 10180)
-#### 6. Pacific halibut (Hippoglossus stenolepis, code 10120)
-#### 7. Flathead sole (Hippoglossoides elassodon, code 10130)
-#### 8. Rex sole (Glyptocephalus zachirus, code 10200)
-#### 0. Dusky rockfish (Sebastes variabilis, code 30152)
-#### 10. Northern rockfish (Sebastes polyspinis, code 30420)
-#### 11. Silvergray Rockfish (Sebastes brevispinis, code 30100)
-#### 12. Shortspine thornyhead (Sebastolobus alascanus, code 30020
-#### 13. Rougheye and blackspotted rockfishes (Sebastes aleutianus and  
-####     Sebastes melanostictus, respectively, codes 30050,30051,30052)
-
-#### 14/15 Northern and Southern rock sole (Lepidopsetta polyxystra and L.
-#### bilineata, respectivity, codes 10260,10261,10262)
 ##################################################
-data = subset(data,
-              COMMON_NAME %in% c("Pacific ocean perch", 
-                                 "arrowtooth flounder", 
-                                 "Pacific cod", 
-                                 
-                                 "walleye pollock", 
-                                 "Pacific halibut", 
-                                 "rex sole", 
-                                 
-                                 "Dover sole",
-                                 "flathead sole", 
-                                 "dusky rockfish",
-                                 
-                                 "northern rockfish",
-                                 "northern rock sole", 
-                                 "southern rock sole",
-                                 
-                                 "B_R_rockfishes",
-                                 "shortspine thornyhead",
-                                 "silvergray rockfish",
-                                 
-                                 #Species to include in evaluation but not in
-                                 #the optimization:
-                                 "sablefish",
-                                 "Atka mackerel",
-                                 "shortraker rockfish",
-                                 "spiny dogfish",
-                                 "skates spp.",
-                                 "yelloweye rockfish",
-                                 "octopus spp.",
-                                 "harlequin rockfish"
-              ))
+data <- subset(data,
+               COMMON_NAME %in% c(
+                 ## Species included in the survey optimization
+                 "arrowtooth flounder", ## Atherestes stomias
+                 "Pacific cod", ## Gadus macrocephalus
+                 "walleye pollock", ## Gadus chalcogrammus
+                 "rex sole", ## Glyptocephalus zachirus
+                 "flathead sole", ## Hippoglossoides elassodon
+                 "Pacific halibut", ## Hippoglossus stenolepis
+                 "southern rock sole", ## Lepidopsetta bilineata
+                 "northern rock sole", ## Lepidopsetta polyxystra
+                 "Pacific ocean perch", ## Sebastes alutus
+                 "silvergray rockfish", ## Sebastes brevispinis
+                 "northern rockfish", ## Sebastes polyspinis
+                 "dusky rockfish", ## Sebastes variabilis
+                 "B_R_rockfishes", ## Sebastes aleutianus and S. melanostictus
+                 "Dover sole", ## Solea solea
+                 "shortspine thornyhead", ## Sebastolobus alascanus
+                 
+                 ## Species not included in the survey optimization, but 
+                 ## included when simulating surveys
+                 "sablefish",
+                 "Atka mackerel",
+                 "shortraker rockfish",
+                 "spiny dogfish",
+                 "yelloweye rockfish",
+                 "giant octopus",
+                 "longnose skate",
+                 "big skate",
+                 "harlequin rockfish",
+                 "giant grenadier",
+                 "sculpins"
+               ))
 
 ##################################################
 ####   Assign station depths from EFH layer
