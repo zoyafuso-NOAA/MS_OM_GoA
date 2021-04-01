@@ -70,7 +70,7 @@ master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 #################################################
 spp_names <- sort(unique(master_data$COMMON_NAME))
 
-for (ispp in spp_names) {
+for (ispp in spp_names[7:9]) {
   for (depth_in_model in c(F, T)) {
     
     ##################################################
@@ -159,7 +159,8 @@ for (ispp in spp_names) {
     ####   Stratification for results
     ##################################################
     settings <- FishStatsUtils::make_settings( 
-      n_x = 750,   # Number of knots
+      Version = "VAST_v12_0_0",
+      n_x = 500,   # Number of knots
       Region = "User", #User inputted extrapolation grid
       purpose = "index2",
       fine_scale = TRUE,
@@ -181,6 +182,7 @@ for (ispp in spp_names) {
                                "Eta2" = 0), #Turn off overdispersion 
       "Options" = c("Calculate_Range" = F, 
                     "Calculate_effective_area" = F),
+      
       ObsModel = c(2, 1),
       max_cells = Inf,
       use_anisotropy = T)
@@ -271,7 +273,7 @@ for (ispp in spp_names) {
     } 
     
     # Loop through partitions, refitting each time with a different PredTF_i
-    for (fI in 3:n_fold ) {
+    for (fI in 1:n_fold ) {
       PredTF_i <- ifelse( test = Data_Geostat$fold == fI, 
                           yes = TRUE, 
                           no = FALSE )
@@ -286,7 +288,6 @@ for (ispp in spp_names) {
                          "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
                          "b_i" = Data_Geostat[, "Catch_KG"],
                          "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                         "v_i" = Data_Geostat[, "Vessel"],
                          "getJointPrecision" = TRUE,
                          "newtonsteps" = 1,
                          "test_fit" = F,
@@ -305,7 +306,6 @@ for (ispp in spp_names) {
                          "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
                          "b_i" = Data_Geostat[, "Catch_KG"],
                          "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                         "v_i" = Data_Geostat[, "Vessel"],
                          "getJointPrecision" = TRUE,
                          "newtonsteps" = 1,
                          "test_fit" = F,
