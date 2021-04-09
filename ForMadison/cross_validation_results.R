@@ -17,23 +17,17 @@ library(tidyr)
 ####   Set up directores
 ##################################################
 VAST_dir <-  "G:/Oyafuso/VAST_Runs_EFH/Single_Species/" 
+VAST_data_dir <-  "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/" 
 github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
 
 ##################################
 ## Import Strata Allocations and spatial grid and predicted density
 ##################################
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
-
-which_spp <- sort(c("Sebastes polyspinis", "Sebastes variabilis", 
-                    "Sebastes brevispinis", "Microstomus pacificus",
-                    "Lepidopsetta polyxystra", "Lepidopsetta bilineata",
-                    "Hippoglossus stenolepis", "Hippoglossoides elassodon",
-                    "Glyptocephalus zachirus", "Gadus macrocephalus",
-                    "Gadus chalcogrammus", "Sebastes B_R", "Sebastes alutus",
-                    "Atheresthes stomias", "Sebastolobus alascanus",
-                    "Anoplopoma fimbria", "Beringraja spp", "Octopus spp",
-                    "Pleurogrammus monopterygius", "Sebastes borealis",
-                    "Sebastes variegatus", "Squalus suckleyi"))
+goa_data <- read.csv(paste0(VAST_data_dir, "data/GOA_multspp.csv"))
+which_spp <- gsub(x = grep(x = dir(VAST_dir), pattern = "_depth", value = TRUE),
+                  pattern = "_depth",
+                  replacement = "")[14]
 
 ns <- length(which_spp)
 n_folds <- 10
@@ -62,7 +56,6 @@ for (irow in (1:nrow(cv_df)) ) {
     ## Load crossvalidation result and assign temporary result objects
     load(filename)
     pars <- fit_new$parameter_estimates
-    spatial_list <- fit_new$spatial_list
     temp_df <- fit_new$data_frame
     
     #Final Gradient
@@ -76,44 +69,19 @@ for (irow in (1:nrow(cv_df)) ) {
     
     cv_df$pred_nll[irow] <- fit_new$Report$pred_jnll
     
-    #Extract incides of withheld data
+    #Extract observed and predicted cpue of the withheld data
     withheld_idx <- which(fit_new$data_list$PredTF_i == T)
     
-    #Withheld data locations, species/year indices, observed CPUE
-    withheld_df <- data.frame(
-      idx =  withheld_idx,
-      E_km = spatial_list$loc_i[withheld_idx, "E_km"],
-      N_km = spatial_list$loc_i[withheld_idx, "N_km"],
-      year = 1 + fit_new$data_list$t_i[withheld_idx],
-      obs_density = (temp_df$b_i / temp_df$a_i)[withheld_idx]
-    )
-    
-    #Extrapolation Grid locations
-    loc_g <- spatial_list$loc_g
-    
-    #which extrapoaltion grid cells are closest to each withheld data location 
-    grid_idx <- RANN::nn2(query = withheld_df[,c("E_km", "N_km")], 
-                          data = loc_g, 
-                          k = 1)$nn.idx
-    
-    # for each withheld datum, assign its predicted density to that of its
-    # nearest neighboring extrapolation grid cell
-    for (jrow in 1:nrow(withheld_df)) {
-      withheld_df$pred_density[jrow] <- 
-        fit_new$Report$D_gct[grid_idx[jrow], , withheld_df$year[jrow]]
-    }
+    obs_cpue <- (temp_df$b_i / temp_df$a_i)[withheld_idx]
+    pred_cpue <- fit_new$Report$D_i[withheld_idx]
     
     #Calculate mean absolute error and root mean square error
-    cv_df$MAE[irow] = mean(abs(withheld_df$obs_density - 
-                                 withheld_df$pred_density))
-    
-    cv_df$RMSE[irow] = sqrt(mean((withheld_df$obs_density - 
-                                    withheld_df$pred_density)^2))
+    cv_df$MAE[irow] = mean(abs(obs_cpue - pred_cpue))
+    cv_df$RMSE[irow] <- sqrt(mean((obs_cpue - pred_cpue)^2)) 
     
     #Calculate mean obs density for calculation of RRMSE and RMAE
-    mean_obs_density <- mean(temp_df$b_i / temp_df$a_i)
-    cv_df$RRMSE[irow] <- cv_df$RMSE[irow] / mean_obs_density
-    cv_df$RMAE[irow] <- cv_df$MAE[irow] / mean_obs_density
+    cv_df$RRMSE[irow] <- cv_df$RMSE[irow] / mean(obs_cpue)
+    cv_df$RMAE[irow] <- cv_df$MAE[irow] / mean(obs_cpue)
     
     #Update progress
     print(paste0("Done with: ", cv_df$species[irow], ", ", 
@@ -141,11 +109,32 @@ RMAE$depth_in_model <- c(F, T)[apply(X = RMAE[,-1],
                                      MARGIN = 1,
                                      FUN = which.min)]
 
+RMSE <- tidyr::spread(data = aggregate(RMSE ~ species + depth,
+                                       data = cv_df,
+                                       FUN = function(x) sqrt(mean(x^2))),
+                      key = "depth",
+                      value = "RMSE")
+
+goa_data$CPUE <- goa_data$WEIGHT / goa_data$EFFORT
+mean_cpue <- aggregate(CPUE ~ COMMON_NAME ,
+                       data = goa_data,
+                       subset = COMMON_NAME == "Pacific cod",
+                       FUN = mean)$CPUE
+
+RMSE[, 2:3] / mean_cpue
+
+sweep(x = RMSE[, c("TRUE", "FALSE")],
+      MARGIN = 1,
+      STATS = mean_cpue$CPUE,
+      FUN = "/")
+
 RRMSE <- tidyr::spread(data = aggregate(RRMSE ~ species + depth,
                                         data = cv_df,
                                         FUN = mean),
                        key = "depth",
                        value = "RRMSE")
+
+
 
 RRMSE$depth_in_model <- c(F, T)[apply(X = RRMSE[,-1],
                                       MARGIN = 1,
