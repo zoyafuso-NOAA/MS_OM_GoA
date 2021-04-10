@@ -12,7 +12,7 @@
 #### Set up directories     
 ##################################################
 rm(list = ls())
-which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
+which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[1]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
@@ -38,7 +38,7 @@ library(VAST)
 #### Load Data
 ##################################################
 load(paste0(github_dir, "data/Extrapolation_depths.RData"))
-load(paste0(github_dir2, "data/RRMSE_VAST_models.RData"))
+load(paste0(github_dir2, "data/prednll_VAST_models.RData"))
 
 ##################################################
 #### Some plotting constants
@@ -48,29 +48,19 @@ yrange <- range(Extrapolation_depths[, "N_km"])
 xrange_diff <- diff(xrange)
 yrange_diff <- diff(yrange)
 
-RRMSE$common_name <- c(
-  "sablefish", "arrowtooth flounder", "skates spp", "walleye pollock", 
-  "Pacific cod", "rex sole", "flathead sole", "Pacific halibut", 
-  "southern rock sole", "northern rock sole", "Dover sole", "Octopus spp", 
-  "Atka mackerel", "Pacific ocean perch", "BS and RE rockfishes", 
-  "shortraker rockfish", "silvergrey rockfish", "northern rockfish", 
-  "dusky rockfish", "harlequin rockfish", "shortspine thornyhead", 
-  "Pacific spiny dogfish")
-
-plot_spp_names <- gsub(x = RRMSE$species, 
-                     pattern = "\\.", 
-                     replacement = "" )
+plot_spp_names <- prednll$species
+plot_spp_names[c(3, 24)] <- c("BS and RE rockfishes", "Pacific spiny dogfish")
 
 #################################################
 #### Loop over species
 ################################################
 # for (which_spp in 1) {
-for (which_spp in 1:nrow(RRMSE)) {
+for (which_spp in 1:nrow(prednll)) {
   
   ###################################
   ## Set up png plot
   ###################################
-  plot_filename <- paste0(output_dir, RRMSE$common_name[which_spp], "_VAST.png")
+  plot_filename <- paste0(output_dir, plot_spp_names[which_spp], "_VAST.png")
   
   png(filename = plot_filename,
       width = 170,
@@ -94,9 +84,9 @@ for (which_spp in 1:nrow(RRMSE)) {
   ## load VAST fit according to the model (depth or no depth as covariate)
   ## with the "best" (i.e., lower RRMSE) predictive performance 
   ###################################
-  depth_in_model <- RRMSE$depth_in_model[which_spp]
+  depth_in_model <- prednll$depth_in_model[which_spp]
   result_dir <- paste0(VAST_dir, 
-                       RRMSE$species[which_spp],
+                       prednll$species[which_spp],
                        ifelse(test = depth_in_model, 
                               yes = "_depth", 
                               no = ""))
@@ -188,7 +178,7 @@ for (which_spp in 1:nrow(RRMSE)) {
        y = 0.5,
        labels = paste0(
          "Appendix Figure A-", which_spp, ". -- ",
-         RRMSE$common_name[which_spp], " (depth ", 
+         plot_spp_names[which_spp], " (depth ", 
          ifelse(depth_in_model, yes = "included).", no = "excluded)."), 
          "\n                                        ",
          "Various VAST model output and diagnostic plots:",
