@@ -49,13 +49,13 @@ xrange_diff <- diff(xrange)
 yrange_diff <- diff(yrange)
 
 plot_spp_names <- prednll$species
-plot_spp_names[c(3, 24)] <- c("BS and RE rockfishes", "Pacific spiny dogfish")
+plot_spp_names[c(4, 24)] <- c("BS and RE rockfishes", "Pacific spiny dogfish")
 
 #################################################
 #### Loop over species
 ################################################
-# for (which_spp in 1) {
-for (which_spp in 1:nrow(prednll)) {
+for (which_spp in 5) {
+# for (which_spp in 1:nrow(prednll)) {
   
   ###################################
   ## Set up png plot

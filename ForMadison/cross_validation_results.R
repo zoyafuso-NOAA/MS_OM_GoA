@@ -126,7 +126,7 @@ D_gct = Index <- array(dim = c(N, ns, n_years),
 
 for(ispp in 1:ns){
   depth_in_model <- prednll$depth_in_model[ispp]
-  result_dir = paste0(VAST_dir, RMSE$species[ispp],
+  result_dir = paste0(VAST_dir, prednll$species[ispp],
                       ifelse(depth_in_model, "_depth", ""),
                       "/")
   

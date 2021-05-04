@@ -21,7 +21,7 @@ rm(list = ls())
 ####   github directory whereas the model output is sent to Z. Oyafuso's G
 ####   Drive due to storage limits on github.
 ##################################################
-which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[2]
+which_machine <- c("Zack_PC" = 1, "Zack_GI_PC" = 2)[1]
 
 github_dir <- c("C:/Users/Zack Oyafuso/Documents/GitHub/MS_OM_GoA/",
                 "C:/Users/zack.oyafuso/Work/GitHub/MS_OM_GoA/")[which_machine]
@@ -70,8 +70,8 @@ master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 #################################################
 spp_names <- sort(unique(master_data$COMMON_NAME))
 
-for (ispp in spp_names[7:9]) {
-  for (depth_in_model in c(F, T)) {
+for (ispp in spp_names[1]) {
+  for (depth_in_model in c(F, T)[2]) {
     
     ##################################################
     ## Create directory to store model results
@@ -207,47 +207,84 @@ for (ispp in spp_names[7:9]) {
     ##################################################
     ####   Fit the model and save output
     ##################################################
-    
-    fit = switch(paste0(depth_in_model),
-                 "FALSE" = FishStatsUtils::fit_model( 
-                   "settings" = settings,
-                   "working_dir" = result_dir,
-                   "Lat_i" = Data_Geostat[, "Lat"],
-                   "Lon_i" = Data_Geostat[, "Lon"],
-                   "t_i" = Data_Geostat[, "Year"],
-                   "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
-                   "b_i" = Data_Geostat[, "Catch_KG"],
-                   "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                   "getJointPrecision" = TRUE,
-                   "newtonsteps" = 1,
-                   "test_fit" = F,
-                   "input_grid" = Extrapolation_depths),
-                 
-                 "TRUE" = FishStatsUtils::fit_model( 
-                   "settings" = settings,
-                   "working_dir" = result_dir,
-                   "Lat_i" = Data_Geostat[, "Lat"],
-                   "Lon_i" = Data_Geostat[, "Lon"],
-                   "t_i" = Data_Geostat[, "Year"],
-                   "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
-                   "b_i" = Data_Geostat[, "Catch_KG"],
-                   "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                   "getJointPrecision" = TRUE,
-                   "newtonsteps" = 1,
-                   "test_fit" = F,
-                   "input_grid" = Extrapolation_depths,
-                   
-                   ##Additional arguments for covariates
-                   "X1_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                   "X2_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                   "covariate_data" = cbind(Data_Geostat[,c("Lat",
-                                                            "Lon",
-                                                            "LOG_DEPTH",
-                                                            "LOG_DEPTH2",
-                                                            "Catch_KG")],
-                                            Year = NA),
-                   "X_gtp" = X_gtp )
+    fit = FishStatsUtils::fit_model( 
+      "settings" = settings,
+      "working_dir" = result_dir,
+      "Lat_i" = Data_Geostat[, "Lat"],
+      "Lon_i" = Data_Geostat[, "Lon"],
+      "t_i" = Data_Geostat[, "Year"],
+      "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+      "b_i" = Data_Geostat[, "Catch_KG"],
+      "a_i" = Data_Geostat[, "AreaSwept_km2"],
+      "getJointPrecision" = TRUE,
+      "newtonsteps" = 1,
+      "test_fit" = F,
+      "input_grid" = Extrapolation_depths,
+      
+      ## Extra arguments if depth covariates are included
+      "X1_formula" =  switch(depth_in_model,
+                             "TRUE" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                             "FALSE" = "~0"),
+      "X2_formula" =  switch(depth_in_model,
+                             "TRUE" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                             "FALSE" = "~0"),
+      "covariate_data" = switch(depth_in_model,
+                                "TRUE" = cbind(Data_Geostat[,c("Lat",
+                                                               "Lon",
+                                                               "LOG_DEPTH",
+                                                               "LOG_DEPTH2",
+                                                               "Catch_KG")],
+                                               Year = NA),
+                                "FALSE" = NULL),
+      "X_gtp" = switch(depth_in_model,
+                       "TRUE" = X_gtp,
+                       "FALSE" = NULL)
     )
+    
+    ## Diagnostics
+    plot(x = fit,
+         working_dir = paste0(result_dir, "diagnostics/"))
+    
+    # fit = switch(paste0(depth_in_model),
+    #              "FALSE" = FishStatsUtils::fit_model( 
+    #                "settings" = settings,
+    #                "working_dir" = result_dir,
+    #                "Lat_i" = Data_Geostat[, "Lat"],
+    #                "Lon_i" = Data_Geostat[, "Lon"],
+    #                "t_i" = Data_Geostat[, "Year"],
+    #                "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+    #                "b_i" = Data_Geostat[, "Catch_KG"],
+    #                "a_i" = Data_Geostat[, "AreaSwept_km2"],
+    #                "getJointPrecision" = TRUE,
+    #                "newtonsteps" = 1,
+    #                "test_fit" = F,
+    #                "input_grid" = Extrapolation_depths),
+    #              
+    #              "TRUE" = FishStatsUtils::fit_model( 
+    #                "settings" = settings,
+    #                "working_dir" = result_dir,
+    #                "Lat_i" = Data_Geostat[, "Lat"],
+    #                "Lon_i" = Data_Geostat[, "Lon"],
+    #                "t_i" = Data_Geostat[, "Year"],
+    #                "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+    #                "b_i" = Data_Geostat[, "Catch_KG"],
+    #                "a_i" = Data_Geostat[, "AreaSwept_km2"],
+    #                "getJointPrecision" = TRUE,
+    #                "newtonsteps" = 1,
+    #                "test_fit" = F,
+    #                "input_grid" = Extrapolation_depths,
+    #                
+    #                ##Additional arguments for covariates
+    #                "X1_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+    #                "X2_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+    #                "covariate_data" = cbind(Data_Geostat[,c("Lat",
+    #                                                         "Lon",
+    #                                                         "LOG_DEPTH",
+    #                                                         "LOG_DEPTH2",
+    #                                                         "Catch_KG")],
+    #                                         Year = NA),
+    #                "X_gtp" = X_gtp )
+    # )
     
     ##################################################
     ####   Save
@@ -278,54 +315,93 @@ for (ispp in spp_names[7:9]) {
                           yes = TRUE, 
                           no = FALSE )
       
-      fit_new = switch(paste0(depth_in_model),
-                       "FALSE" = FishStatsUtils::fit_model( 
-                         "settings" = settings,
-                         "working_dir" = paste0(result_dir, "CV_", fI, "/"),
-                         "Lat_i" = Data_Geostat[, "Lat"],
-                         "Lon_i" = Data_Geostat[, "Lon"],
-                         "t_i" = Data_Geostat[, "Year"],
-                         "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
-                         "b_i" = Data_Geostat[, "Catch_KG"],
-                         "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                         "getJointPrecision" = TRUE,
-                         "newtonsteps" = 1,
-                         "test_fit" = F,
-                         "input_grid" = Extrapolation_depths,
-                         
-                         "PredTF_i" = PredTF_i, 
-                         "Parameters" = fit$ParHat,
-                         "getsd" = T),
-                       
-                       "TRUE" = FishStatsUtils::fit_model( 
-                         "settings" = settings,
-                         "working_dir" = paste0(result_dir, "CV_", fI, "/"),
-                         "Lat_i" = Data_Geostat[, "Lat"],
-                         "Lon_i" = Data_Geostat[, "Lon"],
-                         "t_i" = Data_Geostat[, "Year"],
-                         "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
-                         "b_i" = Data_Geostat[, "Catch_KG"],
-                         "a_i" = Data_Geostat[, "AreaSwept_km2"],
-                         "getJointPrecision" = TRUE,
-                         "newtonsteps" = 1,
-                         "test_fit" = F,
-                         "input_grid" = Extrapolation_depths,
-                         
-                         "PredTF_i" = PredTF_i, 
-                         "Parameters" = fit$ParHat,
-                         "getsd" = T,
-                         
-                         ##Additional arguments for covariates
-                         "X1_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                         "X2_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
-                         "covariate_data" = cbind(Data_Geostat[,c("Lat",
-                                                                  "Lon",
-                                                                  "LOG_DEPTH",
-                                                                  "LOG_DEPTH2",
-                                                                  "Catch_KG")],
-                                                  Year = NA),
-                         "X_gtp" = X_gtp )
+      fit_new <- FishStatsUtils::fit_model( 
+        "settings" = settings,
+        "working_dir" = paste0(result_dir, "CV_", fI, "/"),
+        "Lat_i" = Data_Geostat[, "Lat"],
+        "Lon_i" = Data_Geostat[, "Lon"],
+        "t_i" = Data_Geostat[, "Year"],
+        "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+        "b_i" = Data_Geostat[, "Catch_KG"],
+        "a_i" = Data_Geostat[, "AreaSwept_km2"],
+        "getJointPrecision" = TRUE,
+        "newtonsteps" = 1,
+        "test_fit" = F,
+        "input_grid" = Extrapolation_depths,
+        "Parameters" = fit$ParHat,
+        
+        ## For cross validation runs, specify which folds are used in the 
+        ## fitting process and which folds are withheld
+        "PredTF_i" = PredTF_i, 
+        
+        ## Extra arguments if depth covariates are included
+        "X1_formula" =  switch(depth_in_model,
+                               "TRUE" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                               "FALSE" = "~0"),
+        "X2_formula" =  switch(depth_in_model,
+                               "TRUE" = "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+                               "FALSE" = "~0"),
+        "covariate_data" = switch(depth_in_model,
+                                  "TRUE" = cbind(Data_Geostat[,c("Lat",
+                                                                 "Lon",
+                                                                 "LOG_DEPTH",
+                                                                 "LOG_DEPTH2",
+                                                                 "Catch_KG")],
+                                                 Year = NA),
+                                  "FALSE" = NULL),
+        "X_gtp" = switch(depth_in_model,
+                         "TRUE" = X_gtp,
+                         "FALSE" = NULL)
       )
+      
+      # fit_new = switch(paste0(depth_in_model),
+      #                  "FALSE" = FishStatsUtils::fit_model( 
+      #                    "settings" = settings,
+      #                    "working_dir" = paste0(result_dir, "CV_", fI, "/"),
+      #                    "Lat_i" = Data_Geostat[, "Lat"],
+      #                    "Lon_i" = Data_Geostat[, "Lon"],
+      #                    "t_i" = Data_Geostat[, "Year"],
+      #                    "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+      #                    "b_i" = Data_Geostat[, "Catch_KG"],
+      #                    "a_i" = Data_Geostat[, "AreaSwept_km2"],
+      #                    "getJointPrecision" = TRUE,
+      #                    "newtonsteps" = 1,
+      #                    "test_fit" = F,
+      #                    "input_grid" = Extrapolation_depths,
+      #                    
+      #                    "PredTF_i" = PredTF_i, 
+      #                    "Parameters" = fit$ParHat,
+      #                    "getsd" = T),
+      #                  
+      #                  "TRUE" = FishStatsUtils::fit_model( 
+      #                    "settings" = settings,
+      #                    "working_dir" = paste0(result_dir, "CV_", fI, "/"),
+      #                    "Lat_i" = Data_Geostat[, "Lat"],
+      #                    "Lon_i" = Data_Geostat[, "Lon"],
+      #                    "t_i" = Data_Geostat[, "Year"],
+      #                    "c_i" = as.numeric(Data_Geostat[, "spp"]) - 1,
+      #                    "b_i" = Data_Geostat[, "Catch_KG"],
+      #                    "a_i" = Data_Geostat[, "AreaSwept_km2"],
+      #                    "getJointPrecision" = TRUE,
+      #                    "newtonsteps" = 1,
+      #                    "test_fit" = F,
+      #                    "input_grid" = Extrapolation_depths,
+      #                    
+      #                    "PredTF_i" = PredTF_i, 
+      #                    "Parameters" = fit$ParHat,
+      #                    "getsd" = T,
+      #                    
+      #                    ##Additional arguments for covariates
+      #                    "X1_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+      #                    "X2_formula" =  "Catch_KG ~ LOG_DEPTH + LOG_DEPTH2",
+      #                    "covariate_data" = cbind(Data_Geostat[,c("Lat",
+      #                                                             "Lon",
+      #                                                             "LOG_DEPTH",
+      #                                                             "LOG_DEPTH2",
+      #                                                             "Catch_KG")],
+      #                                             Year = NA),
+      #                    "X_gtp" = X_gtp )
+      # )
       
       # Save fit 
       save(list = "fit_new",  
