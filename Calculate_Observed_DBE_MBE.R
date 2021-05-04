@@ -31,7 +31,8 @@ sci_names <- c("Atheresthes stomias", "Gadus chalcogrammus",
                "Lepidopsetta bilineata", "Lepidopsetta polyxystra", 
                "Microstomus pacificus", "Sebastes alutus", 
                "Sebastes brevispinis", "Sebastes polyspinis", 
-               "Sebastes variabilis", "Sebastolobus alascanus")
+               "Sebastes variabilis", "Sebastolobus alascanus",
+               "Cottoidea", "Sebastes BR", "Squalus suckleyi")
 
 which_years <- c(1996, 1999, seq(from = 2003, to = 2019, by = 2))
 
