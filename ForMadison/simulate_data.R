@@ -64,6 +64,11 @@ vast_cpp_version <- "VAST_v12_0_0"
 master_data <- read.csv(file = paste0(github_dir, "data/GOA_multspp.csv") )
 load(paste0(github_dir2, "data/prednll_VAST_models.RData"))
 
+master_data$COMMON_NAME[master_data$COMMON_NAME == "B_R_rockfishes"] <-
+  "BS and RE rockfishes"
+# master_data$COMMON_NAME[master_data$COMMON_NAME == "spiny dogfish"] <-
+#   "Pacific spiny dogfish"
+
 ##################################################
 ####   Import extrapolation grid with depth values
 ##################################################
@@ -83,7 +88,8 @@ for (i in 1:n_t) {
 #################################################
 ## Loop over species to fit models with and without depth covariates
 #################################################
-for (irow in 1:nrow(prednll) ) {
+# for (irow in 1:nrow(prednll) ) {
+for (irow in c(25) ) {
   
   ##################################################
   ## Create directory to store model results
@@ -180,17 +186,17 @@ for (irow in 1:nrow(prednll) ) {
   ##################################################
   pred_TF <- rep(1, nrow(data_geostat_with_grid)); pred_TF[1:nrow(data)] <- 0
   
-  fit = tryCatch( {
+  fit = #tryCatch( {
     switch(paste0(depth_in_model),
            "FALSE" = FishStatsUtils::fit_model( 
              "settings" = settings,
              "working_dir" = result_dir,
-             "Lat_i" = data_geostat[, "Lat"],
-             "Lon_i" = data_geostat[, "Lon"],
-             "t_i" = data_geostat[, "Year"],
-             "c_i" = as.numeric(data_geostat[, "spp"]) - 1,
-             "b_i" = data_geostat[, "Catch_KG"],
-             "a_i" = data_geostat[, "AreaSwept_km2"],
+             "Lat_i" = data_geostat_with_grid[, "Lat"],
+             "Lon_i" = data_geostat_with_grid[, "Lon"],
+             "t_i" = data_geostat_with_grid[, "Year"],
+             "c_i" = as.numeric(data_geostat_with_grid[, "spp"]) - 1,
+             "b_i" = data_geostat_with_grid[, "Catch_KG"],
+             "a_i" = data_geostat_with_grid[, "AreaSwept_km2"],
              "getJointPrecision" = TRUE,
              "newtonsteps" = 1,
              "test_fit" = F,
@@ -223,9 +229,10 @@ for (irow in 1:nrow(prednll) ) {
                                                        "Catch_KG")],
                                       Year = NA),
              "X_gtp" = X_gtp, 
-             "PredTF_i" = pred_TF))},
-    error = function(cond) return(NULL)
-  )
+             "PredTF_i" = pred_TF))
+    # },
+    # error = function(cond) return(NULL)
+  # )
   
   if( !is.null(fit) ) {
     save(fit, file = paste0(VAST_dir, prednll$species[irow], "/fit.RData"))
