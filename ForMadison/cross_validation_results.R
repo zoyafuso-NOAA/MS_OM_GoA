@@ -121,8 +121,10 @@ RMSE <- tidyr::spread(data = aggregate(RMSE ~ species + depth,
 ####   Create the result object that would go into the optimizations
 ##################################################
 N <- nrow(Extrapolation_depths)
-D_gct = Index <- array(dim = c(N, ns, n_years), 
+D_gct = I_gct <- array(dim = c(N, ns, n_years), 
                        dimnames = list(NULL, which_spp, NULL))
+vast_index <- data.frame()
+
 
 for(ispp in 1:ns){
   depth_in_model <- prednll$depth_in_model[ispp]
@@ -133,7 +135,16 @@ for(ispp in 1:ns){
   load(paste0(result_dir, "/fit.RData"))
   
   D_gct[,ispp,] = fit$Report$D_gct[, 1 , which_years]
-  Index[,ispp,] = fit$Report$Index_gctl[, 1, which_years, 1]
+  I_gct[,ispp,] = fit$Report$Index_gctl[, 1, which_years, 1]
+  
+  temp_vast_output <- read.csv(paste0(result_dir, 
+                                      "diagnostics/Table_for_SS3.csv"))
+  
+  vast_index <- rbind(vast_index,
+                      data.frame(species = prednll$species[ispp],
+                                 subset(temp_vast_output, 
+                                        subset = Year %in% unique(goa_data$YEAR)))
+  )
   
   print(result_dir)
 }
@@ -143,6 +154,6 @@ for(ispp in 1:ns){
 ##################################################
 save("RMSE", file = paste0(github_dir, "/data/rmse_VAST_models.RData"))
 save("prednll", file = paste0(github_dir, "/data/prednll_VAST_models.RData"))
-save("D_gct", file = paste0(github_dir, "/data/fit_density.RData") )
-save("Index", file = paste0(github_dir, "/data/fit_index.RData") )
-
+save("D_gct", file = paste0(github_dir, "/data/VAST_fit_D_gct.RData") )
+save("I_gct", file = paste0(github_dir, "/data/VAST_fit_I_gct.RData") )
+save("vast_index", file = paste0(github_dir, "/data/VAST_fit_I_ct.RData") )
