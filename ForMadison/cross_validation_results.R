@@ -80,6 +80,7 @@ for (irow in 1:nrow(cv_df) )  {
     
     #Calculate mean absolute error and root mean square error
     cv_df$RMSE[irow] <- sqrt(mean((obs_cpue - pred_cpue)^2)) 
+    cv_df$MAE[irow] <- mean(abs(obs_cpue - pred_cpue))
     
     #Update progress
     print(paste0("Done with: ", cv_df$species[irow], ", ", 
@@ -117,6 +118,47 @@ RMSE <- tidyr::spread(data = aggregate(RMSE ~ species + depth,
                       key = "depth",
                       value = "RMSE")
 
+RRMSE <- RMSE
+for (irow in 1:nrow(RRMSE)) {
+  sppname <- RRMSE$species[irow]
+  sppname <- ifelse(test = sppname == "BS and RE rockfishes", 
+                    yes = "B_R_rockfishes",
+                    no = sppname)
+  
+  subdf <- subset(x = goa_data, 
+                  subset = COMMON_NAME == sppname,
+                  select = c(EFFORT, WEIGHT))
+  subdf$CPUE <- subdf$WEIGHT / subdf$EFFORT
+  RRMSE[irow, c("TRUE", "FALSE")] <- round(RRMSE[irow, c("TRUE", "FALSE")] /
+    mean(subdf$CPUE), 2)
+}
+
+##################################################
+####   
+##################################################
+MAE <- tidyr::spread(data = aggregate(MAE ~ species + depth,
+                                       data = cv_df,
+                                       FUN = function(x) round(mean(x), 2 ),
+                                       subset = max_grad < 1E-4),
+                      key = "depth",
+                      value = "MAE")
+
+RMAE <- MAE
+for (irow in 1:nrow(RMSE)) {
+  sppname <- RMAE$species[irow]
+  sppname <- ifelse(test = sppname == "BS and RE rockfishes", 
+                    yes = "B_R_rockfishes",
+                    no = sppname)
+  
+  subdf <- subset(x = goa_data, 
+                  subset = COMMON_NAME == sppname,
+                  select = c(EFFORT, WEIGHT))
+  subdf$CPUE <- subdf$WEIGHT / subdf$EFFORT
+  RMAE[irow, c("TRUE", "FALSE")] <- round(RMAE[irow, c("TRUE", "FALSE")] /
+    mean(subdf$CPUE), 2)
+}
+
+
 ##################################################
 ####   Create the result object that would go into the optimizations
 ##################################################
@@ -124,7 +166,6 @@ N <- nrow(Extrapolation_depths)
 D_gct = I_gct <- array(dim = c(N, ns, n_years), 
                        dimnames = list(NULL, which_spp, NULL))
 vast_index <- data.frame()
-
 
 for(ispp in 1:ns){
   depth_in_model <- prednll$depth_in_model[ispp]
@@ -152,7 +193,8 @@ for(ispp in 1:ns){
 ##################################################
 ####   Save
 ##################################################
-save("RMSE", file = paste0(github_dir, "/data/rmse_VAST_models.RData"))
+save(list = c("RMSE", "RRMSE", "MAE", "RMAE"), 
+     file = paste0(github_dir, "/data/rmse_VAST_models.RData"))
 save("prednll", file = paste0(github_dir, "/data/prednll_VAST_models.RData"))
 save("D_gct", file = paste0(github_dir, "/data/VAST_fit_D_gct.RData") )
 save("I_gct", file = paste0(github_dir, "/data/VAST_fit_I_gct.RData") )

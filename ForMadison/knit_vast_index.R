@@ -8,8 +8,8 @@ rm(list = ls())
 ##################################################
 ####   Set up directories
 ##################################################
-github_dir <- "C:/Users/zack.oyafuso/Work/GitHub/Optimal_Allocation_GoA/"
-VAST_dir <- "G:/Oyafuso/VAST_Runs_EFH/Single_Species/"
+github_dir <- "C:/Users/Zack Oyafuso/Documents/GitHub/Optimal_Allocation_GoA/"
+VAST_dir <- "C:/Users/Zack Oyafuso/Desktop/VAST_Runs/Single_Species/"
 
 ##################################################
 ####    Import required packages
@@ -31,15 +31,15 @@ for (ispp in 1:ns_all) {
   #Load vast output
   temp_index <- read.csv(
     paste0(VAST_dir, 
-           sci_names_all[ispp], 
+           common_names_all[ispp], 
            ifelse(RMSE$depth_in_model[ispp], "_depth", ""),
-           "/diagnostics/Table_for_SS3.csv"))[Years2Include,]
+           "/diagnostics/Table_for_SS3.csv"))[years_included,]
   
   #Record CV 
   vast_index = rbind(vast_index,
                      with( temp_index, 
                            data.frame(
-                             spp = sci_names_all[ispp],
+                             spp = common_names_all[ispp],
                              year = Year,
                              est = Estimate_metric_tons, 
                              cv = SD_mt / Estimate_metric_tons)
